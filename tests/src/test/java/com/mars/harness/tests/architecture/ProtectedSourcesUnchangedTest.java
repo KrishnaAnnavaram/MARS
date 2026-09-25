@@ -23,6 +23,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * ({@code legacy-sources/SOURCES.json}). The manifest {@code protection/legacy-sources.sha256} was
  * taken from the export and cross-checked against the pristine clones; any edit, addition or
  * deletion under {@code legacy-sources/} fails this test.
+ *
+ * <p>Hashes are line-ending independent: a text file (no NUL byte) is hashed with CRLF normalized to
+ * LF, as git stores it, so the check holds on a Windows checkout ({@code core.autocrlf=true}) and a
+ * Linux or macOS clone alike. Binary files are hashed byte for byte.
  */
 class ProtectedSourcesUnchangedTest {
 
@@ -52,7 +56,7 @@ class ProtectedSourcesUnchangedTest {
             Path file = root.resolve(e.getKey());
             if (!Files.isRegularFile(file)) {
                 changed.add("MISSING " + e.getKey());
-            } else if (!REGENERATED_BY_LEGACY_TESTS.contains(e.getKey()) && !Hashing.sha256File(file).equals(e.getValue())) {
+            } else if (!REGENERATED_BY_LEGACY_TESTS.contains(e.getKey()) && !normalizedSha256(file).equals(e.getValue())) {
                 changed.add("MODIFIED " + e.getKey());
             }
         }
@@ -64,5 +68,26 @@ class ProtectedSourcesUnchangedTest {
                     .filter(p -> !manifest.containsKey(p)).forEach(p -> changed.add("ADDED " + p));
         }
         assertThat(changed).as("protected legacy sources must stay unchanged").isEmpty();
+    }
+
+    private static String normalizedSha256(Path file) throws IOException {
+        byte[] bytes = Files.readAllBytes(file);
+        boolean binary = false;
+        for (byte b : bytes) {
+            if (b == 0) {
+                binary = true;
+                break;
+            }
+        }
+        if (binary) {
+            return Hashing.sha256(bytes);
+        }
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream(bytes.length);
+        for (int i = 0; i < bytes.length; i++) {
+            if (!(bytes[i] == 13 && i + 1 < bytes.length && bytes[i + 1] == 10)) { // CRLF -> LF
+                out.write(bytes[i]);
+            }
+        }
+        return Hashing.sha256(out.toByteArray());
     }
 }
