@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.bootshift</groupId>
+    <artifactId>bootshift-parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+  <artifactId>bootshift-stages</artifactId>
+  <name>Bootshift :: Stages (Agents 01-20)</name>
+  <description>Deterministic pipeline stages. Each stage is independently runnable; the orchestrator only sequences them.</description>
+  <dependencies>
+    <dependency><groupId>com.bootshift</groupId><artifactId>bootshift-ports</artifactId><version>${project.version}</version></dependency>
+    <dependency><groupId>com.bootshift</groupId><artifactId>bootshift-adapters</artifactId><version>${project.version}</version></dependency>
+  </dependencies>
+</project>

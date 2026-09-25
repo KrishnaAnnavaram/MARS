@@ -1,0 +1,56 @@
+{
+  "name": "strict-oss",
+  "version": "1.0.0",
+  "description": "Machine-enforced strict open-source gate. Unknown license is blocked until verified.",
+
+  "allowlist": [
+    "Apache-2.0",
+    "Apache 2.0",
+    "The Apache Software License, Version 2.0",
+    "MIT",
+    "The MIT License",
+    "MIT License",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "BSD License",
+    "New BSD License",
+    "EPL-2.0",
+    "Eclipse Public License - v 2.0",
+    "Eclipse Public License v2.0",
+    "EDL-1.0",
+    "Eclipse Distribution License - v 1.0",
+    "Eclipse Distribution License (New BSD License)",
+    "CDDL-1.1",
+    "GPL-2.0-with-classpath-exception",
+    "Public Domain",
+    "CC0-1.0",
+    "Unlicense"
+  ],
+
+  "denylist": [
+    "Proprietary",
+    "Source-Available",
+    "MSAL",
+    "Moderne Source Available License",
+    "Commercial",
+    "Commercial-Only",
+    "BUSL-1.1",
+    "Business Source License",
+    "Elastic License",
+    "SSPL-1.0",
+    "Confluent Community License"
+  ],
+
+  "forbidden_artifacts": [
+    "org.openrewrite.recipe:rewrite-spring",
+    "org.openrewrite.recipe:rewrite-migrate-java-spring",
+    "io.moderne:moderne-recipe",
+    "io.moderne.recipe:rewrite-spring"
+  ],
+
+  "notes": [
+    "OpenRewrite core, java and maven modules are Apache-2.0 and are permitted as tools.",
+    "The Spring recipe estate is source-available and is forbidden as a runtime dependency (R8, R9).",
+    "An inference runtime's OSS license is never treated as evidence about the license of a model loaded into it."
+  ]
+}

@@ -1,0 +1,5 @@
+f48b7888b0016061a2d693686412a2d04822aa14c81c506114f9392c6bc8687b  E:/Virtusa Projects/bootshift/src
+# algorithm: sha256 over sorted "<relative-path>:<sha256-of-file>" lines
+# excludes: [/.git/, /target/, /build/, /out/, /bin/, /.idea/, /.gradle/, /node_modules/]
+# files walked (before excludes): 111
+# computed at: 2026-09-10T17:30:00.841989500Z

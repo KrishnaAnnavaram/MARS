@@ -1,0 +1,81 @@
+{
+  "issue_id": "INV-103",
+  "cwe": "CWE-502",
+  "research_status": "established",
+  "root_cause": {
+    "facts": [
+      "The request body `token` is attacker-controlled (@RequestBody) — observed at PreferencesController.java:16.",
+      "The decoded bytes are passed to ObjectInputStream.readObject() with no ObjectInputFilter and no resolveClass() override — observed at PreferencesController.java:18-19."
+    ],
+    "conclusions": [
+      "Arbitrary classes on the classpath are instantiated during readObject(), before any type is checked.",
+      "Whether this reaches remote code execution depends on a usable gadget chain among the service's transitive dependencies."
+    ],
+    "hypotheses": [
+      "A Spring-core style gadget is plausibly reachable on a Spring Boot classpath, but this has NOT been confirmed against this project's dependency tree."
+    ]
+  },
+  "threat": {
+    "actor": "Unauthenticated remote caller who can POST to the endpoint.",
+    "preconditions": ["Network reach to the endpoint", "A usable gadget chain on the classpath (for RCE); none needed for DoS"],
+    "attacker_input": "A base64-encoded, crafted Java serialized object graph in the request body.",
+    "vector": "HTTP POST /api/prefs/apply",
+    "violated_property": "Integrity of code execution (untrusted data must not become executable object graphs).",
+    "confidentiality_impact": "High (post-RCE: full data access)",
+    "integrity_impact": "High (arbitrary code / object state)",
+    "availability_impact": "High (deserialization bombs cause CPU/memory exhaustion without any gadget)",
+    "attack_narrative": "Attacker crafts a serialized payload -> posts it -> ObjectInputStream reconstructs the attacker's object graph -> gadget chain executes during readObject()."
+  },
+  "security_objective": "Untrusted, client-supplied bytes must never drive native Java object reconstruction.",
+  "candidates": [
+    {
+      "candidate_id": "CAND-001",
+      "approach": "Stop using native Java serialization on the wire. Accept the preferences as a JSON DTO bound by Jackson with default typing disabled, and delete the ObjectInputStream path.",
+      "security_mechanism": "Format change to a non-executable data format with no polymorphic type resolution.",
+      "affected_layer": "controller",
+      "advantages": ["Eliminates the root cause: no readObject() sink remains."],
+      "limitations": ["Breaks wire compatibility with clients that send the serialized token."],
+      "bypass_risks": ["Only if Jackson polymorphic/default typing is later enabled."],
+      "behavioral_risks": ["Old serialized tokens stop working (intended)."],
+      "implementation_complexity": "Low",
+      "validation_requirements": ["A JSON body binds and applies.", "A native serialized payload is rejected as malformed input."]
+    },
+    {
+      "candidate_id": "CAND-002",
+      "approach": "Keep ObjectInputStream but install a strict allow-list ObjectInputFilter (JEP 290) with maxdepth/maxrefs budgets.",
+      "security_mechanism": "Deserialization allow-list plus resource budget.",
+      "affected_layer": "input-validation",
+      "advantages": ["Preserves the existing wire format."],
+      "limitations": ["The allow-list must be maintained; an over-broad pattern re-opens the hole."],
+      "bypass_risks": ["A too-permissive filter pattern can still admit a gadget."],
+      "behavioral_risks": ["Legitimate but unlisted nested types would be rejected."],
+      "implementation_complexity": "Medium",
+      "validation_requirements": ["An allow-listed payload deserializes.", "A non-allow-listed class is rejected before instantiation."]
+    }
+  ],
+  "evaluation": [
+    { "candidate_id": "CAND-001", "eliminates_root_cause": true, "restores_objective": true, "bypassable": "no (no sink remains)", "other_entrypoints": "none", "fits_architecture": "yes", "regression_risk": "wire-compat only", "new_weakness": "none if default typing stays off", "verifiable_by_05_06": true, "simpler_safer_alt": "this is the simplest safe option" },
+    { "candidate_id": "CAND-002", "eliminates_root_cause": false, "restores_objective": "partially", "bypassable": "yes if allow-list too broad", "other_entrypoints": "future ObjectInputStreams unprotected", "fits_architecture": "acceptable", "regression_risk": "low", "new_weakness": "allow-list maintenance risk", "verifiable_by_05_06": true, "simpler_safer_alt": "CAND-001" }
+  ],
+  "recommendation": {
+    "candidate_id": "CAND-001",
+    "why_selected": "It removes the root cause entirely and is the smallest change that fully restores the security objective.",
+    "why_alternatives_rejected": "CAND-002 only constrains the sink and depends on an allow-list that silently re-opens the hole if mis-maintained.",
+    "security_property_restored": "Untrusted input can no longer cause instantiation of arbitrary classes.",
+    "expected_behavior_after": "Preferences are submitted as JSON; serialized tokens are rejected as malformed input.",
+    "known_limitations": ["Existing clients sending the serialized token must migrate to JSON."],
+    "residual_risk": "Low, provided Jackson default typing is never enabled on this path. Novel, internally-derived recommendation: human review required."
+  },
+  "validation_requirements": [
+    { "id": "TEST-001", "type": "positive", "assertion": "A valid JSON preferences body is applied." },
+    { "id": "TEST-002", "type": "security", "assertion": "A native Java serialized payload is no longer deserialized." },
+    { "id": "TEST-003", "type": "static", "assertion": "No ObjectInputStream.readObject() on request-derived bytes remains (SAST/grep gate)." }
+  ],
+  "provenance": {
+    "external_research_available": false,
+    "sources": [],
+    "reasoning": "Internally derived from the vulnerability evidence and established secure-coding principles for CWE-502. No external citation is claimed; confidence is Low.",
+    "candidate_count": 2
+  },
+  "confidence": "Low"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "04d-remediation-research",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent 4 deepest-gap fallback: structured, evidence-driven vulnerability research when a CWE is absent from BOTH the catalog and the knowledge base. This slice implements the deterministic vulnerability-understanding extractor only.",
+  "type": "commonjs",
+  "scripts": {
+    "research": "node scripts/research-context.js"
+  }
+}

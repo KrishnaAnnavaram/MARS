@@ -1,0 +1,14 @@
+{
+  "name": "05-verify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared skill for Phase C Step 1: re-scanner, red-team-recon and behavior-guard. Static/reasoning-based checks against any fix Fixer drafted a diff for (Compiled or Compile Failed) — no compiler invoked, no live database, no deployed instance.",
+  "type": "commonjs",
+  "scripts": {
+    "workload": "node scripts/list-workload.js",
+    "rescan": "node scripts/collect-rescan.js --all && node scripts/render-rescan.js --all",
+    "redteam": "node scripts/collect-redteam.js --all && node scripts/render-redteam.js --all",
+    "behavior": "node scripts/collect-behavior.js --all && node scripts/render-behavior.js --all"
+  },
+  "dependencies": {}
+}

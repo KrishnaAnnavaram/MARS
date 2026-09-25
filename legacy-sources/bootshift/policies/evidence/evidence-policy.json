@@ -1,0 +1,68 @@
+{
+  "name": "evidence-levels",
+  "version": "1.0.0",
+  "description": "The level a claim must reach before it may be published as fact, and before it may authorize a change.",
+  "levels": {
+    "E0": {
+      "name": "ASSERTED",
+      "description": "A statement with no artifact behind it",
+      "may_authorize_mutation": false,
+      "may_be_published_as_fact": false
+    },
+    "E1": {
+      "name": "DOCUMENTED",
+      "description": "Supported by a pinned vendor documentation snapshot",
+      "may_authorize_mutation": false,
+      "may_be_published_as_fact": false
+    },
+    "E2": {
+      "name": "STATIC",
+      "description": "Supported by source, AST or the build model",
+      "may_authorize_mutation": false,
+      "may_be_published_as_fact": true
+    },
+    "E3": {
+      "name": "ARTIFACT_VERIFIED",
+      "description": "The published artifact itself was inspected",
+      "may_authorize_mutation": true,
+      "may_be_published_as_fact": true
+    },
+    "E4": {
+      "name": "EXECUTED",
+      "description": "It compiled, or the tests actually ran",
+      "may_authorize_mutation": true,
+      "may_be_published_as_fact": true
+    },
+    "E5": {
+      "name": "DIFFERENTIALLY_VERIFIED",
+      "description": "OLD and NEW behaved identically",
+      "may_authorize_mutation": true,
+      "may_be_published_as_fact": true
+    }
+  },
+  "minimum_level_by_claim_kind": {
+    "VERSION_EXISTS": "E3",
+    "API_REMOVED": "E3",
+    "API_RENAMED": "E3",
+    "PROPERTY_RENAMED": "E3",
+    "PROPERTY_REMOVED": "E3",
+    "ARTIFACT_REMOVED": "E3",
+    "COMPONENT_COMPATIBLE": "E3",
+    "EDGE_COMPILES": "E4",
+    "SUITE_NOT_REGRESSED": "E4",
+    "APPLICATION_STARTS": "E4",
+    "BEHAVIOUR_UNCHANGED": "E5"
+  },
+  "shortfall_action": "REPORT_AS_UNPROVEN_AND_RAISE_EVIDENCE_SHORTFALL",
+  "uncovered_dimension_action": "REPORT_AS_UNOBSERVED_WITH_REASON",
+  "never": [
+    "Omit an uncovered dimension from the coverage statement",
+    "Let an E0 or E1 claim authorize a mutation",
+    "Report a dimension as passed when it was not evaluated"
+  ],
+  "manifest_verdicts": {
+    "VERIFIED": "Every referenced artifact is present and its hash matches",
+    "ARCHIVED": "Artifacts were pruned by retention; the manifest itself is intact",
+    "TAMPERED": "An artifact is present but its content no longer matches its recorded hash"
+  }
+}

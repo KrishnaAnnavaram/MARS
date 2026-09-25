@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Migration result",
+  "description": "The final defensible claim (spec section 38).",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "status",
+    "baseline_manifest_hash",
+    "evidence_manifest_hash",
+    "change_ledger_valid",
+    "unexplained_differences",
+    "evidence_shortfalls"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "MIGRATION_COMPLETE",
+        "BLOCKED",
+        "NEEDS_HUMAN"
+      ]
+    },
+    "source_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "target_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "edges_planned": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deterministic_coverage": {
+      "type": "number"
+    },
+    "final_source_tree_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "baseline_manifest_hash": {
+      "type": "string"
+    },
+    "evidence_manifest_hash": {
+      "type": "string"
+    },
+    "change_ledger_head": {
+      "type": "string"
+    },
+    "change_ledger_valid": {
+      "type": "boolean"
+    },
+    "change_ledger_events": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unexplained_differences": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "outstanding_approvals": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "evidence_shortfalls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unpublishable_claims": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "ledger_violations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

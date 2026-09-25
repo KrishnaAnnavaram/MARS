@@ -1,0 +1,21 @@
+{
+  "name": "01b-context-weaver",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Selects the architecturally significant nodes of the code graph, briefs an author on them, validates the resulting contextual descriptions, and serves them back to downstream agents",
+  "type": "commonjs",
+  "scripts": {
+    "workload": "node scripts/list-context-workload.js",
+    "validate": "node scripts/validate-context.js",
+    "lookup": "node scripts/lookup-context.js",
+    "generate": "node scripts/generate-descriptions.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.68.0",
+    "openai": "^4.104.0",
+    "@google/generative-ai": "^0.24.1"
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Version Migration — agent judgement input",
+  "description": "The judgement half of a migration report. Written by the agent to .github/.pipeline-context/version-migration/<slug>/migration.json once the build is green on the target runtime, and merged by scripts/render-migration-report.js with the script-generated facts (baseline.json, rounds/round-NN.json, runtime/*.json). Facts about what failed, what was built and what the app answered come from those records — never restate them here. This file carries only what a script cannot know: why each change was needed, which reference rule it came from, and what is left over.",
+  "type": "object",
+  "required": ["slug", "title", "summary", "migration", "round_notes"],
+  "additionalProperties": false,
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "The session slug, matching the directory name under .github/.pipeline-context/version-migration/."
+    },
+    "title": {
+      "type": "string",
+      "description": "One line naming the jump, e.g. \"Spring Boot 3.5.0 to 4.1.1 on Java 21\"."
+    },
+    "summary": {
+      "type": "string",
+      "description": "3-5 sentences a non-engineer can read: what moved, what had to change in the source because of it, and whether the application still behaves the same. State plainly if anything is unresolved."
+    },
+    "migration": {
+      "type": "object",
+      "required": ["reference_pack", "language", "platform"],
+      "additionalProperties": false,
+      "properties": {
+        "reference_pack": { "type": "string", "description": "Reference file this migration followed, e.g. references/spring-boot-3-to-4.md." },
+        "language": {
+          "type": "object",
+          "required": ["name", "from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "from": { "type": "string" },
+            "to": { "type": "string" }
+          }
+        },
+        "platform": {
+          "type": "object",
+          "required": ["name", "from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "description": "Framework or platform being moved, e.g. Spring Boot." },
+            "from": { "type": "string" },
+            "to": { "type": "string" }
+          }
+        }
+      }
+    },
+    "dependency_changes": {
+      "type": "array",
+      "description": "Every declared coordinate, property or plugin version that changed, including artifacts that were renamed, added or removed.",
+      "items": {
+        "type": "object",
+        "required": ["coordinate", "from", "to", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "coordinate": { "type": "string", "description": "groupId:artifactId, a property name, or a plugin id." },
+          "from": { "type": "string", "description": "Previous version, or \"absent\" / the old artifact name when renamed." },
+          "to": { "type": "string", "description": "New version, or \"removed\" when dropped." },
+          "reason": { "type": "string", "description": "One sentence citing the reference rule that required it." },
+          "kind": { "type": "string", "enum": ["version", "rename", "added", "removed", "property", "plugin"] }
+        }
+      }
+    },
+    "code_changes": {
+      "type": "array",
+      "description": "Source changes the framework or language jump forced. One entry per distinct change, not per line.",
+      "items": {
+        "type": "object",
+        "required": ["file", "what", "why"],
+        "additionalProperties": false,
+        "properties": {
+          "file": { "type": "string", "description": "Path relative to the project root." },
+          "category": { "type": "string", "description": "Short label grouping the change, e.g. \"JSON handling\", \"Health monitoring\", \"Test wiring\"." },
+          "what": { "type": "string", "description": "One sentence: what changed in this file." },
+          "why": { "type": "string", "description": "One sentence: the API/package/behaviour change that forced it." },
+          "reference_rule": { "type": "string", "description": "The heading or rule id in the reference pack this came from." },
+          "before": { "type": "string", "description": "Short before excerpt — the few lines that changed, not the whole file." },
+          "after": { "type": "string", "description": "The matching after excerpt." },
+          "found_in_round": { "type": "integer", "description": "Round whose errors surfaced this change, if it was error-driven." }
+        }
+      }
+    },
+    "round_notes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One entry per build round, in order. Explains what the round's errors meant and what was changed in response. The round's outcome and error counts come from the round record — do not repeat them.",
+      "items": {
+        "type": "object",
+        "required": ["round", "diagnosis", "changes"],
+        "additionalProperties": false,
+        "properties": {
+          "round": { "type": "integer" },
+          "diagnosis": { "type": "string", "description": "What this round's failures actually were, in one short paragraph. For round 0, what the pre-migration build and behaviour established." },
+          "changes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "What was changed in response, one line each. Empty for a round that needed no change."
+          },
+          "reference_rules": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Reference-pack rules applied in this round."
+          }
+        }
+      }
+    },
+    "behaviour": {
+      "type": "object",
+      "description": "Verdict on the before/after runtime comparison.",
+      "required": ["verdict"],
+      "additionalProperties": false,
+      "properties": {
+        "verdict": { "type": "string", "enum": ["unchanged", "changed", "not-compared"] },
+        "notes": { "type": "string", "description": "For \"changed\": exactly which probe differs and whether the difference is expected. For \"not-compared\": why the comparison could not be made." }
+      }
+    },
+    "out_of_scope_changes": {
+      "type": "array",
+      "description": "Changes made or noticed that the migration did NOT require — bug fixes, cleanups, configuration the team wanted anyway. Listing them here keeps the migration story honest; anything here must be presented as separate from the upgrade.",
+      "items": {
+        "type": "object",
+        "required": ["change", "why_separate"],
+        "additionalProperties": false,
+        "properties": {
+          "change": { "type": "string" },
+          "why_separate": { "type": "string", "description": "Why this is not caused by the version jump." }
+        }
+      }
+    },
+    "manual_follow_ups": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What a human must still do: deployment descriptors, infrastructure, credentials, load testing, anything the sandbox could not verify."
+    },
+    "residual_risk": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "What could still be wrong even though the build is green and the probes match."
+    }
+  }
+}

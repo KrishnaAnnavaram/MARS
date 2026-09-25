@@ -1,0 +1,16 @@
+{
+  "id": "ambiguous-simple-name",
+  "description": "Two application classes are both called Order, in different packages. The migration fact names the one in com.example.billing. A matcher that resolves by simple name rather than by fully qualified name will flag the catalogue Order as well.",
+  "tuning": true,
+  "fact": {
+    "type": "API_SIGNATURE_CHANGED",
+    "subject": "com.example.billing.Order",
+    "from": "com.example.billing.Order",
+    "to": "com.example.billing.Order"
+  },
+  "true_affected_paths": [
+    "billing-service/src/main/java/com/example/billing/Order.java"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict.",
+  "tuning_reason": "The miss this fixture exposed drove the package-plus-type-declaration match. Derived-from, therefore excluded from the reported numbers."
+}

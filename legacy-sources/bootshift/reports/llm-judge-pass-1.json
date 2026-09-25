@@ -1,0 +1,195 @@
+{
+  "judge_pass": 1,
+  "pipeline_run": 1,
+  "run_id": "RUN-01M267M0HBCW8KAGXQKF85WR67",
+  "judged_at": "2026-09-10T19:05:00Z",
+  "judge_note": "This is the only judge pass. Findings below were derived by reading the published Run-1 artifacts, the change ledger, the edge index and the run workspace, not the terminal output alone. No code was changed before this file was written.",
+
+  "run_outcome": {
+    "terminal_state": "STRUCTURED_REFUSAL",
+    "stopped_at": "12-transformation on EDGE-2-PATCH",
+    "analysis_half": "COMPLETE (stages 00-11 all SUCCESS)",
+    "edges_planned": 8,
+    "edges_complete": 1,
+    "stages_18_19_20_executed": false,
+    "consequence": "Approval, evidence sealing, the migration document and the provenance graph were never produced in Run 1."
+  },
+
+  "verified_invariants": [
+    {
+      "question": "Was the original ./src preserved?",
+      "answer": "YES",
+      "evidence": "reports/src-before-pipeline.sha256 = f48b7888b0016061a2d693686412a2d04822aa14c81c506114f9392c6bc8687b, recomputed identical immediately before Run 1. Bootstrap recorded original_snapshot_hash equal to migration_snapshot_hash; all mutation occurred under the external workspace root."
+    },
+    {
+      "question": "Was the baseline valid and sealed?",
+      "answer": "YES",
+      "evidence": "baseline-manifest.json sealed=true, hash 132e5db8da64002d, old_workspace_matches_original=true, 12 tests observed with 2 pre-existing failures recorded as debt."
+    },
+    {
+      "question": "Was build resolution authoritative?",
+      "answer": "YES",
+      "evidence": "build-model.json authoritative=true, kind=MAVEN, 9186 managed versions, 55 plugins, 1 repository and 2 resolution issues all present in the rehydrated model."
+    },
+    {
+      "question": "Was the target justified?",
+      "answer": "YES",
+      "evidence": "Spring Boot 3.5.16 selected AUTO_HIGHEST_SAFE_SUPPORTED; 4.0 and 4.1 eliminated because the application uses Spring Cloud and no GA train targets those lines. Landing Java 21 selected LTS_PREFERRED from installed {17,21}."
+    },
+    {
+      "question": "Were all required stepping stones present?",
+      "answer": "YES",
+      "evidence": "migration-path.json: majors_between_source_and_landing=1, major_boundaries_crossed=1; 8 edges PREPARATORY, PATCH, MAJOR_BOUNDARY(3.0), MINOR x4, LANDING. The stage self-check that refuses a path with fewer boundary edges than majors passed."
+    },
+    {
+      "question": "Did selected JDKs actually execute?",
+      "answer": "YES",
+      "evidence": "13-build-repair and 15-test both record toolchain.frozen_java_major=17 and executed_java_version=17.0.20.1 with executed_version_verified=true."
+    },
+    {
+      "question": "Were existing tests preserved?",
+      "answer": "YES",
+      "evidence": "12 tests at baseline, 12 at EDGE-1; classification 10 PASSED, 2 PRE_EXISTING_FAILURE. No test deleted, disabled or excluded; ledger contains only three MODIFY events, all JUnit 4 to Jupiter rewrites."
+    },
+    {
+      "question": "Were required OLD characterization scenarios frozen before mutation?",
+      "answer": "PARTIALLY",
+      "evidence": "82 scenarios built; 36 FROZEN by execution against the ORIGINAL application in stage 10, 34 UNOBSERVABLE_WITH_EXPLICIT_GAP, 12 AWAITING_OLD_OBSERVATION. The 12 unexecuted are correctly not treated as protection."
+    },
+    {
+      "question": "Were transformations authorized and traceable?",
+      "answer": "YES",
+      "evidence": "3 ledger events, all APPLIED, each with recipe_id, FILE_ID, before and after hashes and a patch reference; chain valid; scope assertion passed with zero violations."
+    },
+    {
+      "question": "Are human approvals genuine rather than machine-generated?",
+      "answer": "NOT APPLICABLE",
+      "evidence": "The approval stage never ran. No decision exists in the store, and none was fabricated."
+    }
+  ],
+
+  "findings": [
+    {
+      "id": "J1-001",
+      "classification": "HARNESS_IMPLEMENTATION_DEFECT",
+      "severity": "BLOCKING",
+      "title": "StageExecutor refuses every edge after the first",
+      "detail": "StageExecutor.hasReached evaluates a non-mutating required state (PLAN_FROZEN) with `!current.isMutating() && current.ordinal() >= required.ordinal()`. After EDGE-1 completes, current is EDGE_COMPLETE, which IS mutating, so the guard returns false and TransformationStage is refused for EDGE-2 with 'Required state PLAN_FROZEN has not been reached'. The precondition check I added to enforce stage ordering is itself what stopped the run.",
+      "evidence": "reports/pipeline-run-1.log final block; output/edge-index shows EDGE-1 COMPLETE and EDGE-2..8 at PLANNED only.",
+      "repairable": true,
+      "repair": "Answer a non-mutating precondition from the artifact plane (the published stage artifact that proves it) rather than from state ordinals, so being inside the edge loop cannot invalidate an analysis-half precondition."
+    },
+    {
+      "id": "J1-002",
+      "classification": "PLANNER_OR_KNOWLEDGE_DEFECT",
+      "severity": "MAJOR",
+      "title": "Per-edge fact scoping does not narrow: every edge receives every fact",
+      "detail": "PlannerStage.EdgeFact.appliesTo returns true unconditionally whenever the fact carries declared edge attribution, instead of testing membership, and it is never given the edge id to test against. The knowledge stage did its half correctly - 112 EDGE_EXACT, 887 ARTIFACT_VERSION_WINDOW, 692 SPAN_ONLY, 991 facts carrying explicit edge attribution from 8 per-edge BOM diffs - and the planner discards that attribution. All 8 edges therefore report identical verified_facts=1683 and identical deterministic_coverage=0.6791, which is precisely the defect Phase 2 exists to remove.",
+      "evidence": "11-plan/migration-plan.json edge_summary: every edge shows verified_facts 1683 and deterministic_coverage 0.6791. 08-knowledge/artifact-channel.json edge_attribution shows edge_boms_resolved=8, coordinates_attributed=108.",
+      "repairable": true,
+      "repair": "Pass the edge id into appliesTo and test declared-edge membership; keep interval intersection as the fallback for facts with no attribution."
+    },
+    {
+      "id": "J1-003",
+      "classification": "DIFFERENTIAL_VALIDATION_DEFECT",
+      "severity": "MAJOR",
+      "title": "Scenarios executed against both sides are discarded before comparison",
+      "detail": "36 scenarios were frozen against OLD and all 36 executed successfully against NEW, but only 18 were compared. compareScenarios skips any scenario whose dimension is not in the edge's differential_dimensions, and that list came from the impact set, which contained only CONTEXT_CAPABILITY. HTTP_API, SECURITY_AUTHORIZATION, SERIALIZATION and CONFIGURATION_BINDING observations exist on disk for both sides and were thrown away. Those dimensions will therefore be reported at E2 'no comparison executed' while the evidence to reach E4 was collected and discarded.",
+      "evidence": "16-runtime/scenario-observations-new.json successfully_executed=36; 17-differential/differential-report.json comparison_count=18, dimensions_covered_by_scenarios=[CONTEXT_CAPABILITY].",
+      "repairable": true,
+      "repair": "Compare every scenario that has an OLD and a NEW observation. The frozen dimension list should govern which classifications BLOCK the edge, not which observations are looked at."
+    },
+    {
+      "id": "J1-004",
+      "classification": "HARNESS_IMPLEMENTATION_DEFECT",
+      "severity": "MODERATE",
+      "title": "Documentation component detection labels ordinary OSS libraries as internal",
+      "detail": "ComponentDocumentationCatalog.detectComponents classifies any coordinate whose group does not start with a short allowlist of prefixes as 'internal:<group>'. Guava, ANTLR, Gson, Joda-Time, XStream, commons-*, Jersey and two dozen others were labelled internal, producing 37 entries in components_without_authoritative_source. That list is meant to show where the documentation channel is blind; padded with well-known OSS libraries it hides the genuine gaps (Hibernate Validator, Tomcat, Resilience4j, Cucumber).",
+      "evidence": "07-documentation/document-registry.json components_detected and components_without_authoritative_source.",
+      "repairable": true,
+      "repair": "Classify by whether the coordinate resolves from a public repository rather than by group-name prefix, and separate 'known OSS component with no catalogued document' from 'possibly organization-internal'."
+    },
+    {
+      "id": "J1-005",
+      "classification": "PLANNER_OR_KNOWLEDGE_DEFECT",
+      "severity": "MODERATE",
+      "title": "Every edge is planned at FULL_DIFFERENTIAL, including PATCH",
+      "detail": "All 8 edges froze validation_depth=FULL_DIFFERENTIAL. This is a consequence of J1-002: because every edge receives every impact finding, every edge sees a HIGH-risk finding and escalates to the maximum depth. A patch edge that changes only the parent POM version does not warrant the same behavioural depth as the Jakarta boundary, and uniform maximum depth is indistinguishable from having no depth calculation at all.",
+      "evidence": "11-plan/migration-plan.json edge_summary; validation_depth_calculation on each edge shows impact_required_depth=FULL_DIFFERENTIAL.",
+      "repairable": true,
+      "repair": "Fixed as a consequence of J1-002; verify in Run 2 that depth varies by edge class."
+    },
+    {
+      "id": "J1-006",
+      "classification": "EVIDENCE_OR_PROVENANCE_DEFECT",
+      "severity": "MODERATE",
+      "title": "No final evidence, migration document or provenance graph exists for Run 1",
+      "detail": "Because the run stopped at EDGE-2, stages 18, 19 and 20 never executed. There is no approval report, no evidence manifest, no claims, no coverage statement, no MIGRATION_DOCUMENT.md and no provenance graph. Nothing was fabricated to fill the gap, which is correct, but Run 1 produced no publishable claim at all.",
+      "evidence": "output/ contains 00-bootstrap through 17-differential and nothing else.",
+      "repairable": true,
+      "repair": "Follows from J1-001; the finalization stages will run once the edge loop can proceed."
+    },
+    {
+      "id": "J1-007",
+      "classification": "MISSING_EXTERNAL_INFRASTRUCTURE",
+      "severity": "ENVIRONMENTAL",
+      "title": "No OCI runtime daemon, so datastore-dependent dimensions cannot be compared",
+      "detail": "Docker is installed on this machine but its engine is not running. ContainerProvisioner correctly probed the daemon rather than the binary, found nothing answering, and recorded NO_OCI_RUNTIME plus UNPROVISIONED gaps for mongodb and scheduler. PERSISTENCE_STATE, QUERY_RESULT and TRANSACTION_EFFECT scenarios were emitted as UNOBSERVABLE_WITH_EXPLICIT_GAP and will be NOT_COMPARED. This is the harness behaving correctly under an environment limitation, not a defect.",
+      "evidence": "04-baseline/environment-equivalence.json equivalence_gaps; 10-characterization scenarios in state UNOBSERVABLE_WITH_EXPLICIT_GAP.",
+      "repairable": false,
+      "repair": "Not repairable in code. Requires a running container runtime on the execution host."
+    },
+    {
+      "id": "J1-008",
+      "classification": "SOURCE_APPLICATION_PREEXISTING_DEBT",
+      "severity": "INFORMATIONAL",
+      "title": "Two baseline test failures and two modules that cannot start without infrastructure",
+      "detail": "The original application has 2 failing tests before any migration change, configuaration-server fails to start outright, and employee-service cannot refresh its context without MongoDB. All three were captured in the sealed baseline and classified as PRE_EXISTING_FAILURE rather than as migration regressions.",
+      "evidence": "04-baseline/baseline-tests.json failing_tests=2; 04-baseline/baseline-runtime.json modules_started=4/6; 15-test classification_counts PRE_EXISTING_FAILURE=2.",
+      "repairable": false,
+      "repair": "Not a harness defect. Belongs to the application."
+    },
+    {
+      "id": "J1-009",
+      "classification": "EXPECTED_LIMITATION",
+      "severity": "INFORMATIONAL",
+      "title": "Coverage is unmeasurable for employee-service",
+      "detail": "employee-service produced no coverage report at baseline or at EDGE-1, so the coverage gate is reported as not evaluated for that module rather than as passed. Its test phase reports 0 tests executed.",
+      "evidence": "15-test/coverage-report.json module employee-service available=false, baseline_available=false, gate_triggered=false with an explicit gate_note.",
+      "repairable": false,
+      "repair": "The module's own test configuration; recorded as a gap rather than repaired by the harness."
+    },
+    {
+      "id": "J1-010",
+      "classification": "TEST_OR_CHARACTERIZATION_DEFECT",
+      "severity": "MINOR",
+      "title": "Twelve scenarios remain AWAITING_OLD_OBSERVATION",
+      "detail": "12 of 82 scenarios were neither executed against OLD nor marked unobservable. They belong to modules that started but whose specific endpoint could not be exercised. They are correctly excluded from the oracle set and from the NEW-side execution, so they protect nothing and are not counted as if they did, but they are also not converted into an explicit gap.",
+      "evidence": "10-characterization/characterization-scenarios.json by_state AWAITING_OLD_OBSERVATION=12.",
+      "repairable": true,
+      "repair": "Convert a scenario that failed to execute against OLD into UNOBSERVABLE_WITH_EXPLICIT_GAP carrying the execution failure, so the coverage statement counts it as a declared gap."
+    }
+  ],
+
+  "blocking_findings": ["J1-001"],
+  "repairable_findings": ["J1-001", "J1-002", "J1-003", "J1-004", "J1-005", "J1-006", "J1-010"],
+  "human_only_findings": [],
+  "environment_findings": ["J1-007", "J1-008", "J1-009"],
+
+  "claims_stronger_than_evidence": [
+    {
+      "check": "Does any dimension claim E4 without executed OLD/NEW comparisons?",
+      "result": "NO CLAIM WAS PUBLISHED AT ALL in Run 1, because stage 19 never ran. The mechanical level assignment was therefore not exercised end to end and must be verified in Run 2."
+    },
+    {
+      "check": "Is deterministic coverage presented as migration completeness?",
+      "result": "NO. residual-report.json carries an explicit metric_scope statement saying the figure measures rule availability for known facts and not fact-set completeness."
+    },
+    {
+      "check": "Is the impact accuracy figure presented as general accuracy?",
+      "result": "NO. reports/impact-accuracy.json records 11 held-out fixtures with an explicit scope warning, and the 5 fixtures whose failures drove analyzer changes are excluded as tuning."
+    }
+  ],
+
+  "decision": "REPAIR_ONCE"
+}

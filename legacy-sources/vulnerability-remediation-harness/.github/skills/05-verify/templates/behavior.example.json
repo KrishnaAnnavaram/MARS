@@ -1,0 +1,12 @@
+{
+  "issue_id": "ISSUE-000",
+  "verdict": "BEHAVIOR_PRESERVED",
+  "confidence": "High",
+  "plain_summary": "Illustrative example only. Search results for normal, legitimate searches look exactly the same as before.",
+  "in_scope_changes": [
+    "Query construction switched from BasicQuery/StringBuilder to Criteria/Query — this is the fix plan's stated approach.",
+    "The log.info call now logs query.getQueryObject().toJson() instead of the raw StringBuilder — the fix plan flagged this as necessary so the log statement keeps showing the effective query; still functionally equivalent diagnostic output, not a new capability."
+  ],
+  "out_of_scope_changes": [],
+  "reasoning": "The method signature, return type, and every call site are unchanged. The only externally observable difference for a legitimate caller is that a name value containing regex metacharacters is now treated literally instead of as a real regex — which is the fix plan's explicitly intended behavior change (per the issue's own Expected Behavior section), not an unintended one."
+}

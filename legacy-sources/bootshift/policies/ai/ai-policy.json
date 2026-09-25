@@ -1,0 +1,71 @@
+{
+  "name": "ai-boundary",
+  "version": "1.0.0",
+  "description": "Where AI may and may not act. Enforced by AiBoundaryTest and by the pre-apply gates in Agent 13; this file parameterizes those gates, it does not grant authority.",
+  "enabled_by_default": false,
+  "rule_r9": "No AI output is ever an authorization for a change.",
+  "rule_r10": "The harness runs end-to-end with AI disabled, and does so in CI.",
+  "rule_r11": "AI output reaches the filesystem only through FileMutationGateway.",
+  "provider": {
+    "kind": "LOCAL_OSS_ONLY",
+    "endpoint_constraint": "LOOPBACK_ONLY",
+    "remote_inference": "FORBIDDEN",
+    "model_license_check": "SEPARATE_FROM_RUNTIME_LICENSE",
+    "unknown_model_license": "BLOCK"
+  },
+  "permitted_uses": [
+    "Suggest a repair for a compiler diagnostic cluster",
+    "Cluster diagnostics by probable root cause",
+    "Draft a rationale for a human to review",
+    "Summarize a pinned documentation snapshot",
+    "Propose characterization scenarios",
+    "Explain a graph query result"
+  ],
+  "forbidden_uses": [
+    "Decide that a version is compatible",
+    "Authorize a mutation",
+    "Approve its own patch",
+    "Classify a test failure as expected",
+    "Decide a behavioural difference is acceptable",
+    "Write to the filesystem directly"
+  ],
+  "pre_apply_gates": [
+    "IN_AUTHORIZED_SCOPE",
+    "PARSES",
+    "COMPILES",
+    "TESTS_STILL_PASS",
+    "WITHIN_BUDGET"
+  ],
+  "gate_order_is_significant": true,
+  "gate_failure_action": "REJECT_AND_RECORD",
+  "budgets": {
+    "max_total_attempts": 12,
+    "max_attempts_per_root_cause": 3,
+    "max_files_per_patch": 3,
+    "max_changed_lines_per_patch": 80,
+    "over_budget_action": "RAISE_BROAD_RESIDUAL_PATCH_GATE"
+  },
+  "on_accepted_patch": {
+    "ledger_author": "AI",
+    "approval_gate": "HIGH_RISK_AI_PATCH",
+    "validation_depth": "DIFFERENTIAL",
+    "attribution_artifact": "ai-attributed-changes.json"
+  },
+  "prompt_content": {
+    "secrets": "NEVER_INCLUDED",
+    "redaction": "SensitiveValues.redact applied to every prompt segment",
+    "included": [
+      "diagnostic text",
+      "surrounding source",
+      "VERIFIED migration facts"
+    ],
+    "excluded": [
+      "credentials",
+      "connection strings",
+      "tokens",
+      "keys",
+      "any SECRET_REFERENCE value"
+    ]
+  },
+  "every_attempt_recorded": true
+}

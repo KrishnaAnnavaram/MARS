@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Merge Arbitration — agent narrative input",
+  "description": "Written by the merge-arbiter agent to .github/.pipeline-context/merge/<issue_id>.arbitration.json after reading <issue_id>.score.json (the deterministic score, gates, and computed decision from compute-score.js). Consumed by scripts/render-verdict.js. The score and computed decision are facts this file does not alter. A visible override may only make a computed Cleared decision more conservative by blocking it.",
+  "type": "object",
+  "required": ["issue_id", "narrative"],
+  "additionalProperties": false,
+  "properties": {
+    "issue_id": { "type": "string" },
+    "narrative": {
+      "type": "string",
+      "description": "Plain-language explanation of the decision: what the five checks found, why the score/gates land where they do, and what a reviewer should read first if they want to understand this patch's readiness in one paragraph."
+    },
+    "override": {
+      "type": "object",
+      "required": ["applied"],
+      "additionalProperties": false,
+      "properties": {
+        "applied": {
+          "type": "boolean",
+          "default": false,
+          "description": "False by default — the computed decision stands. Set true only to change a computed Cleared decision to Blocked with a specific, evidenced reason. An override is never silent: render-verdict.js always shows both decisions side by side."
+        },
+        "decision": {
+          "type": "string",
+          "enum": ["Blocked"],
+          "description": "Required when applied is true. An override may only block; it may not clear a computed Blocked decision."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Required when applied is true. Must cite specific evidence from one or more of the five upstream reports — never a general feeling of confidence or caution."
+        }
+      }
+    }
+  }
+}

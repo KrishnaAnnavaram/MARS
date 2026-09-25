@@ -1,0 +1,6 @@
+{
+  "reattachment_rule": 4,
+  "rename_source": "CONTENT_HASH",
+  "same_file_id": true,
+  "why": "No git history is available, but an absent file has this exact content hash. Rule 4 matches before similarity is ever consulted."
+}

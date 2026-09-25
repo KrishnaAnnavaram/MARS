@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "artifact_type": "inventory-artifact",
+  "run_id": "RUN-01M24YQ8HRR9EDNHZCV1K8DRTT",
+  "stage": "01-inventory",
+  "produced_at": "2026-09-10T06:06:29.786Z",
+  "producer": "com.bootshift.stages.stage01.InventoryStage",
+  "inputs": [],
+  "blind_spots": [],
+  "gaps": [],
+  "payload": {
+    "run_id": "RUN-SOMETHING-ELSE",
+    "gaps": [
+      "shadowing a reserved key"
+    ]
+  },
+  "_why_invalid": "The payload shadows the reserved keys run_id and gaps. StageSupport.compose throws on this, which is how four real defects were caught during construction rather than in a downstream consumer."
+}

@@ -1,0 +1,16 @@
+{
+  "base_url": "http://localhost:8081",
+  "auth": { "type": "basic", "username": "demo", "password": "demo123" },
+  "readiness": { "path": "/actuator/health", "timeout_seconds": 150 },
+  "requests": [
+    { "name": "health is public", "method": "GET", "path": "/actuator/health", "no_auth": true },
+    { "name": "list all employees", "method": "GET", "path": "/api/v1/employees" },
+    { "name": "get employee 1", "method": "GET", "path": "/api/v1/employees/1" },
+    { "name": "missing employee is 404", "method": "GET", "path": "/api/v1/employees/99999" },
+    { "name": "search by department", "method": "GET", "path": "/api/v1/employees/search?department=Engineering" },
+    { "name": "high earners", "method": "GET", "path": "/api/v1/employees/high-earners?salary=50000" },
+    { "name": "unauthenticated is rejected", "method": "GET", "path": "/api/v1/employees", "no_auth": true },
+    { "name": "bad credentials rejected", "method": "GET", "path": "/api/v1/employees", "no_auth": true, "headers": { "Authorization": "Basic ZGVtbzp3cm9uZw==" } },
+    { "name": "validation rejects empty body", "method": "POST", "path": "/api/v1/employees", "body": {} }
+  ]
+}

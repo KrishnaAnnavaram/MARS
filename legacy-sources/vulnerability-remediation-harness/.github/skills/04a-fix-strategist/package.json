@@ -1,0 +1,13 @@
+{
+  "name": "04a-fix-strategist",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reads root cause (and blast radius) reports, matches the defect against a CWE-aligned remediation pattern catalog, and renders docs/agent_output/04-remediation/fix_plan_<issue_id>.md as a human-approval checkpoint before any code is written.",
+  "type": "commonjs",
+  "scripts": {
+    "workload": "node scripts/list-remediation-workload.js",
+    "context": "node scripts/collect-remediation-context.js --all",
+    "render": "node scripts/render-fix-plan.js --all"
+  },
+  "dependencies": {}
+}
