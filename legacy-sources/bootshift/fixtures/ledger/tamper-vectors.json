@@ -1,0 +1,46 @@
+{
+  "description": "Every way an append-only hash chain can be attacked, and the verdict the harness must return. ChangeLedgerTamperTest injects each one.",
+  "chain": "SHA256(previous_hash || canonical_json(event))",
+  "vectors": [
+    {
+      "id": "TV-01",
+      "attack": "Modify a field in an event in the middle of the chain",
+      "expected": "TAMPERED at that index"
+    },
+    {
+      "id": "TV-02",
+      "attack": "Insert a fabricated event between two real ones",
+      "expected": "TAMPERED at the insertion point"
+    },
+    {
+      "id": "TV-03",
+      "attack": "Delete an event from the middle",
+      "expected": "TAMPERED at the following index"
+    },
+    {
+      "id": "TV-04",
+      "attack": "Reorder two adjacent events",
+      "expected": "TAMPERED at the first reordered index"
+    },
+    {
+      "id": "TV-05",
+      "attack": "Truncate the tail and rewrite the head pointer",
+      "expected": "TAMPERED: head does not match the recomputed chain"
+    },
+    {
+      "id": "TV-06",
+      "attack": "Append after the ledger is sealed",
+      "expected": "Refused; reopening requires an explicit reopen with a reason"
+    },
+    {
+      "id": "TV-07",
+      "attack": "Recompute the whole chain after editing an event",
+      "expected": "Head no longer matches the recorded seal hash"
+    },
+    {
+      "id": "TV-08",
+      "attack": "Replace the head pointer file alone",
+      "expected": "TAMPERED: recomputed chain disagrees with the pointer"
+    }
+  ]
+}

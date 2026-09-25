@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lifecycle registry",
+  "description": "Tier-1 support lifecycle with explicit evidence quality. Only VERIFIED evidence may eliminate a target.",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "component",
+    "releases"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "component": {
+      "type": "string"
+    },
+    "as_of": {
+      "type": "string"
+    },
+    "evaluated_on": {
+      "type": "string"
+    },
+    "curated_table_stale": {
+      "type": "boolean"
+    },
+    "online": {
+      "type": "boolean"
+    },
+    "releases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "line",
+          "lifecycle_evidence_quality"
+        ],
+        "properties": {
+          "line": {
+            "type": "string"
+          },
+          "latest_patch": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "eol": {
+            "type": "boolean"
+          },
+          "support_horizon_months": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "lifecycle_evidence_quality": {
+            "enum": [
+              "VERIFIED",
+              "ADVISORY",
+              "ESTIMATED",
+              "UNKNOWN"
+            ]
+          },
+          "lifecycle_source": {
+            "type": "string"
+          },
+          "spring_cloud_train": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

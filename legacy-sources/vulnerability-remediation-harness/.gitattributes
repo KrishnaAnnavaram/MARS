@@ -1,0 +1,30 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Explicit per-type rules
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.feature text eol=lf
+.gitattributes text eol=lf
+.gitignore text eol=lf
+
+# Windows scripts must keep CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Unix scripts must keep LF
+mvnw text eol=lf
+
+# Binary files
+*.jar binary
+*.war binary
+*.ear binary
+*.class binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary

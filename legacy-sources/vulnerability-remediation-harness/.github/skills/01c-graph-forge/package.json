@@ -1,0 +1,14 @@
+{
+  "name": "01c-graph-forge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loads Code Cartographer artifacts.json into a Neo4j graph modeling modules, types and their relationships",
+  "type": "commonjs",
+  "scripts": {
+    "graph": "node scripts/build-graph.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "neo4j-driver": "^5.27.0"
+  }
+}

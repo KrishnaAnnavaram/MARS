@@ -1,0 +1,14 @@
+{
+  "note": "This file is not a fixture. Fixtures are directories containing fixture.json and tree/.",
+  "contract": {
+    "fixture.json": {
+      "id": "string",
+      "description": "why this case exists and what it would catch",
+      "tuning": "true if the analyzer's rules were derived from this case; excluded from numbers",
+      "fact": "the migration fact handed to the matcher",
+      "true_affected_paths": "the ground truth, relative to tree/"
+    },
+    "tree/": "a small source tree the matcher runs over"
+  },
+  "forbidden": "A fixture must never declare what the matcher is expected to predict. Grading a prediction that came from the fixture file measures nothing."
+}

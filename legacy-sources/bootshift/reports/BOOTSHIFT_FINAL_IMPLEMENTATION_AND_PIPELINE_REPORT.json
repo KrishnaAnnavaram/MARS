@@ -1,0 +1,263 @@
+{
+  "report": "BOOTSHIFT_FINAL_IMPLEMENTATION_AND_PIPELINE_REPORT",
+  "generated_at": "2026-09-10T20:05:00Z",
+  "repository": "E:\\Virtusa Projects\\bootshift",
+
+  "verdict": {
+    "harness": "BUILDS_AND_TESTS_CLEAN",
+    "migration": "INCOMPLETE_BLOCKED",
+    "terminal_state": "POLICY_BLOCK",
+    "blocked_at": "EDGE-2-PATCH / 17-differential",
+    "edges_planned": 8,
+    "edges_complete": 1,
+    "edges_attempted": 2,
+    "summary": "The analysis half completed, one edge completed, and the second edge was refused because the harness found a behavioural difference between the original and migrated discovery-service that no verified migration fact and no human decision explained. The refusal is the designed terminal state for an unexplained difference, not a failure of the harness. Run 2 was the final verification; no judging or repair followed it, and the finding was not suppressed, approved, reclassified or narrowed away."
+  },
+
+  "harness_build": {
+    "command": "mvn -o clean install -DskipTests && mvn -o test",
+    "result": "BUILD SUCCESS",
+    "tests_run": 190,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "skip_reason": "pre-existing platform-conditional test in MutationBoundaryTest"
+  },
+
+  "source_integrity": {
+    "invariant": "./src is INPUT ONLY and is never modified by a migration run",
+    "algorithm": "sha256 over sorted \"<relative-path>:<sha256-of-file>\" lines",
+    "files_walked": 111,
+    "before_run_1": "f48b7888b0016061a2d693686412a2d04822aa14c81c506114f9392c6bc8687b",
+    "after_run_2": "f48b7888b0016061a2d693686412a2d04822aa14c81c506114f9392c6bc8687b",
+    "identical": true
+  },
+
+  "target_resolution": {
+    "source_version": "2.7.12",
+    "landing_version": "3.5.16",
+    "selection_mode": "AUTO_HIGHEST_SAFE_SUPPORTED",
+    "eliminated": [
+      {"version_line": "4.0", "reason": "application uses Spring Cloud and no GA release train targets this line"},
+      {"version_line": "4.1", "reason": "application uses Spring Cloud and no GA release train targets this line"}
+    ],
+    "policy_required": "policies/default/production-eol-exception.json",
+    "policy_reason": "every Spring Boot 3.x line is past OSS support; the exception permits an EOL landing target only because the ecosystem offers no compliant alternative",
+    "landing_java": 21,
+    "java_selection_rule": "LTS_PREFERRED over installed JDKs {17, 21}, read from the machine and not from the harness JVM",
+    "majors_between_source_and_landing": 1,
+    "major_boundaries_crossed": 1,
+    "boundary_self_check": "PASSED"
+  },
+
+  "migration_path": [
+    {"edge_id": "EDGE-1-PREP-TEST", "edge_class": "PREPARATORY", "from": "2.7.12", "to": "2.7.12", "java": 17, "spring_cloud": "2021.0.9", "recipes": 1, "facts_in_force": 692, "deterministic_coverage": 0.9697, "status": "COMPLETE"},
+    {"edge_id": "EDGE-2-PATCH", "edge_class": "PATCH", "from": "2.7.12", "to": "2.7.18", "java": 17, "spring_cloud": "2021.0.9", "recipes": 4, "facts_in_force": 1388, "deterministic_coverage": 0.8220, "status": "BLOCKED"},
+    {"edge_id": "EDGE-3-MAJOR-3", "edge_class": "MAJOR_BOUNDARY", "from": "2.7.18", "to": "3.0.13", "java": 17, "spring_cloud": "2022.0.5", "recipes": 33, "facts_in_force": 1682, "deterministic_coverage": 0.6795, "status": "NOT_STARTED"},
+    {"edge_id": "EDGE-4-MINOR", "edge_class": "MINOR", "from": "3.0.13", "to": "3.1.12", "java": 21, "spring_cloud": "2022.0.5", "recipes": 4, "facts_in_force": 1551, "deterministic_coverage": 0.7357, "status": "NOT_STARTED"},
+    {"edge_id": "EDGE-5-MINOR", "edge_class": "MINOR", "from": "3.1.12", "to": "3.2.12", "java": 21, "spring_cloud": "2023.0.5", "recipes": 4, "facts_in_force": 1420, "deterministic_coverage": 0.8035, "status": "NOT_STARTED"},
+    {"edge_id": "EDGE-6-MINOR", "edge_class": "MINOR", "from": "3.2.12", "to": "3.3.13", "java": 21, "spring_cloud": "2023.0.6", "recipes": 4, "facts_in_force": 1459, "deterministic_coverage": 0.7820, "status": "NOT_STARTED"},
+    {"edge_id": "EDGE-7-MINOR", "edge_class": "MINOR", "from": "3.3.13", "to": "3.4.13", "java": 21, "spring_cloud": "2024.0.3", "recipes": 4, "facts_in_force": 1578, "deterministic_coverage": 0.7231, "status": "NOT_STARTED"},
+    {"edge_id": "EDGE-8-LANDING", "edge_class": "LANDING", "from": "3.4.13", "to": "3.5.16", "java": 21, "spring_cloud": "2025.0.3", "recipes": 4, "facts_in_force": 1576, "deterministic_coverage": 0.7240, "status": "NOT_STARTED"}
+  ],
+
+  "pipeline_run_1": {
+    "run_id": "RUN-01M267M0HBCW8KAGXQKF85WR67",
+    "artifact_plane": "output-run-1/",
+    "stages_00_to_11": "ALL_SUCCESS",
+    "edges_complete": 1,
+    "terminal": "STRUCTURED_REFUSAL",
+    "detail": "Required state PLAN_FROZEN has not been reached (current: EDGE_COMPLETE)",
+    "stages_18_19_20_executed": false,
+    "changes_applied": 3
+  },
+
+  "judge_pass": {
+    "passes_performed": 1,
+    "decision": "REPAIR_ONCE",
+    "written_before_any_code_change": true,
+    "over_claims_found": 0,
+    "reports": ["reports/llm-judge-pass-1.md", "reports/llm-judge-pass-1.json"]
+  },
+
+  "repair_pass": {
+    "passes_performed": 1,
+    "report": "reports/judge-repair-pass.md",
+    "files_changed": [
+      "stages/src/main/java/com/bootshift/stages/StageExecutor.java",
+      "stages/src/main/java/com/bootshift/stages/stage11/PlannerStage.java",
+      "stages/src/main/java/com/bootshift/stages/stage17/DifferentialStage.java",
+      "stages/src/main/java/com/bootshift/stages/stage07/ComponentDocumentationCatalog.java",
+      "stages/src/main/java/com/bootshift/stages/stage07/DocumentationStage.java",
+      "stages/src/main/java/com/bootshift/stages/stage10/CharacterizationStage.java",
+      "tests/src/test/java/com/bootshift/tests/pipeline/JudgeRepairRegressionTest.java",
+      "README.md"
+    ],
+    "regression_tests_added": 13,
+    "prohibited_actions_taken": [],
+    "note": "Repair 3 makes validation strictly stronger and can turn a passing run into a blocking one. It did."
+  },
+
+  "pipeline_run_2": {
+    "run_id": "RUN-01M26B99S7GWBDP1CSDV6Q5QV6",
+    "artifact_plane": "output/",
+    "launch_attempts": 3,
+    "aborted_launches": [
+      {"cause": "OPERATOR_ERROR", "detail": "the CLI resumed run 1's state instead of creating a fresh run; no code involved", "artifacts": null},
+      {"cause": "OPERATOR_ERROR", "detail": "launched from a shell with JAVA_HOME stripped, so the project's mvnw.cmd could not find a JVM and build resolution degraded to non-authoritative; no code involved", "artifacts": "output-run-2-aborted-launch-env/"}
+    ],
+    "stages": {
+      "00-bootstrap": "SUCCESS", "01-inventory": "SUCCESS", "02-build": "SUCCESS",
+      "03-graph": "SUCCESS", "04-baseline": "SUCCESS", "05-compatibility": "SUCCESS",
+      "06-target": "SUCCESS", "07-documentation": "SUCCESS", "08-knowledge": "SUCCESS",
+      "09-impact": "SUCCESS", "10-characterization": "SUCCESS", "11-plan": "SUCCESS",
+      "12-transformation": "SUCCESS", "13-build-repair": "SUCCESS", "14-graph-diff": "SUCCESS",
+      "15-test": "SUCCESS", "16-runtime": "SUCCESS", "17-differential": "POLICY_BLOCK",
+      "18-approval": "NOT_REACHED", "19-evidence": "NOT_REACHED", "20-export": "NOT_REACHED"
+    },
+    "oss_license_gate": "PASSED",
+    "forbidden_estates_loadable_at_runtime": [],
+    "inventory": {"files": 99, "modules": 6},
+    "build_model": {"authoritative": true, "kind": "MAVEN", "dependencies": 962, "unresolved": 0},
+    "graph": {"nodes": 839, "edges": 1852, "symbols": 239, "attribution_ratio": 0.6858, "content_hash": "5b764c29af1e9937882aa10e3c09c04e44dcf7923c5a81f10d231b00ec615ed2", "reproduced_run_1": true},
+    "baseline": {"sealed": true, "old_workspace_matches_original": true, "tests": 12, "pre_existing_failures": 2, "modules_started": 4, "modules_total": 6},
+    "documentation": {"documents_pinned": 21, "catalogue_gaps": 8, "public_without_catalogued_document": 191, "possibly_internal": 0},
+    "knowledge": {"facts": 1691, "verified": 1683},
+    "impact": {"findings": 2072, "definitely_affected": 502, "possibly_affected": 4, "unaffected_within_observed_coverage": 1566, "affected_files": 27},
+    "characterization": {"scenarios": 82, "frozen_oracles": 36, "unobservable_with_explicit_gap": 46, "awaiting_old_observation": 0},
+    "changes_applied": 19,
+    "change_status_counts": {"APPLIED": 19},
+    "change_providers": {"BOOTSHIFT_DETERMINISTIC": 19},
+    "ai_proposed_changes_applied": 0
+  },
+
+  "edges_executed": [
+    {
+      "edge_id": "EDGE-1-PREP-TEST",
+      "outcome": "COMPLETE",
+      "phases_reached": ["PLANNED","TRANSFORMED","COMPILED","GRAPH_VERIFIED","TESTED","RUNTIME_VALIDATED","DIFFERENTIAL_VALIDATED","COMPLETE"],
+      "changes": 3,
+      "recipes": {"test.junit4-to-jupiter": 3},
+      "build_rounds": 1,
+      "toolchain": {"frozen_java_major": 17, "executed_java_version": "17.0.20.1", "executed_version_verified": true},
+      "scope_violations": 0,
+      "tests": {"total": 12, "PASSED": 10, "PRE_EXISTING_FAILURE": 2},
+      "runtime_modules_started": 4,
+      "scenarios_executed_on_new": 36,
+      "differential": {"comparisons": 82, "IDENTICAL": 36, "NOT_COMPARED": 46, "UNEXPLAINED": 0}
+    },
+    {
+      "edge_id": "EDGE-2-PATCH",
+      "outcome": "BLOCKED",
+      "phases_reached": ["PLANNED","TRANSFORMED","COMPILED","GRAPH_VERIFIED","TESTED","RUNTIME_VALIDATED","DIFFERENTIAL_VALIDATED"],
+      "changes": 16,
+      "recipes": {"maven.parent-version": 6, "maven.managed-version": 6, "java.remove-annotation": 4},
+      "build_rounds": 1,
+      "toolchain": {"frozen_java_major": 17, "executed_java_version": "17.0.20.1", "executed_version_verified": true},
+      "scope_violations": 0,
+      "tests": {"total": 12, "PASSED": 10, "PRE_EXISTING_FAILURE": 2},
+      "runtime_modules_started": 4,
+      "scenarios_executed_on_new": 36,
+      "differential": {"comparisons": 82, "IDENTICAL": 35, "NOT_COMPARED": 46, "UNEXPLAINED": 1}
+    }
+  ],
+
+  "blocking_finding": {
+    "scenario_id": "SCN-00047",
+    "dimension": "CONFIGURATION_BINDING",
+    "module": "discovery-service",
+    "target": "/actuator/configprops",
+    "classification": "UNEXPLAINED",
+    "plan_required_dimension": false,
+    "old_property_path_count": 236,
+    "new_property_path_count": 237,
+    "paths_only_in_old": [],
+    "paths_only_in_new": ["contexts.application.beans.spring.cloud.loadbalancer-org.springframework.cloud.client.loadbalancer.LoadBalancerClientsProperties.properties.callGetWithRequestOnDelegates"],
+    "cause": "moving Spring Cloud 2021.0.7 -> 2021.0.9 alongside the Boot patch made a load-balancer property bindable that was not bindable before",
+    "why_unexplained": "no verified migration fact names this property and no human decision covers it",
+    "why_found_at_all": "the comparison ran only because repair 3 stopped discarding scenarios whose dimension the edge plan had not named; before the repair both observations were collected and neither was compared",
+    "resolution_required": "a human with authority over discovery-service must record a decision through the decision store, or a verified migration fact covering the property must be added. The harness will not manufacture either."
+  },
+
+  "repair_effectiveness": [
+    {"finding": "J1-001", "run_1": "refused at EDGE-2 with PLAN_FROZEN not reached", "run_2": "EDGE-2 transformed, built, tested, ran and compared", "verdict": "FIXED"},
+    {"finding": "J1-002", "run_1": "all 8 edges 1683 facts / coverage 0.6791", "run_2": "692-1682 facts, coverage 0.6795-0.9697, boundary edge lowest", "verdict": "FIXED"},
+    {"finding": "J1-003", "run_1": "36 executed, 18 compared, 1 dimension", "run_2": "36 executed, 82 compared, 5 dimensions", "verdict": "FIXED"},
+    {"finding": "J1-004", "run_1": "37 spurious internal: entries", "run_2": "0 possibly-internal, 8 catalogue gaps, 191 public-without-document", "verdict": "FIXED"},
+    {"finding": "J1-005", "run_1": "all edges FULL_DIFFERENTIAL", "run_2": "all edges FULL_DIFFERENTIAL", "verdict": "NOT_FIXED", "note": "the judge's diagnosis was wrong: scoping facts per edge did not make depth vary, because even the smallest edge contains a HIGH-risk impact finding. The real cause is that the risk model does not discriminate between edge classes. Left alone under the no-further-repair rule."},
+    {"finding": "J1-006", "run_1": "stages 18-20 never ran", "run_2": "stages 18-20 never ran", "verdict": "NOT_FIXED", "note": "the gate is correct; the cause moved from a harness bug to a genuine behavioural finding"},
+    {"finding": "J1-010", "run_1": "12 scenarios pending", "run_2": "0 pending, 46 declared gaps", "verdict": "FIXED"}
+  ],
+
+  "invariants": [
+    {"invariant": "./src is input only and never modified", "status": "HOLDS", "evidence": "tree hash identical before run 1 and after run 2 across 111 files"},
+    {"invariant": "cryptographic OLD baseline captured before any mutation", "status": "HOLDS", "evidence": "baseline sealed, old workspace matches original, captured before edge 1"},
+    {"invariant": "FileMutationGateway is the only authorized writer", "status": "HOLDS", "evidence": "19 ledger entries; ArchUnit rule gatewayIsTheOnlyMutationPort enforces it at build time"},
+    {"invariant": "every source change carries full attribution", "status": "HOLDS", "evidence": "each entry carries change_id, edge_id, file_id, before_sha256, after_sha256, provider, recipe_id, operation, patch_ref, knowledge_refs, impact_refs, symbols_changed"},
+    {"invariant": "AI may propose but never authorize", "status": "HOLDS", "evidence": "zero AI-proposed changes applied; all 19 deterministic"},
+    {"invariant": "AI changes receive equal or stronger validation", "status": "HOLDS_VACUOUSLY", "evidence": "no AI change existed"},
+    {"invariant": "no test disabled, deleted or weakened; no coverage narrowed", "status": "HOLDS", "evidence": "12 application tests before and after both edges; harness suite grew to 190"},
+    {"invariant": "documentation alone does not authorize mutation", "status": "HOLDS", "evidence": "all 19 changes carry artifact-channel fact references"},
+    {"invariant": "unknown means UNKNOWN", "status": "HOLDS", "evidence": "46 scenarios UNOBSERVABLE_WITH_EXPLICIT_GAP, 0 pending"},
+    {"invariant": "unobserved means NOT_COMPARED", "status": "HOLDS", "evidence": "92 NOT_COMPARED across two edges, each with a stated reason"},
+    {"invariant": "unexplained behavioural differences remain blocking", "status": "HOLDS", "evidence": "run 2 terminated POLICY_BLOCK on exactly one such difference"},
+    {"invariant": "human decisions come only from the human-decision mechanism", "status": "HOLDS", "evidence": "decision store empty; no approval fabricated or impersonated"},
+    {"invariant": "every claim has evidence and a coverage statement", "status": "HOLDS", "evidence": "coverage_statement section of this document"},
+    {"invariant": "remaining blind spots described honestly", "status": "HOLDS", "evidence": "blind_spots section of this document"}
+  ],
+
+  "coverage_statement": {
+    "scope": "Every claim is scoped to two of eight edges: EDGE-1-PREP-TEST and EDGE-2-PATCH. Nothing here says anything about Spring Boot 3.x behaviour, because no edge reaching a 3.x version was ever executed.",
+    "claims": [
+      {"claim": "./src unmodified", "evidence": "recomputed tree hash over 111 files", "level": "CRYPTOGRAPHIC", "coverage": "complete"},
+      {"claim": "19 changes applied and fully attributed", "evidence": "hash-chained ledger", "level": "CRYPTOGRAPHIC", "coverage": "complete for executed edges"},
+      {"claim": "nothing changed outside authorized scope", "evidence": "scope assertion, 0 violations on both edges", "level": "MECHANICAL", "coverage": "complete for executed edges"},
+      {"claim": "tests neither lost nor weakened", "evidence": "12 before, 12 after, identical classification", "level": "EXECUTED", "coverage": "4 of 6 modules produce tests"},
+      {"claim": "toolchain executed as frozen", "evidence": "java -version parsed and matched", "level": "EXECUTED", "coverage": "both edges"},
+      {"claim": "behaviour unchanged on edge 1", "evidence": "36 OLD/NEW scenario pairs, all IDENTICAL", "level": "EXECUTED_COMPARISON", "coverage": "4 of 6 modules, 5 of 12 dimensions"},
+      {"claim": "behaviour changed on edge 2", "evidence": "1 UNEXPLAINED in CONFIGURATION_BINDING", "level": "EXECUTED_COMPARISON", "coverage": "4 of 6 modules, 5 of 12 dimensions"}
+    ],
+    "not_supported_by_any_evidence": "that the migration to 3.5.16 is achievable, safe or complete",
+    "metric_scope_warnings": [
+      "deterministic coverage measures what fraction of KNOWN facts have a transformation rule available; it is not fact-set completeness and not migration completeness",
+      "impact accuracy 1.0/1.0 is measured on 11 held-out fixtures with an explicit scope warning; the 5 tuning fixtures are excluded and it is not a general accuracy claim"
+    ]
+  },
+
+  "blind_spots": [
+    {"id": "BS-001", "severity": "MAJOR", "detail": "No OCI container runtime: Docker installed but its daemon not running. PERSISTENCE_STATE, QUERY_RESULT and TRANSACTION_EFFECT were never compared; 46 of 82 scenarios are declared gaps; employee-service could not start."},
+    {"id": "BS-002", "severity": "MAJOR", "detail": "Runtime and scenario evidence covers 4 of 6 modules. configuaration-server fails to start (pre-existing, captured at baseline); employee-service needs MongoDB."},
+    {"id": "BS-003", "severity": "MAJOR", "detail": "7 of 12 characterization dimensions were never compared on either edge."},
+    {"id": "BS-004", "severity": "MODERATE", "detail": "Two application tests fail before any migration change, so those two behaviours are unverified throughout."},
+    {"id": "BS-005", "severity": "MODERATE", "detail": "Coverage is unmeasurable for employee-service; the gate is reported as not evaluated rather than as passed."},
+    {"id": "BS-006", "severity": "MODERATE", "detail": "Symbol attribution is 0.6858 - above the 0.6 policy floor, well below complete. Roughly a third of symbol relations are unresolved and findings from them are capped at POSSIBLY_AFFECTED."},
+    {"id": "BS-007", "severity": "MAJOR", "detail": "No sealed evidence manifest, no mechanical evidence-level assignment, no provenance graph and no export exist for either run - stages 18-20 never executed."},
+    {"id": "BS-008", "severity": "MODERATE", "detail": "J1-005 remains open: every edge is planned at FULL_DIFFERENTIAL, so validation depth carries no information."},
+    {"id": "BS-009", "severity": "CRITICAL", "detail": "The Jakarta boundary is entirely unexercised. EDGE-3-MAJOR-3 carries 33 recipes against 4 for any other edge and has never been run. The most likely place for this migration to fail is the place with the least evidence."}
+  ],
+
+  "not_implemented": [
+    {"item": "Gradle build-script transformation", "detail": "BuildSystemResolver detects Gradle and Kind.MIXED and the model round-trips, but no Gradle transformation exists. A Gradle project would be analyzed and not migrated."},
+    {"item": "Full Gradle parity", "detail": "multi-project discovery, coverage extraction and toolchain handling"},
+    {"item": "Security and persistence graph enrichment", "detail": "including explicit ambiguity modelling in the symbol graph"},
+    {"item": "Extended artifact verification", "detail": "beyond checksum and bytecode diff; no signature verification and no SBOM cross-check"},
+    {"item": "AI repair request content verification", "detail": "the AI boundary is enforced structurally - AI may propose, never authorize - but repair request contents are not independently verified. Moot in these runs: no AI provider was enabled."},
+    {"item": "Single sealed tool/environment provenance record", "detail": "tool and environment facts are recorded per stage, not consolidated into one sealed record"},
+    {"item": "Stages 18-20 end to end", "detail": "written and wired, never executed by a run, therefore unverified in practice"}
+  ],
+
+  "deliverables": {
+    "migration_document": "reports/MIGRATION_DOCUMENT.md",
+    "judge_pass_1": ["reports/llm-judge-pass-1.md", "reports/llm-judge-pass-1.json"],
+    "repair_pass": "reports/judge-repair-pass.md",
+    "run_logs": ["reports/pipeline-run-1.log", "reports/pipeline-run-2.log"],
+    "source_integrity": ["reports/src-before-pipeline.sha256", "reports/src-after-pipeline.sha256"],
+    "impact_accuracy": "reports/impact-accuracy.json",
+    "final_report": ["reports/BOOTSHIFT_FINAL_IMPLEMENTATION_AND_PIPELINE_REPORT.md", "reports/BOOTSHIFT_FINAL_IMPLEMENTATION_AND_PIPELINE_REPORT.json"],
+    "artifact_planes": {
+      "run_2_current": "output/",
+      "run_1_archived": "output-run-1/",
+      "aborted_launch_archived": "output-run-2-aborted-launch-env/"
+    }
+  }
+}

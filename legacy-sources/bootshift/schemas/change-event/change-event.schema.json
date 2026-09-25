@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Change event",
+  "description": "One change attempt (spec section 26). Rejected, failed and reverted attempts are recorded exactly like applied ones (R14).",
+  "type": "object",
+  "required": [
+    "change_id",
+    "run_id",
+    "operation",
+    "status"
+  ],
+  "properties": {
+    "change_id": {
+      "type": "string",
+      "pattern": "^CHANGE-[0-9]{6}$"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "run_id": {
+      "type": "string"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "file_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "operation": {
+      "enum": [
+        "CREATE",
+        "MODIFY",
+        "DELETE",
+        "RENAME",
+        "SPLIT",
+        "MERGE"
+      ]
+    },
+    "path_before": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "path_after": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "before_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "after_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "agent": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provider": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "recipe_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "knowledge_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "impact_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "symbols_changed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "patch_ref": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "status": {
+      "enum": [
+        "PROPOSED",
+        "APPLIED",
+        "VALIDATED",
+        "REJECTED",
+        "FAILED_VALIDATION",
+        "REVERTED"
+      ]
+    },
+    "rejection_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ai": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

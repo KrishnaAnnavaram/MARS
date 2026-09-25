@@ -1,0 +1,33 @@
+# Published artifacts. Immutable per run and content-addressed, but regenerable and large.
+# The evidence bundle produced by `bootshift export` is what gets retained, not this tree.
+# Archived planes from earlier runs are kept on disk for audit and ignored for the same reason.
+output/
+output-run-*/
+output-strict-probe/
+
+# Maven build output
+target/
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Generated migration rules are derived from published artifact metadata on every run.
+# They are committed deliberately so a review can diff them; nothing else generated is.
+!migration-rules/generated-properties/property-migration-rules.json
+
+# Execution workspaces live under the OS temp root, but a --workspace-root override may land here.
+bootshift-workspaces/
+
+# Local toolchain and cache
+.bootshift/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db

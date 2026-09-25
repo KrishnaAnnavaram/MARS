@@ -1,0 +1,15 @@
+{
+  "id": "artifact-removed-from-bom",
+  "description": "An artifact stops being managed by the target BOM. The descriptor that declares it is affected. A sibling descriptor declares a different artifact from the same group and must not be flagged.",
+  "tuning": false,
+  "fact": {
+    "type": "ARTIFACT_REMOVED",
+    "subject": "org.springframework.cloud:spring-cloud-starter-sleuth",
+    "from": "org.springframework.cloud:spring-cloud-starter-sleuth",
+    "to": null
+  },
+  "true_affected_paths": [
+    "tracing-service/pom.xml"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

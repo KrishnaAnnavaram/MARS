@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Build model",
+  "description": "Agent 02 output. Authoritative only when the build tool itself produced it (R5).",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "kind",
+    "authoritative",
+    "modules"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "kind": {
+      "enum": [
+        "MAVEN",
+        "GRADLE",
+        "UNKNOWN"
+      ]
+    },
+    "tool_version": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tool_invocation": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "wrapper_used": {
+      "type": "boolean"
+    },
+    "authoritative": {
+      "type": "boolean"
+    },
+    "degraded_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "toolchains": {
+      "type": "object"
+    },
+    "modules": {
+      "type": "array"
+    },
+    "java_versions": {
+      "type": "object"
+    },
+    "frameworks": {
+      "type": "object"
+    }
+  }
+}

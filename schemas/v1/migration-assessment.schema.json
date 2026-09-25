@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mars.harness/schemas/v1/migration-assessment.schema.json",
+  "title": "Migration assessment (spec §11, §12)",
+  "$comment": "Traffic light, need, priority, complexity, effort score and evidence confidence are separate answers. The effort score is an auditable, policy-weighted sum of named factors; every known factor cites evidence.",
+  "type": "object",
+  "required": ["assessment_id", "run_id", "policy_version", "generated_at", "traffic_light", "traffic_light_rationale",
+               "need", "priority", "complexity", "effort", "evidence_confidence", "confidence_basis", "current",
+               "recommended_sequence", "objectives", "issues", "evidence", "unknowns", "blockers"],
+  "properties": {
+    "assessment_id": { "type": "string", "pattern": "^ASSESS-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "run_id": { "$ref": "common.schema.json#/$defs/run_id" },
+    "policy_version": { "type": "string" },
+    "generated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "traffic_light": { "enum": ["GREEN", "YELLOW", "RED", "UNKNOWN"] },
+    "traffic_light_rationale": { "type": "string", "minLength": 1 },
+    "need": { "enum": ["NOT_REQUIRED", "RECOMMENDED", "PREREQUISITE", "UNKNOWN"] },
+    "priority": { "enum": ["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL", "UNKNOWN"] },
+    "complexity": { "enum": ["TRIVIAL", "LOW", "MODERATE", "HIGH", "REARCHITECTURE", "UNKNOWN"] },
+    "effort": {
+      "type": "object",
+      "required": ["migration_effort_score", "weights_version", "factors"],
+      "properties": {
+        "migration_effort_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "weights_version": { "type": "string" },
+        "method": { "type": "string" },
+        "factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "raw_value", "saturation", "normalized", "weight", "contribution", "known", "evidence_refs"],
+            "properties": {
+              "name": { "type": "string" },
+              "raw_value": { "type": "number" },
+              "saturation": { "type": "number" },
+              "normalized": { "type": "number", "minimum": 0, "maximum": 1 },
+              "weight": { "type": "number", "minimum": 0, "maximum": 100 },
+              "contribution": { "type": "integer", "minimum": 0 },
+              "known": { "type": "boolean" },
+              "evidence_refs": { "$ref": "common.schema.json#/$defs/evidence_refs" },
+              "note": { "type": "string" }
+            },
+            "if": { "properties": { "known": { "const": true } } },
+            "then": { "properties": { "evidence_refs": { "minItems": 1 } } }
+          }
+        }
+      }
+    },
+    "evidence_confidence": { "enum": ["HIGH", "MEDIUM", "LOW", "INSUFFICIENT"] },
+    "confidence_basis": { "$ref": "common.schema.json#/$defs/strings" },
+    "current": { "type": "object", "required": ["framework", "build_system", "evidence_refs"] },
+    "recommended_target": { "type": "object", "required": ["framework", "version", "basis"] },
+    "recommended_sequence": { "enum": ["NO_SEQUENCE_REQUIRED", "MIGRATE_FIRST"] },
+    "objectives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["objective_id", "description", "requires_migration", "evidence_refs"],
+        "if": { "properties": { "requires_migration": { "const": true } } },
+        "then": { "required": ["required_platform", "why"] }
+      }
+    },
+    "issues": { "type": "array", "items": { "type": "object", "required": ["issue_id", "rule_id", "mandatory", "evidence_refs"] } },
+    "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "common.schema.json#/$defs/evidence_id" } },
+    "unknowns": { "type": "array", "items": { "type": "object", "required": ["dimension", "question", "impact"] } },
+    "blockers": { "type": "array", "items": { "type": "object", "required": ["blocker_id", "description", "kind"] } },
+    "reference_pack_id": { "type": "string" },
+    "reference_pack_sha256": { "$ref": "common.schema.json#/$defs/sha256" }
+  },
+  "allOf": [
+    { "if": { "properties": { "traffic_light": { "const": "RED" } } },
+      "then": { "properties": { "need": { "const": "PREREQUISITE" }, "recommended_sequence": { "const": "MIGRATE_FIRST" },
+                                "objectives": { "contains": { "properties": { "requires_migration": { "const": true } } } } } } },
+    { "if": { "properties": { "traffic_light": { "const": "UNKNOWN" } } },
+      "then": { "properties": { "need": { "const": "UNKNOWN" } } } }
+  ],
+  "additionalProperties": false
+}

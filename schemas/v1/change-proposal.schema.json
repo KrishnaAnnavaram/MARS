@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mars.harness/schemas/v1/change-proposal.schema.json",
+  "title": "ChangeProposal (spec §18)",
+  "$comment": "The only way any capability, tool, human or model asks for a change. Immutable once registered; its SHA-256 (proposal_hash, over the canonical JSON) is what an approval binds to.",
+  "type": "object",
+  "required": ["proposal_id", "run_id", "capability", "provider", "provider_type", "provider_version", "reason",
+               "finding_refs", "migration_refs", "evidence_refs", "knowledge_refs", "affected_file_ids",
+               "affected_symbol_ids", "affected_statement_ids", "edits", "risk", "base_hashes", "baseline_seal",
+               "generated_at", "strategy_only", "hints"],
+  "properties": {
+    "proposal_id": { "$ref": "common.schema.json#/$defs/proposal_id" },
+    "run_id": { "$ref": "common.schema.json#/$defs/run_id" },
+    "capability": { "enum": ["MIGRATION", "SECURITY", "MANUAL"] },
+    "provider": { "type": "string", "minLength": 1 },
+    "provider_type": { "enum": ["DETERMINISTIC_RULE", "OPENREWRITE", "DEPENDENCY_UPGRADER", "SECURITY_FIXER",
+                                "COMPILER_REPAIR", "LLM", "MANUAL_PATCH"] },
+    "provider_version": { "type": "string" },
+    "reason": { "type": "string" },
+    "finding_refs": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/finding_id" } },
+    "migration_refs": { "$ref": "common.schema.json#/$defs/strings" },
+    "evidence_refs": { "$ref": "common.schema.json#/$defs/evidence_refs" },
+    "knowledge_refs": { "$ref": "common.schema.json#/$defs/strings" },
+    "affected_file_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/file_id" } },
+    "affected_symbol_ids": { "type": "array", "items": { "anyOf": [
+      { "$ref": "common.schema.json#/$defs/symbol_id" }, { "$ref": "common.schema.json#/$defs/program_unit_id" }] } },
+    "affected_statement_ids": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/statement_id" } },
+    "edits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "operation", "unified_diff", "merged_from"],
+        "properties": {
+          "file_id": { "$ref": "common.schema.json#/$defs/file_id" },
+          "path": { "type": "string", "minLength": 1, "not": { "pattern": "(^/|^[A-Za-z]:|\\.\\.)" } },
+          "new_path": { "type": "string", "minLength": 1, "not": { "pattern": "(^/|^[A-Za-z]:|\\.\\.)" } },
+          "operation": { "enum": ["MODIFY", "CREATE", "DELETE", "RENAME", "MERGE", "SPLIT"] },
+          "new_content": { "type": "string" },
+          "unified_diff": { "type": "string" },
+          "split_from": { "type": "string" },
+          "merged_from": { "$ref": "common.schema.json#/$defs/strings" }
+        },
+        "allOf": [
+          { "if": { "properties": { "operation": { "not": { "const": "CREATE" } } } }, "then": { "required": ["file_id"] } },
+          { "if": { "properties": { "operation": { "const": "RENAME" } } }, "then": { "required": ["new_path"] } }
+        ],
+        "additionalProperties": false
+      }
+    },
+    "expected_outcome": { "type": "string" },
+    "risk": { "enum": ["LOW", "MEDIUM", "HIGH"] },
+    "base_hashes": { "type": "object", "additionalProperties": { "$ref": "common.schema.json#/$defs/sha256" } },
+    "baseline_seal": { "$ref": "common.schema.json#/$defs/sha256" },
+    "generated_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "producer": { "type": "string" },
+        "rule_id": { "type": "string" },
+        "reference_section": { "type": "string" },
+        "model": { "type": "string" },
+        "model_version": { "type": "string" },
+        "prompt_hash": { "type": "string" },
+        "context_hash": { "type": "string" },
+        "response_hash": { "type": "string" },
+        "verification": { "$ref": "common.schema.json#/$defs/strings" }
+      },
+      "additionalProperties": false
+    },
+    "strategy_only": { "type": "boolean" },
+    "hints": { "type": "object" },
+    "supersedes": { "$ref": "common.schema.json#/$defs/proposal_id" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "strategy_only": { "const": false } } },
+      "then": { "properties": { "edits": { "minItems": 1 }, "affected_file_ids": { "minItems": 1 } } },
+      "else": { "properties": { "edits": { "maxItems": 0 } } }
+    }
+  ],
+  "additionalProperties": false
+}

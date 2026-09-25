@@ -1,0 +1,15 @@
+{
+  "id": "javax-preserved-package",
+  "description": "javax.sql, javax.crypto and javax.naming remained in the JDK. A blanket javax to jakarta rule flags all three. The correct answer for a fact about javax.validation is only the file that actually imports javax.validation.",
+  "tuning": false,
+  "fact": {
+    "type": "API_RENAMED",
+    "subject": "javax.validation",
+    "from": "javax.validation",
+    "to": "jakarta.validation"
+  },
+  "true_affected_paths": [
+    "order-service/src/main/java/com/example/order/OrderRequest.java"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

@@ -1,0 +1,84 @@
+{
+  "name": "differential-normalization",
+  "version": "1.0.0",
+  "policy_hash_recorded_in_evidence_manifest": true,
+  "description": "Differences that are artefacts of running two processes rather than differences in behaviour. Every rule is explicit, versioned and listed on each comparison result it fires on. Nothing is dropped implicitly.",
+  "on_change": "RAISE_NORMALIZATION_POLICY_CHANGE_APPROVAL_GATE",
+  "rules": [
+    {
+      "id": "NORM-001",
+      "scope": "any field named timestamp",
+      "action": "DROP",
+      "rationale": "Differs by construction between two runs"
+    },
+    {
+      "id": "NORM-002",
+      "scope": "any field named date",
+      "action": "DROP",
+      "rationale": "Differs by construction between two runs"
+    },
+    {
+      "id": "NORM-003",
+      "scope": "HTTP header Date",
+      "action": "DROP",
+      "rationale": "Generated per response"
+    },
+    {
+      "id": "NORM-004",
+      "scope": "HTTP header Server",
+      "action": "DROP",
+      "rationale": "Container identity is EXPECTED_TO_DIFFER under the equivalence contract"
+    },
+    {
+      "id": "NORM-005",
+      "scope": "traceId",
+      "action": "DROP",
+      "rationale": "Generated per request"
+    },
+    {
+      "id": "NORM-006",
+      "scope": "spanId",
+      "action": "DROP",
+      "rationale": "Generated per request"
+    },
+    {
+      "id": "NORM-007",
+      "scope": "port numbers inside URLs",
+      "action": "NORMALIZE",
+      "rationale": "The harness allocates a free port per side"
+    },
+    {
+      "id": "NORM-008",
+      "scope": "uptime",
+      "action": "DROP",
+      "rationale": "Not behaviour"
+    },
+    {
+      "id": "NORM-009",
+      "scope": "springBootVersion",
+      "action": "DROP",
+      "rationale": "This is the thing being changed"
+    },
+    {
+      "id": "NORM-010",
+      "scope": "32 to 64 character hex strings",
+      "action": "NORMALIZE",
+      "rationale": "Content hashes of payloads that themselves contain timestamps"
+    },
+    {
+      "id": "NORM-011",
+      "scope": "generatedSql",
+      "action": "DEMOTE_TO_DIAGNOSTIC",
+      "rationale": "Literal SQL equality is not the contract; query results, state and transaction outcomes are. SQL text is retained as diagnostic evidence because two statements can differ in text and be identical in effect, and identical in text while behaving differently under a new dialect."
+    }
+  ],
+  "never_normalize": [
+    "Response status codes",
+    "Authorization outcomes",
+    "Business rule outputs",
+    "Persisted state",
+    "Query result sets",
+    "Transaction outcomes",
+    "Exception types that reach the client"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "base_url": "http://localhost:8080",
+  "readiness": { "path": "/actuator/health", "timeout_seconds": 120 },
+  "requests": [
+    { "name": "health is public", "method": "GET", "path": "/actuator/health", "no_auth": true },
+    { "name": "search widget", "method": "GET", "path": "/api/products/search?name=widget", "no_auth": true },
+    { "name": "product 2", "method": "GET", "path": "/api/products/2", "no_auth": true }
+  ]
+}

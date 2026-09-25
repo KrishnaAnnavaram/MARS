@@ -1,0 +1,15 @@
+{
+  "id": "javax-persistence-relocation",
+  "description": "javax.persistence relocates to jakarta.persistence. Only the entity references it; the service and the properties file do not.",
+  "tuning": false,
+  "fact": {
+    "type": "API_RENAMED",
+    "subject": "javax.persistence",
+    "from": "javax.persistence",
+    "to": "jakarta.persistence"
+  },
+  "true_affected_paths": [
+    "employee-service/src/main/java/com/example/domain/Employee.java"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

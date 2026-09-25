@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Test report",
+  "description": "Agent 15 output. Every result is classified against the sealed baseline and the previous edge.",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "total_tests",
+    "classification_counts",
+    "modules"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "total_tests": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "classification_counts": {
+      "type": "object"
+    },
+    "modules": {
+      "type": "array"
+    },
+    "comparison_rule": {
+      "type": "string"
+    },
+    "forbidden_actions": {
+      "type": "string"
+    }
+  }
+}

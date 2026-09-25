@@ -1,0 +1,235 @@
+diff --git a/Dockerfile b/Dockerfile
+index 7512959..33763df 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -1,7 +1,7 @@
+-# MIGRATION-DEMO: Java 17 base image
+-# During Spring Boot 4 migration, this will be updated to Java 21
++# Java 21 base image
++# Updated during the Spring Boot 4 migration
+ # This demonstrates the JDK version upgrade path
+-FROM eclipse-temurin:17-jre
++FROM eclipse-temurin:21-jre
+ 
+ # Set working directory
+ WORKDIR /app
+diff --git a/pom.xml b/pom.xml
+index f1ba26b..f52b4af 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -16,12 +16,12 @@
+     <parent>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-parent</artifactId>
+-        <version>3.5.0</version>
++        <version>4.1.1</version>
+         <relativePath/>
+     </parent>
+ 
+     <properties>
+-        <java.version>17</java.version>
++        <java.version>21</java.version>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+     </properties>
+@@ -30,7 +30,7 @@
+         <!-- MIGRATION-DEMO: Spring Boot Web Starter (Spring MVC) -->
+         <dependency>
+             <groupId>org.springframework.boot</groupId>
+-            <artifactId>spring-boot-starter-web</artifactId>
++            <artifactId>spring-boot-starter-webmvc</artifactId>
+         </dependency>
+ 
+         <!-- MIGRATION-DEMO: Spring Data JPA with Hibernate ORM -->
+@@ -71,10 +71,12 @@
+             <scope>runtime</scope>
+         </dependency>
+ 
+-        <!-- Spring Security Test -->
++        <!-- MIGRATION: Spring Security Test — Boot 4 carries the MockMvc security test
++             auto-configuration in its own starter, which supersedes the raw
++             org.springframework.security:spring-security-test dependency -->
+         <dependency>
+-            <groupId>org.springframework.security</groupId>
+-            <artifactId>spring-security-test</artifactId>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-security-test</artifactId>
+             <scope>test</scope>
+         </dependency>
+ 
+@@ -85,6 +87,19 @@
+             <scope>test</scope>
+         </dependency>
+ 
++        <!-- MIGRATION: Boot 4 splits the test slices into their own starters -->
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-webmvc-test</artifactId>
++            <scope>test</scope>
++        </dependency>
++
++        <dependency>
++            <groupId>org.springframework.boot</groupId>
++            <artifactId>spring-boot-starter-data-jpa-test</artifactId>
++            <scope>test</scope>
++        </dependency>
++
+         <!-- Testcontainers for PostgreSQL integration testing -->
+         <dependency>
+             <groupId>org.testcontainers</groupId>
+@@ -122,8 +137,8 @@
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-compiler-plugin</artifactId>
+                 <configuration>
+-                    <source>17</source>
+-                    <target>17</target>
++                    <release>21</release>
++                    
+                     <encoding>UTF-8</encoding>
+                 </configuration>
+             </plugin>
+diff --git a/src/main/java/com/example/migrationdemo/config/JacksonConfig.java b/src/main/java/com/example/migrationdemo/config/JacksonConfig.java
+index c97af63..5706f52 100644
+--- a/src/main/java/com/example/migrationdemo/config/JacksonConfig.java
++++ b/src/main/java/com/example/migrationdemo/config/JacksonConfig.java
+@@ -1,41 +1,40 @@
+ package com.example.migrationdemo.config;
+ 
+-import com.fasterxml.jackson.databind.ObjectMapper;
+-import com.fasterxml.jackson.databind.SerializationFeature;
+-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
++import com.fasterxml.jackson.annotation.JsonInclude;
++import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.Configuration;
++import tools.jackson.databind.SerializationFeature;
++import tools.jackson.databind.cfg.DateTimeFeature;
+ 
+ /**
+  * MIGRATION-DEMO:
+- * This Jackson 2 configuration is intentionally included so that
+- * Jackson-related changes can be demonstrated during the Spring Boot 4
+- * migration.
++ * Migrated from Jackson 2 to Jackson 3 as part of the Spring Boot 3 -> 4 upgrade.
+  *
+- * Jackson 2.x is part of Spring Boot 3.x.
+- * Spring Boot 4 will include Jackson 3.x, which has breaking API changes.
++ * Spring Boot 4 ships Jackson 3, which moves databind to the tools.jackson
++ * namespace and replaces the ObjectMapper configuration entry point. The
++ * annotations package (com.fasterxml.jackson.annotation) is unchanged.
++ *
++ * Customising Boot's builder is preferred over defining an own mapper bean:
++ * it keeps every Boot default and applies only these deltas.
+  */
+ @Configuration
+ public class JacksonConfig {
+ 
+     @Bean
+-    public ObjectMapper objectMapper() {
+-        ObjectMapper mapper = new ObjectMapper();
+-
+-        // Support LocalDateTime serialization
+-        mapper.registerModule(new JavaTimeModule());
+-
+-        // Use ISO 8601 date/time formatting
+-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
++    public JsonMapperBuilderCustomizer jsonMapperBuilderCustomizer() {
++        return builder -> builder
++                // java.time support is built in to Jackson 3 - no JavaTimeModule to register
+ 
+-        // Do not serialize null values
+-        mapper.setDefaultPropertyInclusion(
+-                com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL);
++                // Use ISO 8601 date/time formatting
++                .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+ 
+-        // Disable pretty printing for production
+-        mapper.disable(SerializationFeature.INDENT_OUTPUT);
++                // Do not serialize null values
++                .changeDefaultPropertyInclusion(
++                        inclusion -> inclusion.withValueInclusion(JsonInclude.Include.NON_NULL))
+ 
+-        return mapper;
++                // Disable pretty printing for production
++                .disable(SerializationFeature.INDENT_OUTPUT);
+     }
+ 
+ }
+diff --git a/src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java b/src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java
+index 85a5e3d..e4446c9 100644
+--- a/src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java
++++ b/src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java
+@@ -1,7 +1,7 @@
+ package com.example.migrationdemo.health;
+ 
+-import org.springframework.boot.actuate.health.Health;
+-import org.springframework.boot.actuate.health.HealthIndicator;
++import org.springframework.boot.health.contributor.Health;
++import org.springframework.boot.health.contributor.HealthIndicator;
+ import org.springframework.stereotype.Component;
+ import javax.sql.DataSource;
+ import java.sql.Connection;
+diff --git a/src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java b/src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java
+index 396552a..f872bc7 100644
+--- a/src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java
++++ b/src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java
+@@ -5,11 +5,11 @@ import com.example.migrationdemo.dto.EmployeeCreateRequest;
+ import com.example.migrationdemo.dto.EmployeeResponse;
+ import com.example.migrationdemo.exception.EmployeeNotFoundException;
+ import com.example.migrationdemo.service.EmployeeService;
+-import com.fasterxml.jackson.databind.ObjectMapper;
++import tools.jackson.databind.json.JsonMapper;
+ import org.junit.jupiter.api.Test;
+ import org.springframework.beans.factory.annotation.Autowired;
+-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+-import org.springframework.boot.test.mock.mockito.MockBean;
++import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
++import org.springframework.test.context.bean.override.mockito.MockitoBean;
+ import org.springframework.context.annotation.Import;
+ import org.springframework.http.MediaType;
+ import org.springframework.security.test.context.support.WithMockUser;
+@@ -31,11 +31,11 @@ class EmployeeControllerTest {
+     @Autowired
+     private MockMvc mockMvc;
+ 
+-    @MockBean
++    @MockitoBean
+     private EmployeeService employeeService;
+ 
+     @Autowired
+-    private ObjectMapper objectMapper;
++    private JsonMapper jsonMapper;
+ 
+     @Test
+     @WithMockUser
+@@ -117,7 +117,7 @@ class EmployeeControllerTest {
+ 
+         mockMvc.perform(post("/api/v1/employees")
+                 .contentType(MediaType.APPLICATION_JSON)
+-                .content(objectMapper.writeValueAsString(request)))
++                .content(jsonMapper.writeValueAsString(request)))
+                 .andExpect(status().isCreated())
+                 .andExpect(jsonPath("$.id").value(1));
+     }
+@@ -135,7 +135,7 @@ class EmployeeControllerTest {
+ 
+         mockMvc.perform(post("/api/v1/employees")
+                 .contentType(MediaType.APPLICATION_JSON)
+-                .content(objectMapper.writeValueAsString(request)))
++                .content(jsonMapper.writeValueAsString(request)))
+                 .andExpect(status().isBadRequest());
+     }
+ 
+diff --git a/src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java b/src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java
+index f96b873..79c4bf7 100644
+--- a/src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java
++++ b/src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java
+@@ -5,7 +5,7 @@ import com.example.migrationdemo.repository.EmployeeRepository;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ import org.springframework.beans.factory.annotation.Autowired;
+-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
++import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+ import org.springframework.test.context.DynamicPropertyRegistry;
+ import org.springframework.test.context.DynamicPropertySource;
+ import org.testcontainers.containers.PostgreSQLContainer;

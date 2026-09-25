@@ -1,0 +1,53 @@
+{
+  "name": "sensitive-data",
+  "version": "1.0.0",
+  "evidence_policy": "NEVER_STORE_PLAINTEXT",
+  "description": "A sensitive value is represented by metadata. The value itself is never stored, logged, exported, or placed in a prompt.",
+  "applies_at_every_boundary": [
+    "published artifacts",
+    "the change ledger",
+    "logs",
+    "telemetry",
+    "AI prompts",
+    "exported bundles",
+    "reports"
+  ],
+  "record_shape": {
+    "secretRef": "SECRET-<hash prefix>",
+    "kind": "the detector's classification",
+    "location": {
+      "fileId": "FILE-…",
+      "line": "integer",
+      "key": "the property key"
+    },
+    "shape": "structural description sufficient to explain why it matters and insufficient to use",
+    "detector": "the rule that matched",
+    "confidence": "0.0 to 1.0"
+  },
+  "detectors": [
+    "URI_WITH_INLINE_CREDENTIALS",
+    "PRIVATE_KEY_BLOCK",
+    "AWS_ACCESS_KEY_ID",
+    "BEARER_TOKEN",
+    "BASIC_AUTH_HEADER",
+    "JDBC_PASSWORD_PROPERTY",
+    "HIGH_ENTROPY_ASSIGNMENT"
+  ],
+  "hashing": {
+    "unkeyed_hash_of_secret": "FORBIDDEN",
+    "unkeyed_rationale": "Trivially reversible for low-entropy values",
+    "keyed_hash": "PERMITTED_WHERE_POLICY_EXPLICITLY_ALLOWS_CORRELATION",
+    "keyed_algorithm": "HMAC-SHA256 with a deployment-local key",
+    "keyed_purpose": "Answering 'the same secret appears in these five files' without storing it"
+  },
+  "untrusted_repository_controls": {
+    "command_allowlist": true,
+    "network_egress_allowlist": true,
+    "per_invocation_timeout": true,
+    "output_cap": true,
+    "read_only_original_workspace": true,
+    "path_traversal_prevention": true,
+    "symlink_escape_prevention": true
+  },
+  "out_of_scope": "Kernel-level sandboxing. A malicious build plugin the repository already trusted runs with the harness's privileges. Run untrusted repositories in a disposable environment."
+}

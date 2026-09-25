@@ -1,0 +1,7 @@
+{
+  "issue_id": "ISSUE-000",
+  "test_file": "some-service/src/test/java/com/example/repository/SomeSearchRepositoryTest.java",
+  "what_it_proves": "Illustrative example only. Asserts that searchEmployees(name, department) builds a Criteria that binds the name value literally (via Pattern.quote) rather than embedding it in query syntax — replaying the issue's injection payload as the 'name' argument and asserting the captured Query's filter object treats it as a literal string, not as MongoDB operator syntax. On the pre-patch StringBuilder/BasicQuery code this assertion does not hold, because the payload would alter the query structure instead of being bound as a value.",
+  "mocking_strategy": "Mockito-mocks MongoTemplate and captures the Query argument passed to find(...) via an ArgumentCaptor, instead of using @DataMongoTest — this repo has no embedded-Mongo dependency, so a real-Mongo test cannot run in this sandbox.",
+  "requires_live_dependency": false
+}

@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Differential report",
+  "description": "Agent 17 output. UNEXPLAINED blocks unless an authorized decision resolves it (R21).",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "comparison_count",
+    "classification_counts",
+    "normalization_policy_hash",
+    "comparisons"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "comparison_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "required_dimensions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "classification_counts": {
+      "type": "object"
+    },
+    "normalization_policy_hash": {
+      "type": "string"
+    },
+    "environment_mode": {
+      "enum": [
+        "MANAGED",
+        "DELEGATED"
+      ]
+    },
+    "comparisons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "dimension",
+          "classification"
+        ],
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "module": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "classification": {
+            "enum": [
+              "IDENTICAL",
+              "EXPECTED",
+              "UNEXPECTED",
+              "UNEXPLAINED",
+              "NOT_COMPARED"
+            ]
+          },
+          "difference_count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "explanation_refs": {
+            "type": "array"
+          },
+          "approval_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

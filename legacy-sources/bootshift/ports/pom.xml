@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.bootshift</groupId>
+    <artifactId>bootshift-parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+  <artifactId>bootshift-ports</artifactId>
+  <name>Bootshift :: Ports</name>
+  <description>Hexagonal ports. Interfaces only. Depends on core domain, never on adapters.</description>
+  <dependencies>
+    <dependency><groupId>com.bootshift</groupId><artifactId>bootshift-core</artifactId><version>${project.version}</version></dependency>
+  </dependencies>
+</project>

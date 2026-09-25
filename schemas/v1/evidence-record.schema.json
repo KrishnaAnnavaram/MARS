@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mars.harness/schemas/v1/evidence-record.schema.json",
+  "title": "Evidence record (spec §7)",
+  "$comment": "One line of the hash-chained evidence log (each line of the evidence log wraps it as {previous_hash, hash, record}). Reliability UNKNOWN is a first-class outcome: unknown evidence is recorded, never replaced by an assumption.",
+  "type": "object",
+  "required": ["evidence_id", "run_id", "kind", "summary", "subjects", "basis", "reliability", "observed_at", "producer"],
+  "properties": {
+    "evidence_id": { "$ref": "common.schema.json#/$defs/evidence_id" },
+    "run_id": { "$ref": "common.schema.json#/$defs/run_id" },
+    "kind": { "enum": ["OBSERVATION", "TOOL_RESULT", "LIFECYCLE_FACT", "REFERENCE_RULE", "IMPORTED_FINDING", "DECISION",
+                       "VALIDATION", "UNKNOWN"] },
+    "summary": { "type": "string", "minLength": 1 },
+    "observed": { "type": "string" },
+    "where": { "type": "string" },
+    "subjects": { "$ref": "common.schema.json#/$defs/strings" },
+    "basis": { "type": "string" },
+    "reliability": { "enum": ["VERIFIED", "ADVISORY", "ESTIMATED", "UNKNOWN", "DECLARED", "DERIVED", "ASSERTED"] },
+    "observed_at": { "$ref": "common.schema.json#/$defs/timestamp" },
+    "as_of": { "type": "string" },
+    "artifact_ref": { "type": "string" },
+    "artifact_sha256": { "type": "string" },
+    "producer": { "type": "string", "minLength": 1 }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,7 @@
+spring:
+    datasource:
+        url: jdbc:postgresql://db.internal:5432/gateway
+    application:
+        name: gateway-service
+server:
+    port: 9090

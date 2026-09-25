@@ -1,0 +1,35 @@
+{
+  "name": "development",
+  "version": "1.0.0",
+  "description": "Relaxed posture for harness development and fixture work. Never use for a real migration: it admits unknown internal components and lowers the graph attribution floor.",
+
+  "coverage_gate_enabled": true,
+  "coverage_drop_block_percentage_points": 10.0,
+
+  "residual_no_escalation_threshold": 0.90,
+  "residual_one_level_threshold": 0.60,
+
+  "impact_recall_floor": 0.60,
+  "similarity_threshold": 0.72,
+
+  "allow_milestone_targets": false,
+  "allow_eol_landing_target": true,
+  "minimum_support_horizon_months": -60,
+
+  "allow_checkpoint_collapse": true,
+  "unknown_internal_component_action": "WARN",
+
+  "ai_allowed_in_production": true,
+  "ai_max_total_attempts": 20,
+  "ai_max_attempts_per_root_cause": 4,
+  "ai_max_files_per_patch": 5,
+  "ai_max_changed_lines_per_patch": 150,
+
+  "repair_max_attempts_per_root_cause": 5,
+  "repair_max_total_rounds": 12,
+
+  "unexplained_difference_blocks": false,
+
+  "graph_java_coverage_floor": 0.90,
+  "graph_attribution_floor": 0.50
+}

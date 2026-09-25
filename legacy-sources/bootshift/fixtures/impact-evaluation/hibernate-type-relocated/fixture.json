@@ -1,0 +1,15 @@
+{
+  "id": "hibernate-type-relocated",
+  "description": "org.hibernate.annotations.Type changed shape between Hibernate 5 and 6. The entity using it is affected. A second entity uses only jakarta.persistence annotations and is not.",
+  "tuning": false,
+  "fact": {
+    "type": "API_SIGNATURE_CHANGED",
+    "subject": "org.hibernate.annotations.Type",
+    "from": "org.hibernate.annotations.Type",
+    "to": "org.hibernate.annotations.JdbcTypeCode"
+  },
+  "true_affected_paths": [
+    "ledger-service/src/main/java/com/example/ledger/Entry.java"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

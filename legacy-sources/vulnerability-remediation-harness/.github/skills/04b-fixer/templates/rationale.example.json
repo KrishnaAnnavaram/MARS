@@ -1,0 +1,16 @@
+{
+  "issue_id": "ISSUE-000",
+  "summary": "Illustrative example only — replace every field. Replaces the string-concatenated BasicQuery in SomeSearchRepository with a parameterised Criteria query, per the fix plan's CWE-943 approach. This is the smallest change: the method signature, return type and call sites are unchanged, only the query construction is replaced.",
+  "files_changed": [
+    {
+      "file": "some-service/src/main/java/com/example/repository/SomeSearchRepository.java",
+      "change": "Replaced the StringBuilder-built BasicQuery filter with Criteria.where(\"name\").regex(Pattern.quote(name)) chained with an optional .and(\"department\").is(department), executed via a Query wrapping the Criteria instead of BasicQuery."
+    }
+  ],
+  "matches_plan": true,
+  "deviations": [],
+  "residual_risk": [
+    "The plan's third verification step (replaying the injection payload against a running instance) could not be run in the isolated build sandbox, which has no MongoDB — only compilation was verified here."
+  ],
+  "open_questions": []
+}

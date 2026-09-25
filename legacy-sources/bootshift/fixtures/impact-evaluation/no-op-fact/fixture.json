@@ -1,0 +1,11 @@
+{
+  "id": "no-op-fact",
+  "description": "A fact about an API the tree never references must produce no findings. An analyzer that reports something here has a precision problem that a recall-only metric would hide.",
+  "tuning": false,
+  "fact": {
+    "type": "API_REMOVED",
+    "subject": "org.springframework.boot.web.server.LocalServerPort"
+  },
+  "true_affected_paths": [],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}
