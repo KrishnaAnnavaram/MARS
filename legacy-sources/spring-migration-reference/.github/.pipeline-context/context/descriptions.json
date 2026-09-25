@@ -1,0 +1,1339 @@
+{
+  "generatedAt": "2026-08-15T22:15:00.000Z",
+  "artifactsGeneratedAt": "2026-08-15T16:29:46.355Z",
+  "author": "mixed (architect-agent + llm:google:gemini-3.5-flash-lite)",
+  "nodes": [
+    {
+      "kind": "Module",
+      "id": "employee-service",
+      "fingerprint": "bda4ddd9e0103688",
+      "summary": "The system of record for employees. Owns the `employees` Mongo collection and is the only service that writes to it; every other service reads employee data over its REST surface. Also the only service that enriches employee data with department salary by calling department-service.",
+      "role": "deployable",
+      "responsibilities": [
+        "CRUD over the employee roster",
+        "Excel bulk upload of employees",
+        "Employee search",
+        "Salary lookup, by joining an employee to its department"
+      ],
+      "criticality": "critical",
+      "sideEffects": [
+        "writes: employees Mongo collection",
+        "outbound HTTP to department-service for salary enrichment"
+      ],
+      "invariants": [
+        "An employee's `department` field must reference a department id that department-service knows about; nothing enforces this at write time"
+      ],
+      "failureModes": [
+        "When department-service is unavailable, salary lookup fails rather than degrading — the employee read path still works",
+        "Bulk upload is not transactional: a mid-file failure leaves earlier rows committed"
+      ],
+      "dataTouched": [
+        "writes: employees",
+        "reads: employees"
+      ],
+      "upstream": [
+        "report-service (over HTTP)",
+        "sheduler-service (over HTTP)"
+      ],
+      "downstream": [
+        "department-service",
+        "MongoDB",
+        "discovery-service",
+        "configuaration-server"
+      ],
+      "testHints": [
+        "Stub department-service before exercising any salary path — it is a hard dependency",
+        "Bulk upload needs a real .xlsx fixture; the parser is Apache POI, not a CSV reader"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/pom.xml (spring-boot-starter-data-mongodb, spring-boot-starter-webflux)",
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.service.EmployeeService",
+      "fingerprint": "331872576dba1207",
+      "summary": "The employee service contract. This is the type Spring injects into EmployeeController, so it is what every caller is coded against even though EmployeeServiceImpl holds the behaviour. Changing a signature here is a breaking change for the whole module.",
+      "role": "contract",
+      "criticality": "high",
+      "sideEffects": [],
+      "invariants": [
+        "Every method that takes an employeeId declares EmployeeNotFoundException — callers are expected to handle a missing employee, not receive null"
+      ],
+      "failureModes": [
+        "A caller resolving to the interface rather than the implementation will appear to dead-end in the call graph; the real behaviour is in EmployeeServiceImpl"
+      ],
+      "downstream": [
+        "EmployeeServiceImpl"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/EmployeeService.java"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.employeeservice.service.implementation.EmployeeServiceImpl#getEmployeeSalary(String)",
+      "fingerprint": "8c624a0367914bb5",
+      "summary": "Joins an employee to its department to produce a salary view. Reads the employee locally, then makes a blocking WebClient call to department-service for the department record and copies the salary out of it. This is the only place employee data and department data are combined.",
+      "role": "service",
+      "responsibilities": [
+        "Resolve an employee's salary by way of its department"
+      ],
+      "criticality": "high",
+      "sideEffects": [
+        "outbound HTTP GET to department-service via WebClient",
+        "blocks the calling thread on .block() until department-service responds"
+      ],
+      "invariants": [
+        "employeeResponse.getDepartment() must name a department that department-service can return",
+        "The department-service response must be non-null before its fields are read"
+      ],
+      "failureModes": [
+        "NullPointerException on departmentResponse.getDepartmentName() when department-service returns an empty body or 404 for the department id — the result of .block() is used without a null check",
+        "Thread blocks until the WebClient timeout when department-service is slow or down; no fallback despite resilience4j being on the classpath",
+        "A stale or dangling department id on the employee record surfaces here rather than at write time"
+      ],
+      "dataTouched": [
+        "reads: employees",
+        "reads: department-service /api/v1/department/{id}"
+      ],
+      "upstream": [
+        "EmployeeController.getEmployeeSalary() via GET /api/v1/employee/salary/{id}"
+      ],
+      "downstream": [
+        "department-service",
+        "DepartmentUrlConfiguration"
+      ],
+      "testHints": [
+        "Assert the null-department case explicitly — stub department-service to return an empty body and confirm the observed behaviour",
+        "Cover the timeout path with a delayed stub; there is no circuit breaker on this call",
+        "Happy path needs both an employee fixture and a matching department stub"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:86-106"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/employee/salary/{id}",
+      "fingerprint": "9d56eeaaec1ac17b",
+      "summary": "Returns an employee together with their department name and salary. The only endpoint in employee-service whose response depends on another service being up.",
+      "role": "controller",
+      "criticality": "high",
+      "sideEffects": [
+        "fans out to department-service on every request"
+      ],
+      "failureModes": [
+        "Returns a 500 rather than a degraded response when department-service is unavailable",
+        "Latency tracks department-service latency, because the downstream call is blocking"
+      ],
+      "upstream": [
+        "external API clients"
+      ],
+      "downstream": [
+        "EmployeeServiceImpl.getEmployeeSalary()",
+        "department-service"
+      ],
+      "testHints": [
+        "Replay with a valid employee id whose department id does not exist — that is the sharpest edge on this route"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java"
+      ]
+    },
+    {
+      "kind": "ExternalType",
+      "id": "MongoRepository",
+      "fingerprint": "7b7b4f3eadd14c72",
+      "summary": "Spring Data's repository base interface. Every repository in this workspace extends it and inherits findAll, findById, save, deleteById and count without declaring them, so those calls are real even though the graph holds no Method node for them.",
+      "role": "framework-base",
+      "criticality": "medium",
+      "sideEffects": [
+        "reads and writes the backing Mongo collection for whatever entity the repository is typed on"
+      ],
+      "invariants": [
+        "Query methods derived from names (findByX) are generated at runtime — a typo in the name is a startup failure, not a compile error"
+      ],
+      "failureModes": [
+        "A call to an inherited method looks like a dead end in the call graph; do not read that as an unreached code path",
+        "findById returns Optional.empty rather than throwing for a missing document"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "Extended by EmployeeRepository, DepartmentRepository, EmployeeReportRepository, EmployeeSchedulerRepository"
+      ]
+    },
+    {
+      "kind": "Module",
+      "id": "configuaration-server",
+      "fingerprint": "d038702ff9e76493",
+      "summary": "Acts as the centralized Spring Cloud Config Server for the microservices architecture, supplying externalized configuration properties to all client services. Registers itself with Eureka for discovery and exposes actuator endpoints for operational monitoring.",
+      "confidence": "high",
+      "criticality": "critical",
+      "upstream": [
+        "All microservice clients utilizing spring-cloud-starter-config"
+      ]
+    },
+    {
+      "kind": "Module",
+      "id": "department-service",
+      "fingerprint": "c262066322b861df",
+      "summary": "Microservice responsible for managing department records and their associated metadata, providing a REST API for creation and retrieval queries including filtering by minimum salary. Persists data to MongoDB and registers as a client in the Eureka discovery server.",
+      "confidence": "high",
+      "criticality": "high",
+      "dataTouched": [
+        "MongoDB department collection"
+      ],
+      "downstream": [
+        "MongoDB database",
+        "Eureka discovery server",
+        "Config server"
+      ],
+      "upstream": [
+        "API Gateway or external HTTP clients"
+      ]
+    },
+    {
+      "kind": "Module",
+      "id": "discovery-service",
+      "fingerprint": "09015fd164aa647b",
+      "summary": "The Eureka service registry for the workspace. Every other deployable module registers with it as a Eureka client and discovers its peers through it; clients cache the registry so a brief outage here does not immediately break existing traffic, but new registrations and fresh lookups stop working while it is down.",
+      "role": "deployable",
+      "responsibilities": [
+        "Hosts the Eureka discovery server",
+        "Tracks registered service instances and their health"
+      ],
+      "criticality": "critical",
+      "sideEffects": [
+        "maintains an in-memory service registry"
+      ],
+      "failureModes": [
+        "When down, new service instances cannot register and existing clients eventually evict stale peers from their local cache, causing load-balanced cross-service calls (e.g. employee-service to department-service) to fail once the cache expires"
+      ],
+      "testHints": [
+        "Verify registration via the Eureka dashboard after starting a client module"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "discovery-service/pom.xml (spring-cloud-starter-netflix-eureka-server)",
+        "discovery-service/src/main/java/com/aura/vihanga/discoveryservice/DiscoveryServiceApplication.java"
+      ]
+    },
+    {
+      "kind": "Module",
+      "id": "report-service",
+      "fingerprint": "14e148ce29bf710f",
+      "summary": "Read-side reporting service: joins its own copy of the employees collection with department salary data fetched over HTTP from department-service, and renders the result as an Excel workbook for download. Does not write employee data.",
+      "role": "deployable",
+      "responsibilities": [
+        "Aggregate employee and department salary data",
+        "Generate .xlsx exports via Apache POI"
+      ],
+      "criticality": "medium",
+      "sideEffects": [
+        "outbound HTTP to department-service to resolve department salaries",
+        "reads its own Mongo employees collection, separate from employee-service's repository"
+      ],
+      "failureModes": [
+        "Export endpoint fails when department-service is unreachable, since the WebClient call blocks with .block() and there is no fallback",
+        "Assumes department salary data always returns as a non-null array; a shape change on department-service breaks deserialization"
+      ],
+      "testHints": [
+        "Stub department-service's response array before calling GET /api/v1/export",
+        "Verify the generated workbook has the expected header row and cell types"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/service/implementation/EmployeeReportServiceImpl.java",
+        "report-service/pom.xml (poi-ooxml)"
+      ]
+    },
+    {
+      "kind": "Module",
+      "id": "sheduler-service",
+      "fingerprint": "25f65ed2244c09a9",
+      "summary": "Runs a once-a-year scheduled job that reports female employees on Women's Day, and exposes a plain read-only employee listing endpoint. Keeps its own copy of the Employee document type and its own Mongo repository; does not write employee data.",
+      "role": "deployable",
+      "responsibilities": [
+        "Cron job printing a Women's Day message for female employees",
+        "GET /api/v1/employee passthrough listing"
+      ],
+      "criticality": "low",
+      "sideEffects": [
+        "reads its own employees Mongo collection",
+        "prints to stdout on the scheduled job"
+      ],
+      "failureModes": [
+        "The scheduled job (cron 0 0 0 8 3 *) only writes to System.out — in a containerized deployment that output may never be reviewed by anyone",
+        "No pagination on getAllEmployees(); the whole collection is loaded into memory in one call"
+      ],
+      "testHints": [
+        "Directly invoke printWomenDayMessage() in a test rather than waiting for the cron trigger",
+        "Seed employees with mixed GenderType values to verify the FEMALE filter"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/WomenDaySchedulerImpl.java",
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/EmployeeSchedulerServiceImpl.java"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/department/{id}",
+      "fingerprint": "28a1c8d4f16fc076",
+      "summary": "Looks up a single department by id. Returns HTTP 200 with a null body rather than 404 when the id does not exist — there is no not-found handling on this path, unlike the equivalent employee endpoint.",
+      "role": "controller",
+      "criticality": "medium",
+      "failureModes": [
+        "Unknown departmentId returns HTTP 200 with a null body instead of 404, because DepartmentServiceImpl.getDepartment() returns null and the controller passes it straight through"
+      ],
+      "upstream": [
+        "external API clients"
+      ],
+      "downstream": [
+        "DepartmentServiceImpl.getDepartment()",
+        "DepartmentRepository"
+      ],
+      "testHints": [
+        "Request an id that does not exist and assert on the actual 200/null response, not an assumed 404"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/service/implementation/DepartmentServiceImpl.java:46-57",
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/controller/DepartmentController.java:34-37"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/department/salary/{minSalary}",
+      "fingerprint": "b394ae334962ddf4",
+      "summary": "Lists all departments whose salary exceeds a given threshold. report-service calls this endpoint (via WebClient, with a hardcoded 10000 threshold) to build the salary-enriched employee export.",
+      "role": "controller",
+      "criticality": "medium",
+      "downstream": [
+        "DepartmentServiceImpl.getAllDepartments()",
+        "DepartmentRepository.findBySalaryGreaterThan()"
+      ],
+      "upstream": [
+        "report-service EmployeeReportServiceImpl.getEmployees() (cross-service HTTP call, no Java call edge)"
+      ],
+      "failureModes": [
+        "Returns an empty list rather than an error when minSalary is above every department's salary — callers cannot distinguish 'no matches' from a misconfigured caller"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/controller/DepartmentController.java:39-44",
+        "report-service/src/main/java/com/aura/vihanga/reportservice/service/implementation/EmployeeReportServiceImpl.java:44-46"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/employee",
+      "fingerprint": "e34004fc446060b7",
+      "summary": "Plain passthrough listing of every employee in sheduler-service's own Mongo collection — a separate collection from employee-service's identically-shaped GET /api/v1/employee/{id} endpoint.",
+      "role": "controller",
+      "criticality": "low",
+      "downstream": [
+        "EmployeeSchedulerServiceImpl.getAllEmployees()",
+        "EmployeeSchedulerRepository"
+      ],
+      "failureModes": [
+        "No pagination; returns every document in one response"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/controller/EmployeeSchedulerController.java:18-21"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/employee/{id}",
+      "fingerprint": "eb6b411adee7a1e2",
+      "summary": "Fetches a single employee by id from employee-service, the system of record. Throws EmployeeNotFoundException, mapped to a 404 by EmployeeAdvice, when the id is unknown — unlike department-service's equivalent endpoint.",
+      "role": "controller",
+      "criticality": "high",
+      "downstream": [
+        "EmployeeServiceImpl.getEmployee()",
+        "EmployeeRepository",
+        "EmployeeAdvice (for the not-found path)"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:61-69",
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:57-84"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/employee/search",
+      "fingerprint": "6d2f1f1426b0a0ac",
+      "summary": "Free-text search over employee name (and optional department) via a hand-built MongoDB regex query. The `name` request parameter is user input concatenated directly into the query filter string.",
+      "role": "controller",
+      "criticality": "high",
+      "sideEffects": [
+        "reads employees via a raw MongoTemplate query built by string concatenation"
+      ],
+      "failureModes": [
+        "`name` is spliced unescaped into a Mongo $regex filter — a value containing regex metacharacters or query-operator syntax can alter the query's meaning rather than simply fail to match (NoSQL injection surface)"
+      ],
+      "testHints": [
+        "Try a name value containing a quote or a Mongo operator token and confirm the query is treated as a literal search, not an injected one"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/EmployeeSearchRepository.java:19-31"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/export",
+      "fingerprint": "3be49cb3ab59e74b",
+      "summary": "Downloads an .xlsx workbook of every employee joined to department salary. Streams the file directly onto the servlet response; there is no size limit or pagination.",
+      "role": "controller",
+      "criticality": "medium",
+      "sideEffects": [
+        "outbound HTTP to department-service",
+        "writes the full workbook into the HTTP response body"
+      ],
+      "failureModes": [
+        "Blocks until department-service responds (WebClient .block()); a slow or down department-service makes this request hang or fail with no fallback",
+        "The full employee set and full department set are held in memory for a nested-loop join — memory scales with employee/department counts"
+      ],
+      "testHints": [
+        "Verify Content-Disposition and content-type headers on the response",
+        "Assert behaviour when department-service returns fewer departments than employees reference"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/controller/EmployeeReportController.java:25-39",
+        "report-service/src/main/java/com/aura/vihanga/reportservice/service/implementation/EmployeeReportServiceImpl.java:38-72"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "POST /api/v1/department",
+      "fingerprint": "2d0cc8fd680a747e",
+      "summary": "Intended to create a department, but the handler calls itself instead of the injected `departmentService.createDepartment(...)` — DepartmentServiceImpl and DepartmentRepository.save() are never reached from this route.",
+      "role": "controller",
+      "criticality": "critical",
+      "sideEffects": [
+        "none reach the database — the bug prevents the intended Mongo write from ever executing"
+      ],
+      "failureModes": [
+        "Every call to this endpoint recurses into itself and throws a StackOverflowError, surfaced to the client as a 500, because `createDepartment(department)` on line 25 of DepartmentController calls the controller method itself rather than `departmentService.createDepartment(department)`",
+        "No department is ever persisted through this endpoint — DepartmentServiceImpl.createDepartment() and DepartmentRepository.save() are unreachable dead code from this path"
+      ],
+      "testHints": [
+        "A single POST to this endpoint with any body reproduces the StackOverflowError — add a regression test once this is fixed"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/controller/DepartmentController.java:23-32 — `createDepartment(department)` on line 25 is a self-call, not `departmentService.createDepartment(department)`"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "POST /api/v1/employee",
+      "fingerprint": "95327ecdb01bbc1e",
+      "summary": "Creates a new employee document. No validation of the `department` field against department-service — any string is accepted and only surfaces as a problem later, at salary-lookup time.",
+      "role": "controller",
+      "criticality": "high",
+      "sideEffects": [
+        "writes: employees Mongo collection"
+      ],
+      "invariants": [
+        "`department` is expected to name a department department-service knows about, but nothing here enforces it"
+      ],
+      "downstream": [
+        "EmployeeServiceImpl.createEmployee()",
+        "EmployeeRepository"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:31-39",
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:40-55"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "POST /api/v1/employee/excelUpload",
+      "fingerprint": "b0ecdc229cc59439",
+      "summary": "Bulk-creates employees from an uploaded .xlsx file via Apache POI parsing, then a single repository.saveAll() call. Not transactional across rows.",
+      "role": "controller",
+      "criticality": "medium",
+      "sideEffects": [
+        "writes: employees Mongo collection (bulk insert)"
+      ],
+      "failureModes": [
+        "A malformed row partway through the file can fail the whole saveAll() batch; row-level error isolation depends on ExcelUploadImpl's parsing, which was not in this pass's workload",
+        "No response body confirms how many rows were saved; the client only learns 'File Upload Successfully'"
+      ],
+      "openQuestions": [
+        "ExcelUploadImpl.isValidExcelFile / getEmployeeDataFromExcel were not selected into this workload — their row-level error handling is unverified"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:41-48",
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:124-131"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.departmentservice.controller.DepartmentController",
+      "fingerprint": "617802045c3f068b",
+      "summary": "REST surface for department-service: create, get-by-id, and salary-threshold listing. The create path is broken — see POST /api/v1/department — so in practice this controller only serves reads.",
+      "role": "controller",
+      "criticality": "critical",
+      "sideEffects": [
+        "writes: none actually reach the database, because the create handler is broken",
+        "reads: departments collection via the other two routes"
+      ],
+      "failureModes": [
+        "createDepartment() self-recurses instead of delegating to departmentService — see the endpoint-level description for detail"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/controller/DepartmentController.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.controller.EmployeeController",
+      "fingerprint": "8af5fe68ab913eec",
+      "summary": "REST surface for employee-service: CRUD, search, bulk upload, and a resilience4j-wrapped salary lookup that fans out to department-service. The only controller in the workspace with circuit-breaker/retry/timeout annotations.",
+      "role": "controller",
+      "criticality": "critical",
+      "sideEffects": [
+        "writes: employees Mongo collection (create, bulk upload)",
+        "outbound HTTP to department-service via the salary path"
+      ],
+      "failureModes": [
+        "getEmployeeSalary() is annotated with @CircuitBreaker/@TimeLimiter/@Retry, but the underlying EmployeeServiceImpl.getEmployeeSalary() call has a null-dereference risk those annotations don't specifically address — see that method's description"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.controller.EmployeeReportController",
+      "fingerprint": "31ac0268aecd61f4",
+      "summary": "Single-endpoint controller exposing the Excel export; a thin pass-through to EmployeeReportServiceImpl for both the data join and the workbook generation.",
+      "role": "controller",
+      "criticality": "medium",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/controller/EmployeeReportController.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.shedulerservice.controller.EmployeeSchedulerController",
+      "fingerprint": "226846de6297a31f",
+      "summary": "Single-endpoint read-only controller exposing sheduler-service's own employee collection; unrelated to the scheduled Women's Day job that lives in the same module.",
+      "role": "controller",
+      "criticality": "low",
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/controller/EmployeeSchedulerController.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.departmentservice.repository.DepartmentRepository",
+      "fingerprint": "fa2477ebc2ea0285",
+      "summary": "Spring Data Mongo repository for departments; findBySalaryGreaterThan is a derived query method used by the salary-threshold endpoint. Inherits save/findById/findAll from MongoRepository.",
+      "role": "repository",
+      "criticality": "medium",
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/repository/DepartmentRepository.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.advice.EmployeeAdvice",
+      "fingerprint": "a59dcdca60f0abc8",
+      "summary": "Global exception handler for employee-service. Maps EmployeeNotFoundException to 404 and unsupported HTTP methods to 400, though the latter path's response body claims code 405 while the actual HTTP status returned is 400 — an inconsistency between the body and the status line.",
+      "role": "exception",
+      "criticality": "medium",
+      "failureModes": [
+        "handleHttpRequestMethodNotSupported returns HTTP 400 while the StandardResponse body says code 405 — a client reading the HTTP status and the body's `code` field sees conflicting information"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java:17-22"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.employeeservice.config",
+      "fingerprint": "18871488daf0730f",
+      "summary": "Groups the two pieces employee-service needs to reach department-service over HTTP: the load-balanced WebClient.Builder bean and the config-driven URL lookup.",
+      "role": "configuration",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/config/"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.employeeservice.dto",
+      "fingerprint": "ea0f0417ce45ed59",
+      "summary": "Response DTOs returned by EmployeeController — EmployeeResponse, EmployeeSalaryResponse, and a local copy of DepartmentResponse used to deserialize department-service's payload.",
+      "role": "dto",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/dto/"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.EmployeeServiceApplication",
+      "fingerprint": "6886f32c72126173",
+      "summary": "Spring Boot entry point for employee-service; also a SpringBootServletInitializer for WAR deployment to an external servlet container, and registers as a Eureka client.",
+      "role": "bootstrap",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.employeeservice.repository",
+      "fingerprint": "dd06e60a3a2f7d9a",
+      "summary": "The two ways employee-service reads/writes employees: EmployeeRepository (standard Spring Data CRUD) and EmployeeSearchRepository (hand-built Mongo query for search).",
+      "role": "repository",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.repository.EmployeeRepository",
+      "fingerprint": "5c278c3f4c4dc3c0",
+      "summary": "Standard Spring Data Mongo repository for the employees collection; no custom query methods declared, so create/get/upload all go through inherited MongoRepository operations.",
+      "role": "repository",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/EmployeeRepository.java"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.employeeservice.service.implementation",
+      "fingerprint": "a477c1d806987c99",
+      "summary": "Holds EmployeeServiceImpl (the employee business logic) and ExcelUploadImpl (static Apache POI helpers for bulk upload, not independently described in this pass).",
+      "role": "service",
+      "confidence": "medium",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.service.implementation.EmployeeServiceImpl",
+      "fingerprint": "306bc36c448e9985",
+      "summary": "The employee business logic and the only place employee data is joined with department data. Owns writes to the employees collection and the outbound call to department-service for salary enrichment.",
+      "role": "service",
+      "criticality": "critical",
+      "sideEffects": [
+        "writes: employees Mongo collection (create, bulk upload)",
+        "outbound HTTP GET to department-service (getEmployeeSalary)"
+      ],
+      "invariants": [
+        "getEmployeeSalary() assumes the WebClient call to department-service returns a non-null body — nothing guards against a 404/empty response before dereferencing departmentResponse.getDepartmentName()/getSalary()"
+      ],
+      "failureModes": [
+        "NullPointerException in getEmployeeSalary() when department-service returns an empty/absent department for the employee's department id",
+        "uploadEmployee() calls employeeRepository.saveAll() with no per-row error isolation"
+      ],
+      "testHints": [
+        "Cover getEmployeeSalary() with a stubbed department-service returning an empty body",
+        "Cover uploadEmployee() with a fixture .xlsx containing one bad row"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:86-106",
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:124-131"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.employeeservice.utill",
+      "fingerprint": "fc4682d2b000bd88",
+      "summary": "Shared low-level types for employee-service: the StandardResponse envelope every controller wraps its body in, and the GenderType/EmployeeType enums used on the Employee document.",
+      "role": "util",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/utill/"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.reportservice.config",
+      "fingerprint": "7a7247abfa25a0c4",
+      "summary": "report-service's equivalent of employee-service's config package: a load-balanced WebClient.Builder and a config-driven department URL lookup, duplicated rather than shared between the two modules.",
+      "role": "configuration",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/config/"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.reportservice.controller.EmployeeReportController#exportToExcel(HttpServletResponse)",
+      "fingerprint": "3cf6145b38627f3e",
+      "summary": "Handler for GET /api/v1/export; fetches the salary-enriched employee list then streams a generated .xlsx workbook onto the response, setting Content-Disposition for a browser download.",
+      "role": "controller",
+      "criticality": "medium",
+      "sideEffects": [
+        "outbound HTTP to department-service via EmployeeReportServiceImpl.getEmployees()",
+        "writes the workbook bytes directly to the servlet response"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/controller/EmployeeReportController.java:25-39"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.reportservice.dto",
+      "fingerprint": "c2d502b55a46decc",
+      "summary": "Local copies of EmployeeResponse/EmployeeSalaryResponse/DepartmentResponse duplicated from employee-service's DTOs, used to deserialize department-service's response and shape the export.",
+      "role": "dto",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/dto/"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.repository.EmployeeReportRepository",
+      "fingerprint": "4296a9b77531d385",
+      "summary": "report-service's own Mongo repository over its own Employee entity copy (report-service/entity/Employee), separate from employee-service's repository even though it likely points at the same physical collection.",
+      "role": "repository",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/repository/EmployeeReportRepository.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.service.implementation.EmployeeReportServiceImpl",
+      "fingerprint": "c71b7ca8935d24e6",
+      "summary": "Builds the salary-enriched employee list for export: reads all employees locally, fetches departments over HTTP from department-service filtered by a hardcoded salary threshold, and joins them in memory with a nested loop.",
+      "role": "service",
+      "criticality": "medium",
+      "sideEffects": [
+        "reads: employees (local Mongo)",
+        "outbound HTTP GET to department-service"
+      ],
+      "failureModes": [
+        "The department fetch uses a hardcoded 10000 value as the salary threshold passed into the URI template — any department at or below that salary is silently excluded from the export, with nothing to indicate the exclusion",
+        "NullPointerException risk if department-service ever returns a null array body — passed straight to Arrays.asList without a null check"
+      ],
+      "openQuestions": [
+        "Whether 10000 is meant to be a literal minimum-salary filter or a leftover placeholder isn't stated anywhere in code or config visible in this repo (the URL property itself is externalized to Spring Cloud Config)"
+      ],
+      "testHints": [
+        "Assert whether the 10000 threshold intentionally excludes low-salary departments from the export, or flag it as a defect if that's not the intended business rule"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/service/implementation/EmployeeReportServiceImpl.java:38-72"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.reportservice.utill",
+      "fingerprint": "9dd63e488f3d9e77",
+      "summary": "report-service's copy of StandardResponse/GenderType/EmployeeType, duplicated from employee-service rather than shared.",
+      "role": "util",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/utill/"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.shedulerservice.service.implementation",
+      "fingerprint": "d859b0d4e29b4a8f",
+      "summary": "Holds sheduler-service's two @Service classes: EmployeeSchedulerServiceImpl (read passthrough) and WomenDaySchedulerImpl (the cron job).",
+      "role": "service",
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.shedulerservice.service.implementation.WomenDaySchedulerImpl",
+      "fingerprint": "66870397de3b2579",
+      "summary": "Runs once a year (cron `0 0 0 8 3 *`, March 8th) to filter female employees and print their names to stdout. Purely observational — no side effect beyond console output.",
+      "role": "scheduler",
+      "criticality": "low",
+      "sideEffects": [
+        "prints to stdout"
+      ],
+      "failureModes": [
+        "Output only goes to System.out, not the configured logger — in a containerized deployment this can be lost depending on stdout capture configuration"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/WomenDaySchedulerImpl.java:19-29"
+      ]
+    },
+    {
+      "kind": "Package",
+      "id": "com.aura.vihanga.shedulerservice.utill",
+      "fingerprint": "23faee34912183a0",
+      "summary": "sheduler-service's copy of the GenderType/EmployeeType enums, duplicated from employee-service.",
+      "role": "util",
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/utill/"
+      ]
+    },
+    {
+      "kind": "ExternalType",
+      "id": "Exception",
+      "fingerprint": "d9ddfccf5767cd07",
+      "summary": "java.lang.Exception, the checked-exception base EmployeeNotFoundException extends. Included here only because EmployeeNotFoundException's constructors delegate to it.",
+      "role": "framework-base",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/exception/EmployeeNotFoundException.java"
+      ]
+    },
+    {
+      "kind": "ExternalType",
+      "id": "ResponseEntityExceptionHandler",
+      "fingerprint": "78dd6ceda68b52c4",
+      "summary": "Spring MVC's base class for @ControllerAdvice exception handlers; EmployeeAdvice extends it to override handleHttpRequestMethodNotSupported and inherits handling for the other exception types Spring MVC raises.",
+      "role": "framework-base",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java"
+      ]
+    },
+    {
+      "kind": "ExternalType",
+      "id": "SpringBootServletInitializer",
+      "fingerprint": "8b783272750a1f70",
+      "summary": "Spring Boot's base class for WAR deployment to an external servlet container; EmployeeServiceApplication extends it and overrides configure() so the app can run either as an embedded server (main()) or a deployed WAR.",
+      "role": "framework-base",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.shedulerservice.service.EmployeeSchedulerService",
+      "fingerprint": "24a66b76b5f99c37",
+      "summary": "The contract both EmployeeSchedulerController and WomenDaySchedulerImpl depend on; EmployeeSchedulerServiceImpl is the only implementation and is a pure passthrough to EmployeeSchedulerRepository.findAll().",
+      "role": "contract",
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/EmployeeSchedulerService.java"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.departmentservice.controller.DepartmentController#createDepartment(Department)",
+      "fingerprint": "03d8c39c5cf80a6b",
+      "summary": "The handler code for POST /api/v1/department. Line 25 calls `createDepartment(department)` — itself — instead of `departmentService.createDepartment(department)`, so every invocation recurses until the stack overflows and departmentService/departmentRepository are never reached.",
+      "role": "controller",
+      "criticality": "critical",
+      "failureModes": [
+        "Infinite self-recursion leads to a StackOverflowError, surfaced to the client as a 500, on every call",
+        "The intended department write never happens"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/controller/DepartmentController.java:23-32"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.departmentservice.controller.DepartmentController#getAllDepartments(double)",
+      "fingerprint": "0f2b639a3183ccf8",
+      "summary": "Handler for GET /api/v1/department/salary/{minSalary}; delegates straight to DepartmentServiceImpl.getAllDepartments() / DepartmentRepository.findBySalaryGreaterThan().",
+      "role": "controller",
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/controller/DepartmentController.java:39-44"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.departmentservice.controller.DepartmentController#getDepartment(String)",
+      "fingerprint": "c7ed1f90feedbef1",
+      "summary": "Handler for GET /api/v1/department/{id}; delegates to DepartmentServiceImpl.getDepartment(), which returns null (not a 404) for an unknown id.",
+      "role": "controller",
+      "failureModes": [
+        "Passes through DepartmentServiceImpl's null-for-not-found behaviour unchanged"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/controller/DepartmentController.java:34-37"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.departmentservice.service.implementation.DepartmentServiceImpl",
+      "fingerprint": "a843051916a60691",
+      "summary": "The department business logic: straightforward create/get/list-by-salary over DepartmentRepository, with no validation beyond what MongoRepository enforces. DepartmentController's create endpoint currently never reaches this class due to a self-recursion bug in the controller.",
+      "role": "service",
+      "criticality": "high",
+      "sideEffects": [
+        "writes: departments Mongo collection (createDepartment, when reached)",
+        "reads: departments Mongo collection"
+      ],
+      "failureModes": [
+        "getDepartment() returns null for an unknown id rather than throwing — there is no equivalent of EmployeeNotFoundException in this module, so callers get a 200/null instead of a 404"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/service/implementation/DepartmentServiceImpl.java"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.employeeservice.controller.EmployeeController#createEmployee(Employee)",
+      "fingerprint": "435ffaa99125cc77",
+      "summary": "Handler for POST /api/v1/employee; delegates to EmployeeServiceImpl.createEmployee(), which writes unconditionally with no department-id validation.",
+      "role": "controller",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:31-39"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.employeeservice.controller.EmployeeController#getEmployee(String)",
+      "fingerprint": "d4f9f9e9010fea15",
+      "summary": "Handler for GET /api/v1/employee/{id}; delegates to EmployeeServiceImpl.getEmployee(), which throws EmployeeNotFoundException (mapped to 404 via EmployeeAdvice) for an unknown id.",
+      "role": "controller",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:61-69"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.employeeservice.controller.EmployeeController#getEmployeeSalary(String)",
+      "fingerprint": "0d3199229c2963bb",
+      "summary": "Handler for GET /api/v1/employee/salary/{id}; wraps EmployeeServiceImpl.getEmployeeSalary() (which blocks on a department-service call) in CompletableFuture.supplyAsync under a circuit breaker/timeout/retry, falling back to EmployeeController.fallBackMethodEmployee() on failure.",
+      "role": "controller",
+      "criticality": "high",
+      "failureModes": [
+        "The resilience annotations guard against timeouts/exceptions from the downstream call, but it is unverified whether the NullPointerException path in EmployeeServiceImpl.getEmployeeSalary() (empty department body) actually triggers the fallback or escapes as a raw 500"
+      ],
+      "testHints": [
+        "Verify whether the NPE case reaches fallBackMethodEmployee() or bypasses it"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:71-82"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.employeeservice.controller.EmployeeController#searchEmployees(String,String)",
+      "fingerprint": "4b370d4df40c2b84",
+      "summary": "Handler for GET /api/v1/employee/search; delegates to EmployeeSearchRepository's string-built Mongo query — see that repository's description for the injection-surface concern.",
+      "role": "controller",
+      "criticality": "high",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:50-59"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.employeeservice.controller.EmployeeController#uploadEmployee(MultipartFile)",
+      "fingerprint": "a54fa8ef01aba7be",
+      "summary": "Handler for POST /api/v1/employee/excelUpload; delegates to EmployeeServiceImpl.uploadEmployee(), which validates the file type then bulk-saves all parsed rows in one saveAll() call.",
+      "role": "controller",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java:41-48"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.model.Employee",
+      "fingerprint": "ccfb6d3046b1d5fb",
+      "summary": "The system-of-record employee document, written only by employee-service. `department` is a free-text field with no referential check against department-service.",
+      "role": "entity",
+      "criticality": "critical",
+      "dataTouched": [
+        "employees Mongo collection"
+      ],
+      "invariants": [
+        "`department` should name a real department id, but nothing enforces it at write time"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/model/Employee.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.entity.Employee",
+      "fingerprint": "003a182605361567",
+      "summary": "report-service's own copy of the employee document shape, read-only from this module's perspective (only findAll()/findByDepartment() are used). A structural duplicate of employee-service's Employee, not a shared type.",
+      "role": "entity",
+      "criticality": "medium",
+      "dataTouched": [
+        "employees Mongo collection (read)"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/entity/Employee.java"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.shedulerservice.controller.EmployeeSchedulerController#getAllEmployees()",
+      "fingerprint": "4adeae94fa3e3779",
+      "summary": "Handler for GET /api/v1/employee in sheduler-service; unpaginated passthrough to EmployeeSchedulerServiceImpl.getAllEmployees().",
+      "role": "controller",
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/controller/EmployeeSchedulerController.java:18-21"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.shedulerservice.entity.Employee",
+      "fingerprint": "c3a375cd5f9793bf",
+      "summary": "sheduler-service's own copy of the employee document shape, read-only from this module — used by both the passthrough listing endpoint and the Women's Day cron filter.",
+      "role": "entity",
+      "criticality": "low",
+      "dataTouched": [
+        "employees Mongo collection (read)"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/entity/Employee.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.shedulerservice.service.implementation.EmployeeSchedulerServiceImpl",
+      "fingerprint": "98ad138b9c60e7e1",
+      "summary": "Pure passthrough implementation of EmployeeSchedulerService — findAll() with no filtering, paging, or transformation.",
+      "role": "service",
+      "criticality": "low",
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/EmployeeSchedulerServiceImpl.java"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.shedulerservice.service.implementation.WomenDaySchedulerImpl#printWomenDayMessage()",
+      "fingerprint": "9d6bd27e3255b025",
+      "summary": "The cron body itself: loads every employee via EmployeeSchedulerService, filters to GenderType.FEMALE, and prints names to stdout once a year on March 8th.",
+      "role": "scheduler",
+      "criticality": "low",
+      "sideEffects": [
+        "prints to stdout"
+      ],
+      "failureModes": [
+        "Loads the full employee collection into memory on every run, even though only a filtered subset is used"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/WomenDaySchedulerImpl.java:19-29"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.configuarationserver.ConfiguarationServerApplication",
+      "fingerprint": "34da71ee77347433",
+      "summary": "Spring Boot entry point that boots the module as both a Config Server (@EnableConfigServer) and a Eureka client. Every other module's application.yml pulls its runtime configuration from here, including the department-service URLs employee-service and report-service depend on.",
+      "role": "bootstrap",
+      "criticality": "critical",
+      "downstream": [
+        "a backing config repository (git or local, not visible in this codebase)"
+      ],
+      "upstream": [
+        "every other module, via spring-cloud-starter-config at startup"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "configuaration-server/src/main/java/com/aura/vihanga/configuarationserver/ConfiguarationServerApplication.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.departmentservice.DepartmentServiceApplication",
+      "fingerprint": "e5f07d72ea5ed82d",
+      "summary": "Spring Boot entry point for department-service; registers as a Eureka client so employee-service and report-service can resolve it by name for their cross-service calls.",
+      "role": "bootstrap",
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/DepartmentServiceApplication.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.departmentservice.model.Department",
+      "fingerprint": "c1952db05d6f1ddb",
+      "summary": "The department Mongo document: id, name and a single salary figure. Salary here is a department-wide value, not tied to any individual employee — it's the field employee-service's salary endpoint reads.",
+      "role": "entity",
+      "criticality": "high",
+      "dataTouched": [
+        "departments Mongo collection"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/model/Department.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.departmentservice.service.DepartmentService",
+      "fingerprint": "42d15470dff87967",
+      "summary": "The department service contract; DepartmentServiceImpl is the sole implementation. Callers coded against this interface (like DepartmentController, once its create-path bug is fixed) are shielded from the implementation.",
+      "role": "contract",
+      "confidence": "high",
+      "evidence": [
+        "department-service/src/main/java/com/aura/vihanga/departmentservice/service/DepartmentService.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.discoveryservice.DiscoveryServiceApplication",
+      "fingerprint": "af1a2a753abb6d19",
+      "summary": "Spring Boot entry point that boots the module as a Eureka server (@EnableEurekaServer) — the process discovery-service's module description refers to.",
+      "role": "bootstrap",
+      "confidence": "high",
+      "evidence": [
+        "discovery-service/src/main/java/com/aura/vihanga/discoveryservice/DiscoveryServiceApplication.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.config.DepartmentUrlConfiguration",
+      "fingerprint": "830d925187a4547c",
+      "summary": "Resolves the department-service URL employee-service's WebClient calls against, from the externally-supplied `employee.department.details.url` property. The property's actual value lives in Spring Cloud Config, not in this repo.",
+      "role": "configuration",
+      "invariants": [
+        "`employee.department.details.url` must be set and must be a valid URI template with one substitution slot for the department id, or getEmployeeSalary()'s WebClient call fails"
+      ],
+      "failureModes": [
+        "Returns null if the property is missing, which WebClient.uri() will reject with an exception rather than a friendly error"
+      ],
+      "openQuestions": [
+        "The actual property value is not present in this repo (externalized to config server) — cannot verify the URL shape"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/config/DepartmentUrlConfiguration.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.config.WebClientConfig",
+      "fingerprint": "2e03278d289071ea",
+      "summary": "Defines the single, lazily-initialized, load-balanced WebClient.Builder bean employee-service uses for its one outbound call to department-service. @LoadBalanced means the host in the URI is resolved through Eureka rather than DNS.",
+      "role": "configuration",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/config/WebClientConfig.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.exception.EmployeeNotFoundException",
+      "fingerprint": "58db975f6240dd08",
+      "summary": "Checked exception thrown when an employee id doesn't resolve; caught by EmployeeAdvice and turned into a 404. Only thrown from EmployeeServiceImpl.getEmployee(), so getEmployeeSalary() also surfaces it since it calls getEmployee() internally.",
+      "role": "exception",
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/exception/EmployeeNotFoundException.java",
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:58-84"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.repository.EmployeeSearchRepository",
+      "fingerprint": "779d241bd40389d6",
+      "summary": "Hand-rolled Mongo query repository backing employee search. Builds its filter document by string-concatenating the raw `name` and `department` request parameters rather than using parameterized query operators.",
+      "role": "repository",
+      "criticality": "high",
+      "sideEffects": [
+        "reads employees via MongoTemplate.find with a string-built query"
+      ],
+      "invariants": [
+        "Callers must not pass untrusted `name`/`department` values without considering that they land unescaped inside a Mongo $regex filter"
+      ],
+      "failureModes": [
+        "A `name` value containing regex metacharacters changes match behaviour instead of erroring; a value crafted with Mongo query-operator syntax is a NoSQL injection surface — the same defect noted on GET /api/v1/employee/search"
+      ],
+      "testHints": [
+        "Add a test asserting that special characters in `name` are treated literally, not as regex/operators"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/EmployeeSearchRepository.java:19-31"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.config.DepartmentConfigUrl",
+      "fingerprint": "5b1b7451125567fe",
+      "summary": "report-service's equivalent of DepartmentUrlConfiguration: resolves the department-service URL from an externally-supplied property, used by EmployeeReportServiceImpl to fetch departments for the export join.",
+      "role": "configuration",
+      "openQuestions": [
+        "Actual property value/URI template shape is externalized to Spring Cloud Config, not visible in this repo"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/config/DepartmentConfigUrl.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.config.WebClientConfig",
+      "fingerprint": "c4e66806fe339e49",
+      "summary": "report-service's load-balanced WebClient.Builder bean, duplicated from employee-service's WebClientConfig rather than shared.",
+      "role": "configuration",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/config/WebClientConfig.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.ReportServiceApplication",
+      "fingerprint": "748c31e98fa5fae5",
+      "summary": "Spring Boot entry point for report-service; registers as a Eureka client so it can resolve department-service by name.",
+      "role": "bootstrap",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/ReportServiceApplication.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.reportservice.service.EmployeeReportService",
+      "fingerprint": "fd15790b15858e59",
+      "summary": "The contract EmployeeReportController depends on; EmployeeReportServiceImpl is the sole implementation, combining the employee/department join and Excel generation behind two methods.",
+      "role": "contract",
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/service/EmployeeReportService.java"
+      ]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.reportservice.service.implementation.EmployeeReportServiceImpl#getEmployees()",
+      "fingerprint": "fd8c65ecc69cbeb3",
+      "summary": "Loads every employee, fetches departments above a hardcoded 10000 salary threshold from department-service, and joins them with a nested loop keyed on department id. The sole outbound HTTP call in report-service.",
+      "role": "service",
+      "criticality": "medium",
+      "sideEffects": [
+        "reads: employees (local Mongo)",
+        "outbound HTTP GET to department-service"
+      ],
+      "failureModes": [
+        "NullPointerException if department-service returns a null body — Arrays.asList(departmentResponses) is called with no null check",
+        "Employees whose department salary is at or below the 10000 threshold are silently dropped from the result, because the nested-loop join only matches against the filtered department list"
+      ],
+      "testHints": [
+        "Test with an employee whose department salary is below 10000 and confirm the (currently silent) exclusion"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "report-service/src/main/java/com/aura/vihanga/reportservice/service/implementation/EmployeeReportServiceImpl.java:38-72"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.shedulerservice.repository.EmployeeSchedulerRepository",
+      "fingerprint": "004520749024bf87",
+      "summary": "Plain Spring Data Mongo repository over sheduler-service's own Employee entity copy; no custom query methods, used only via inherited findAll().",
+      "role": "repository",
+      "confidence": "high",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/repository/EmployeeSchedulerRepository.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.shedulerservice.ShedulerServiceApplication",
+      "fingerprint": "3cb4f794c085aee7",
+      "summary": "Spring Boot entry point for sheduler-service. @EnableScheduling activates the cron-based WomenDaySchedulerImpl job; unlike the other client modules there's no @EnableEurekaClient annotation here even though the module depends on spring-cloud-starter-netflix-eureka-client, so registration likely happens via auto-configuration from the dependency alone.",
+      "role": "bootstrap",
+      "openQuestions": [
+        "Confirm whether Eureka client registration is actually active without the explicit @EnableEurekaClient annotation"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/ShedulerServiceApplication.java"
+      ]
+    }
+  ],
+  "crossCutting": [
+    {
+      "id": "employee-salary-cross-service-join",
+      "topic": "service-dependency",
+      "text": "employee-service reaches department-service over HTTP to resolve salary. This edge carries no Java call edge, so a change to department-service's GET /api/v1/department/{id} contract or response shape breaks employee-service's salary endpoint without any static reference between the two modules.",
+      "modules": [
+        "employee-service",
+        "department-service"
+      ],
+      "types": [
+        "com.aura.vihanga.employeeservice.service.implementation.EmployeeServiceImpl"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "EmployeeServiceImpl.getEmployeeSalary uses WebClient with DepartmentUrlConfiguration.getDepartmentByIdUrl()"
+      ]
+    },
+    {
+      "id": "shared-mongo-employee-collection",
+      "topic": "shared-datastore",
+      "text": "employee-service, report-service and sheduler-service each declare spring-boot-starter-data-mongodb and each define their own Employee document type. If they point at the same database, a schema change in one service's Employee affects reads in the others with nothing in the code to flag it.",
+      "modules": [
+        "employee-service",
+        "report-service",
+        "sheduler-service"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "Three separate Employee @Document types across the three modules",
+        "pom.xml of each module"
+      ]
+    },
+    {
+      "id": "report-service-department-salary-join",
+      "topic": "service-dependency",
+      "text": "report-service reaches department-service over HTTP (GET /api/v1/department/salary/{minSalary}, called with a hardcoded 10000 threshold) to enrich its export. Like the employee-service equivalent, this edge carries no Java call edge — a change to department-service's response shape breaks report-service's export silently, and a change to the 10000 threshold semantics has no test coverage anywhere in the workspace.",
+      "modules": [
+        "report-service",
+        "department-service"
+      ],
+      "types": [
+        "com.aura.vihanga.reportservice.service.implementation.EmployeeReportServiceImpl"
+      ],
+      "confidence": "medium",
+      "evidence": [
+        "EmployeeReportServiceImpl.getEmployees() uses WebClient with DepartmentConfigUrl.getDepartmentUrl()"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mars.harness/schemas/v1/common.schema.json",
+  "title": "MARS unified harness: shared definitions",
+  "$comment": "Contract version 1. Artifacts are serialized snake_case with null fields omitted, so optional fields are absent rather than null. Identifiers are ULID-style: PREFIX-<26 Crockford base32 chars>; CHANGE_ID is Bootshift's CHANGE-<6 digits>.",
+  "$defs": {
+    "run_id": { "type": "string", "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "file_id": { "type": "string", "pattern": "^FILE-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "module_id": { "type": "string", "pattern": "^MOD-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "program_unit_id": { "type": "string", "pattern": "^PU-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "symbol_id": { "type": "string", "pattern": "^SYM-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "statement_id": { "type": "string", "pattern": "^STMT-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "finding_id": { "type": "string", "pattern": "^FINDING-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "proposal_id": { "type": "string", "pattern": "^PROP-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "decision_id": { "type": "string", "pattern": "^DEC-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "evidence_id": { "type": "string", "pattern": "^EVID-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "change_id": { "type": "string", "pattern": "^CHANGE-[0-9]{6,}$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}" },
+    "evidence_refs": { "type": "array", "items": { "$ref": "#/$defs/evidence_id" } },
+    "strings": { "type": "array", "items": { "type": "string" } },
+    "location": {
+      "type": "object",
+      "required": ["path", "line_start", "line_end"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "line_start": { "type": "integer", "minimum": 0 },
+        "col_start": { "type": "integer" },
+        "line_end": { "type": "integer", "minimum": 0 },
+        "col_end": { "type": "integer" }
+      }
+    }
+  }
+}

@@ -1,0 +1,212 @@
+{
+  "slug": "spring-boot-3-to-4",
+  "generated_at": "2026-09-06T14:26:39.925Z",
+  "project": {
+    "dir": "d:/Office Research/SDLC_Harness/spring-boot-3-to-4-migration-demo-master",
+    "relative_to_repo": "../spring-boot-3-to-4-migration-demo-master",
+    "name": "Spring Boot 3 to 4 Migration Demo",
+    "descriptor": "pom.xml",
+    "coordinates": {
+      "groupId": "com.example",
+      "artifactId": "spring-boot-migration-demo",
+      "version": "1.0.0",
+      "name": "Spring Boot 3 to 4 Migration Demo"
+    },
+    "sources": {
+      "main": 17,
+      "test": 5,
+      "resources": 2
+    },
+    "ancillary_files": [
+      "Dockerfile",
+      "docker-compose.yml"
+    ]
+  },
+  "build_tool": {
+    "tool": "maven",
+    "kind": "system",
+    "command": "C:\\Tools\\apache-maven-3.9.16\\bin\\mvn.cmd",
+    "display": "C:\\Tools\\apache-maven-3.9.16\\bin\\mvn.cmd",
+    "version": "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)"
+  },
+  "language": {
+    "name": "Java",
+    "declared": "17",
+    "target": "21",
+    "from_jdk": {
+      "major": 17,
+      "version": "17.0.20",
+      "home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.8-hotspot"
+    },
+    "to_jdk": {
+      "major": 21,
+      "version": "21.0.12.1",
+      "home": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot"
+    }
+  },
+  "platform": {
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "3.5.0"
+    },
+    "properties": {
+      "java.version": "17",
+      "project.build.sourceEncoding": "UTF-8",
+      "project.reporting.outputEncoding": "UTF-8"
+    },
+    "dependencies": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-web",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-data-jpa",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-validation",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-security",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-actuator",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.postgresql",
+        "artifactId": "postgresql",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "com.h2database",
+        "artifactId": "h2",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "runtime",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.security",
+        "artifactId": "spring-security-test",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-test",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "org.testcontainers",
+        "artifactId": "testcontainers",
+        "version": "1.20.1",
+        "declaredVersion": "1.20.1",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.testcontainers",
+        "artifactId": "postgresql",
+        "version": "1.20.1",
+        "declaredVersion": "1.20.1",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.testcontainers",
+        "artifactId": "junit-jupiter",
+        "version": "1.20.1",
+        "declaredVersion": "1.20.1",
+        "scope": "test",
+        "managed": false
+      }
+    ],
+    "plugins": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-maven-plugin",
+        "version": null
+      },
+      {
+        "groupId": "org.apache.maven.plugins",
+        "artifactId": "maven-compiler-plugin",
+        "version": null
+      },
+      {
+        "groupId": "org.apache.maven.plugins",
+        "artifactId": "maven-surefire-plugin",
+        "version": null
+      }
+    ]
+  },
+  "toolchain": {
+    "installed_jdks": [
+      {
+        "home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.8-hotspot",
+        "major": 17,
+        "version": "17.0.20",
+        "source": "JAVA_HOME"
+      },
+      {
+        "home": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot",
+        "major": 21,
+        "version": "21.0.12.1",
+        "source": "C:\\Program Files\\Eclipse Adoptium"
+      },
+      {
+        "home": "C:\\Program Files\\Amazon Corretto\\jdk25.0.1_8",
+        "major": 25,
+        "version": "25.0.1",
+        "source": "C:\\Program Files\\Amazon Corretto"
+      }
+    ]
+  },
+  "reference_packs": [
+    {
+      "id": "spring-boot-3-to-4",
+      "title": "Spring Boot 3.x to 4.x (Java 17 to 21)",
+      "stack": "Spring Boot",
+      "from": "3",
+      "to": "4",
+      "language_from": "17",
+      "language_to": "21",
+      "file": "references/spring-boot-3-to-4.md",
+      "matched_on": [
+        "org.springframework.boot:spring-boot-starter-parent:3",
+        "org.springframework.boot:spring-boot-starter-web"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "persistence-comparison",
+  "version": "1.0.0",
+  "description": "What the harness treats as the persistence contract when comparing OLD and NEW.",
+  "the_contract_is": [
+    "Query result sets, compared as ordered or unordered sets according to the query",
+    "Database and document state after the scenario",
+    "Transaction outcome: committed, rolled back, or failed",
+    "Lock behaviour observable to the caller",
+    "Schema behaviour: what DDL the provider chose to emit"
+  ],
+  "the_contract_is_not": [
+    "The literal text of generated SQL",
+    "Statement ordering within a transaction where the outcome is unchanged",
+    "Connection pool internals"
+  ],
+  "generated_sql": {
+    "retained": true,
+    "role": "DIAGNOSTIC_EVIDENCE",
+    "rationale": "Two statements can differ in text and be identical in effect, and identical in text while behaving differently under a new dialect. Comparing the text produces both false alarms and false confidence, so it is evidence for a human rather than a gate."
+  },
+  "state_capture": {
+    "relational": "Row counts and full row content per touched table, ordered by primary key",
+    "document": "Document count and canonical JSON per touched collection, ordered by _id",
+    "sensitive_columns": "Represented by SensitiveValues metadata, never captured in plaintext"
+  },
+  "unexplained_persistence_difference": {
+    "classification": "UNEXPLAINED",
+    "blocks": true,
+    "approval_gate": "PERSISTENCE_SCHEMA_CHANGE"
+  },
+  "environment_requirement": "A persistence dimension is only compared when the equivalence contract marks the database vendor and version MUST_MATCH and they do match. Otherwise the dimension is NOT_COMPARED with a reason."
+}

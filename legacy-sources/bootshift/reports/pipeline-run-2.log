@@ -1,0 +1,336 @@
+﻿
+  00-bootstrap  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Workspaces created under C:\Users\annav\AppData\Local\Temp\bootshift-workspaces\RUN-01M26B99S7GWBDP1CSDV6Q5QV6; OSS gate passed for 19 harness components
+
+  ! Input path is inside the harness repository; harness modules are excluded from analysis by the module filter.
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\00-bootstrap\20260910-190407-173\bootstrap.json
+
+
+  01-inventory  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  99 files across 6 module(s); 104 migration signal(s); registry sealed as 54b0101529f0c545aeb947226f01f1cf5fea307f198fed24121fd228d94dbe71 (content 3982fd4e3e180eeb)
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\01-inventory\20260910-190407-542\inventory-artifact.json
+    E:\Virtusa Projects\bootshift\output\01-inventory\20260910-190407-542\file-registry.json
+    E:\Virtusa Projects\bootshift\output\01-inventory\20260910-190407-542\inventory-signals.json
+    E:\Virtusa Projects\bootshift\output\01-inventory\20260910-190407-542\inventory-issues.json
+    E:\Virtusa Projects\bootshift\output\01-inventory\20260910-190407-542\manifest.json
+
+
+  02-build  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  MAVEN model: 6 module(s), 962 dependency record(s), 9186 managed version(s)
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\02-build\20260910-190620-240\build-model.json
+    E:\Virtusa Projects\bootshift\output\02-build\20260910-190620-240\dependency-model.json
+    E:\Virtusa Projects\bootshift\output\02-build\20260910-190620-240\bom-model.json
+    E:\Virtusa Projects\bootshift\output\02-build\20260910-190620-240\plugin-model.json
+    E:\Virtusa Projects\bootshift\output\02-build\20260910-190620-240\repository-model.json
+    E:\Virtusa Projects\bootshift\output\02-build\20260910-190620-240\resolution-issues.json
+    E:\Virtusa Projects\bootshift\output\02-build\20260910-190620-240\manifest.json
+
+
+  03-graph  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  839 nodes / 1852 edges, 239 symbols, attribution 0.6858, content hash 5b764c29af1e
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\application-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\file-registry.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\symbol-registry.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\module-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\file-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\symbol-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\dependency-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\spring-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\configuration-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\persistence-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\endpoint-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\test-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\integration-graph.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\graph-summary.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\graph-issues.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\graph-verification-report.json
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\graph-verification-report.md
+    E:\Virtusa Projects\bootshift\output\03-graph\20260910-190629-487\manifest.json
+
+java : [main] INFO com.bootshift.adapters.environment.ContainerProvisioner - docker is installed but its daemon did 
+not answer; it is not usable as a container runtime for this run
+At line:1 char:379
++ ... JAVA_HOME"; java -jar apps\migration-cli\target\bootshift.jar run --t ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([main] INFO com...me for this run:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+  04-baseline  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Baseline sealed as 6f06913aab88cf48 (6 module(s) built, 12 test(s), 4/6 runtime probe(s) started)
+
+  ! 2 pre-existing test failure(s) recorded as baseline debt
+  ! BLIND SPOT BS-RUNTIME-CONFIGUARATION-SERVER: Module configuaration-server did not start during baseline capture
+  ! BLIND SPOT BS-RUNTIME-EMPLOYEE-SERVICE: Module employee-service did not start during baseline capture
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\baseline-build.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\baseline-tests.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\baseline-coverage.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\baseline-configuration.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\baseline-runtime.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\environment-equivalence.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\runtime-graph-baseline.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\application-graph-baseline-enriched.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\baseline-manifest.json
+    E:\Virtusa Projects\bootshift\output\04-baseline\20260910-190631-180\manifest.json
+
+
+  05-compatibility  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Current state Spring Boot 2.7.12 / Java 17 / Spring Cloud 2021.0.7; 9 candidate line(s), 0 unavailable, 0 unknown internal component(s)
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\05-compatibility\20260910-191535-531\compatibility-registry.json
+    E:\Virtusa Projects\bootshift\output\05-compatibility\20260910-191535-531\lifecycle-registry.json
+    E:\Virtusa Projects\bootshift\output\05-compatibility\20260910-191535-531\artifact-availability.json
+    E:\Virtusa Projects\bootshift\output\05-compatibility\20260910-191535-531\version-space-evidence.json
+    E:\Virtusa Projects\bootshift\output\05-compatibility\20260910-191535-531\internal-components.json
+    E:\Virtusa Projects\bootshift\output\05-compatibility\20260910-191535-531\manifest.json
+
+
+  06-target  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Landing target Spring Boot 3.5.16 (Java 21, Spring Cloud 2025.0.3), 8 migration edge(s), -2 month support horizon
+
+  ! eliminated 2.7: support horizon of -33 month(s) is below the policy minimum -24
+  ! eliminated 3.0: support horizon of -33 month(s) is below the policy minimum -24
+  ! eliminated 3.1: support horizon of -27 month(s) is below the policy minimum -24
+  ! eliminated 4.0: the application uses Spring Cloud but no GA release train targets this Boot line, so the required artifacts do not exist
+  ! eliminated 4.1: the application uses Spring Cloud but no GA release train targets this Boot line, so the required artifacts do not exist
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\06-target\20260910-191557-486\target-state.json
+    E:\Virtusa Projects\bootshift\output\06-target\20260910-191557-486\migration-path.json
+    E:\Virtusa Projects\bootshift\output\06-target\20260910-191557-486\target-resolution-report.json
+    E:\Virtusa Projects\bootshift\output\06-target\20260910-191557-486\manifest.json
+
+
+  07-documentation  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  21 document(s) pinned for 7 edge(s); 7 official migration guide(s)
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\07-documentation\20260910-191557-579\document-registry.json
+    E:\Virtusa Projects\bootshift\output\07-documentation\20260910-191557-579\document-coverage.json
+    E:\Virtusa Projects\bootshift\output\07-documentation\20260910-191557-579\manifest.json
+
+[main] WARN com.bootshift.adapters.http.HttpFetcher - Egress refused for https://repo1.maven.org/maven2/com/fasterxml/j
+ackson/core/jackson-annotations/${jackson.version}/jackson-annotations-${jackson.version}.jar - host is not on the 
+allowlist
+
+  08-knowledge  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  1691 migration fact(s): 1683 VERIFIED, 8 CANDIDATE, 0 CONFLICTING for 2.7.12 -> 3.5.16
+
+  ! 8 fact(s) remain CANDIDATE: documentation asserted them but no artifact observation corroborated them, so they cannot authorize a change
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\08-knowledge\20260910-191608-336\migration-knowledge.json
+    E:\Virtusa Projects\bootshift\output\08-knowledge\20260910-191608-336\artifact-channel.json
+    E:\Virtusa Projects\bootshift\output\08-knowledge\20260910-191608-336\documentation-channel.json
+    E:\Virtusa Projects\bootshift\output\08-knowledge\20260910-191608-336\knowledge-summary.json
+    E:\Virtusa Projects\bootshift\output\08-knowledge\20260910-191608-336\manifest.json
+
+
+  09-impact  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  2072 impact finding(s) across 27 file(s); {DEFINITELY_AFFECTED=502, POSSIBLY_AFFECTED=4, UNAFFECTED_WITHIN_OBSERVED_COVERAGE=1566}
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\09-impact\20260910-192255-331\impact-report.json
+    E:\Virtusa Projects\bootshift\output\09-impact\20260910-192255-331\impact-summary.json
+    E:\Virtusa Projects\bootshift\output\09-impact\20260910-192255-331\blast-radius.json
+    E:\Virtusa Projects\bootshift\output\09-impact\20260910-192255-331\manifest.json
+
+
+  10-characterization  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  82 executable scenario(s): 36 frozen against OLD, 46 unobservable, 0 unexecuted; 506 characterization contract(s): 0 frozen, 0 mapped to existing tests, 506 awaiting OLD, 0 unobservable
+
+  ! 46 scenario(s) are unobservable in this environment and are recorded as explicit gaps
+  ! 506 probe(s) await execution against the original application; they cannot act as an oracle until then
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\10-characterization\20260910-192259-366\characterization-report.json
+    E:\Virtusa Projects\bootshift\output\10-characterization\20260910-192259-366\characterization-contracts.json
+    E:\Virtusa Projects\bootshift\output\10-characterization\20260910-192259-366\characterization-scenarios.json
+    E:\Virtusa Projects\bootshift\output\10-characterization\20260910-192259-366\characterization-old-observations.json
+    E:\Virtusa Projects\bootshift\output\10-characterization\20260910-192259-366\characterization-gaps.json
+    E:\Virtusa Projects\bootshift\output\10-characterization\20260910-192259-366\manifest.json
+
+
+  11-plan  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  8 edge(s) frozen, deterministic coverage 0.6791, 1 differential dimension(s) required
+
+  ! 2 fact type(s) have no deterministic capability; deterministic coverage is 0.6791
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\11-plan\20260910-192714-898\migration-plan.json
+    E:\Virtusa Projects\bootshift\output\11-plan\20260910-192714-898\edge-plan.json
+    E:\Virtusa Projects\bootshift\output\11-plan\20260910-192714-898\transformation-capability-registry.json
+    E:\Virtusa Projects\bootshift\output\11-plan\20260910-192714-898\residual-report.json
+    E:\Virtusa Projects\bootshift\output\11-plan\20260910-192714-898\manifest.json
+
+
+  12-transformation  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-1-PREP-TEST: 3 applied, 0 rejected, 0 failed; ledger head 66e62a9b988c
+
+  ! residual after deterministic transformation: [custom-junit4-runner]
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\12-transformation\20260910-192718-301\transformation-report.json
+    E:\Virtusa Projects\bootshift\output\12-transformation\20260910-192718-301\proposed-changes.json
+    E:\Virtusa Projects\bootshift\output\12-transformation\20260910-192718-301\manifest.json
+
+
+  13-build-repair  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-1-PREP-TEST compiles after 1 round(s); 0 AI attempt(s) used of 12
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-192719-127\build-report.json
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-192719-127\repair-report.json
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-192719-127\diagnostics.json
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-192719-127\manifest.json
+
+
+  14-graph-diff  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-1-PREP-TEST graph COMPLETE: +0/-0 nodes, +0/-0 edges, 0 symbol(s) changed; scope OK
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-192836-366\application-graph-current.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-192836-366\graph-diff.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-192836-366\scope-assertion.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-192836-366\last-good-graph.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-192836-366\manifest.json
+
+
+  15-test  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-1-PREP-TEST: 12 test(s), {PASSED=10, PRE_EXISTING_FAILURE=2}
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\15-test\20260910-192836-932\test-report.json
+    E:\Virtusa Projects\bootshift\output\15-test\20260910-192836-932\coverage-report.json
+    E:\Virtusa Projects\bootshift\output\15-test\20260910-192836-932\manifest.json
+
+
+  16-runtime  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-1-PREP-TEST: 4/6 module(s) started, 267 bound property(ies), 279 runtime graph edge(s)
+
+  ! did not start: configuaration-server - PROCESS_EXITED: APPLICATION FAILED TO START
+  ! did not start: employee-service - TIMEOUT: Caused by: com.mongodb.MongoTimeoutException: Timed out after 30000 ms while waiting to connect. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused: getsockopt}}]
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-193432-185\runtime-report.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-193432-185\scenario-observations-new.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-193432-185\configuration-binding.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-193432-185\runtime-graph-current.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-193432-185\application-graph-current-enriched.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-193432-185\silently-ignored-properties.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-193432-185\manifest.json
+
+
+  17-differential  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-1-PREP-TEST: 82 comparison(s) across 1 dimension(s); {IDENTICAL=36, NOT_COMPARED=46}
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-193934-936\differential-report.json
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-193934-936\normalization-policy.json
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-193934-936\environment-equivalence-check.json
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-193934-936\manifest.json
+
+
+  12-transformation  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-2-PATCH: 16 applied, 0 rejected, 0 failed; ledger head 45f11cbe7b67
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\12-transformation\20260910-193935-976\transformation-report.json
+    E:\Virtusa Projects\bootshift\output\12-transformation\20260910-193935-976\proposed-changes.json
+    E:\Virtusa Projects\bootshift\output\12-transformation\20260910-193935-976\manifest.json
+
+
+  13-build-repair  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-2-PATCH compiles after 1 round(s); 0 AI attempt(s) used of 12
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-193937-666\build-report.json
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-193937-666\repair-report.json
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-193937-666\diagnostics.json
+    E:\Virtusa Projects\bootshift\output\13-build-repair\20260910-193937-666\manifest.json
+
+
+  14-graph-diff  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-2-PATCH graph COMPLETE: +0/-0 nodes, +0/-0 edges, 0 symbol(s) changed; scope OK
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-194044-436\application-graph-current.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-194044-436\graph-diff.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-194044-436\scope-assertion.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-194044-436\last-good-graph.json
+    E:\Virtusa Projects\bootshift\output\14-graph-diff\20260910-194044-436\manifest.json
+
+
+  15-test  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-2-PATCH: 12 test(s), {PASSED=10, PRE_EXISTING_FAILURE=2}
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\15-test\20260910-194045-042\test-report.json
+    E:\Virtusa Projects\bootshift\output\15-test\20260910-194045-042\coverage-report.json
+    E:\Virtusa Projects\bootshift\output\15-test\20260910-194045-042\manifest.json
+
+
+  16-runtime  [SUCCESS]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-2-PATCH: 4/6 module(s) started, 268 bound property(ies), 280 runtime graph edge(s)
+
+  ! did not start: configuaration-server - PROCESS_EXITED: APPLICATION FAILED TO START
+  ! did not start: employee-service - TIMEOUT: Caused by: com.mongodb.MongoTimeoutException: Timed out after 30000 ms while waiting to connect. Client view of cluster state is {type=UNKNOWN, servers=[{address=localhost:27017, type=UNKNOWN, state=CONNECTING, exception={com.mongodb.MongoSocketOpenException: Exception opening socket}, caused by {java.net.ConnectException: Connection refused: getsockopt}}]
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-194640-874\runtime-report.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-194640-874\scenario-observations-new.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-194640-874\configuration-binding.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-194640-874\runtime-graph-current.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-194640-874\application-graph-current-enriched.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-194640-874\silently-ignored-properties.json
+    E:\Virtusa Projects\bootshift\output\16-runtime\20260910-194640-874\manifest.json
+
+
+  17-differential  [POLICY_BLOCK]
+  run: RUN-01M26B99S7GWBDP1CSDV6Q5QV6
+  Edge EDGE-2-PATCH: 1 unexplained behavioural difference(s)
+
+  ! UNEXPLAINED CONFIGURATION_BINDING scenario SCN-00047: 1 difference(s) in /actuator/configprops with no verified migration fact and no recorded decision to explain them
+
+  artifacts:
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-195143-382\differential-report.json
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-195143-382\normalization-policy.json
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-195143-382\environment-equivalence-check.json
+    E:\Virtusa Projects\bootshift\output\17-differential\20260910-195143-382\manifest.json
+
+  edge EDGE-2-PATCH stopped at 17-differential
+

@@ -1,0 +1,5 @@
+{
+  "recipe": "test.junit4-to-junit5",
+  "runs_on": "a PREPARATORY edge at the current version",
+  "why": "Entangling a test-framework change with a framework upgrade makes every later failure ambiguous."
+}

@@ -1,0 +1,41 @@
+diff --git a/employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/EmployeeSearchRepository.java b/employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/EmployeeSearchRepository.java
+index d28c2b7..0ec2583 100644
+--- a/employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/EmployeeSearchRepository.java
++++ b/employee-service/src/main/java/com/aura/vihanga/employeeservice/repository/EmployeeSearchRepository.java
+@@ -4,10 +4,12 @@ import com.aura.vihanga.employeeservice.model.Employee;
+ import lombok.extern.slf4j.Slf4j;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.data.mongodb.core.MongoTemplate;
+-import org.springframework.data.mongodb.core.query.BasicQuery;
++import org.springframework.data.mongodb.core.query.Criteria;
++import org.springframework.data.mongodb.core.query.Query;
+ import org.springframework.stereotype.Repository;
+ 
+ import java.util.List;
++import java.util.regex.Pattern;
+ 
+ @Repository
+ @Slf4j
+@@ -17,17 +19,16 @@ public class EmployeeSearchRepository {
+     private MongoTemplate mongoTemplate;
+ 
+     public List<Employee> searchEmployees(String name, String department) {
+-        StringBuilder filter = new StringBuilder("{ ");
+-        filter.append("'name': { $regex: '").append(name).append("' }");
++        Criteria criteria = Criteria.where("name").regex(Pattern.quote(name));
+ 
+         if (department != null && !department.isEmpty()) {
+-            filter.append(", 'department': '").append(department).append("'");
++            criteria = criteria.and("department").is(department);
+         }
+ 
+-        filter.append(" }");
++        Query query = new Query(criteria);
+ 
+-        log.info("EmployeeSearchRepository - searchEmployees - filter {}", filter);
++        log.info("EmployeeSearchRepository - searchEmployees - filter {}", query.getQueryObject().toJson());
+ 
+-        return mongoTemplate.find(new BasicQuery(filter.toString()), Employee.class);
++        return mongoTemplate.find(query, Employee.class);
+     }
+ }

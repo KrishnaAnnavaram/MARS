@@ -1,0 +1,6 @@
+{
+  "original_keeps_its_id": true,
+  "original_gains": "splitInto: [FILE-…, FILE-…]",
+  "each_part_records": "splitFrom",
+  "why": "Lineage must survive a split, or 'why does this file look like this' stops being answerable for the parts."
+}

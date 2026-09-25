@@ -1,0 +1,68 @@
+{
+  "round": 7,
+  "label": "no change — packaging gate on the target runtime",
+  "baseline": false,
+  "started_at": "2026-09-06T14:33:38.041Z",
+  "duration_ms": 12926,
+  "jdk": {
+    "major": 21,
+    "version": "21.0.12.1",
+    "home": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot",
+    "source": "C:\\Program Files\\Eclipse Adoptium"
+  },
+  "build": {
+    "tool": "maven",
+    "kind": "system",
+    "command": "C:\\Tools\\apache-maven-3.9.16\\bin\\mvn.cmd -B clean package -DskipTests",
+    "intent": "package-skip-tests",
+    "exit_code": 0,
+    "spawn_error": null
+  },
+  "outcome": "passed",
+  "declared": {
+    "java": "21",
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "4.1.1"
+    },
+    "dependency_count": 14
+  },
+  "workspace": {
+    "changed_files": [
+      {
+        "state": "M",
+        "file": "Dockerfile"
+      },
+      {
+        "state": "M",
+        "file": "pom.xml"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java"
+      },
+      {
+        "state": "M",
+        "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java"
+      },
+      {
+        "state": "M",
+        "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"
+      }
+    ],
+    "diff_stat": "6 files changed, 57 insertions(+), 43 deletions(-)"
+  },
+  "error_summary": {
+    "total": 0,
+    "byCategory": [],
+    "byFile": []
+  },
+  "errors": [],
+  "errors_truncated": 0,
+  "log_tail": "…(truncated, showing last 8000 chars)…\nplexus-utils-4.0.3.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.12.0/plexus-archiver-4.12.0.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.6/maven-archiver-3.6.6.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.6.0/plexus-io-3.6.0.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.6.0/plexus-io-3.6.0.jar (80 kB at 532 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/tukaani/xz/1.12/xz-1.12.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.6/maven-archiver-3.6.6.jar (28 kB at 92 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.7-9/zstd-jni-1.5.7-9.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/tukaani/xz/1.12/xz-1.12.jar (169 kB at 406 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.22.0/commons-io-2.22.0.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/4.0.3/plexus-utils-4.0.3.jar (193 kB at 382 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.12.0/plexus-archiver-4.12.0.jar (227 kB at 413 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.18.0/commons-lang3-3.18.0.jar (703 kB at 899 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.22.0/commons-io-2.22.0.jar (609 kB at 644 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.7-9/zstd-jni-1.5.7-9.jar (7.6 MB at 5.2 MB/s)\r\n[INFO] Building jar: .\\target\\spring-boot-migration-demo-1.0.0.jar\r\n[INFO] \r\n[INFO] --- spring-boot:4.1.1:repackage (repackage) @ spring-boot-migration-demo ---\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/4.1.1/spring-boot-buildpack-platform-4.1.1.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/4.1.1/spring-boot-buildpack-platform-4.1.1.pom (3.0 kB at 40 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5/5.6.4/httpclient5-5.6.4.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5/5.6.4/httpclient5-5.6.4.pom (6.7 kB at 114 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5-parent/5.6.4/httpclient5-parent-5.6.4.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5-parent/5.6.4/httpclient5-parent-5.6.4.pom (20 kB at 251 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5/5.4.3/httpcore5-5.4.3.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5/5.4.3/httpcore5-5.4.3.pom (3.9 kB at 69 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-parent/5.4.3/httpcore5-parent-5.4.3.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-parent/5.4.3/httpcore5-parent-5.4.3.pom (15 kB at 247 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-h2/5.4.3/httpcore5-h2-5.4.3.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-h2/5.4.3/httpcore5-h2-5.4.3.pom (3.6 kB at 77 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/4.1.1/spring-boot-loader-tools-4.1.1.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/4.1.1/spring-boot-loader-tools-4.1.1.pom (2.2 kB at 29 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.16.7/micrometer-observation-1.16.7.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.16.7/micrometer-observation-1.16.7.pom (4.0 kB at 48 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.16.7/micrometer-commons-1.16.7.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.16.7/micrometer-commons-1.16.7.pom (3.8 kB at 81 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/4.1.1/spring-boot-buildpack-platform-4.1.1.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/4.1.1/spring-boot-buildpack-platform-4.1.1.jar (333 kB at 4.0 MB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5/5.6.4/httpclient5-5.6.4.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-h2/5.4.3/httpcore5-h2-5.4.3.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5/5.4.3/httpcore5-5.4.3.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/4.1.1/spring-boot-loader-tools-4.1.1.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.16.7/micrometer-observation-1.16.7.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-h2/5.4.3/httpcore5-h2-5.4.3.jar (264 kB at 2.2 MB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.16.7/micrometer-commons-1.16.7.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-observation/1.16.7/micrometer-observation-1.16.7.jar (84 kB at 541 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/io/micrometer/micrometer-commons/1.16.7/micrometer-commons-1.16.7.jar (52 kB at 259 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/4.1.1/spring-boot-loader-tools-4.1.1.jar (342 kB at 1.3 MB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5/5.4.3/httpcore5-5.4.3.jar (955 kB at 3.0 MB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/httpcomponents/client5/httpclient5/5.6.4/httpclient5-5.6.4.jar (1.1 MB at 3.3 MB/s)\r\n[INFO] Replacing main artifact .\\target\\spring-boot-migration-demo-1.0.0.jar with repackaged archive, adding nested dependencies in BOOT-INF/.\r\n[INFO] The original artifact has been renamed to .\\target\\spring-boot-migration-demo-1.0.0.jar.original\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  11.183 s\r\n[INFO] Finished at: 2026-09-06T20:03:50+05:30\r\n[INFO] ------------------------------------------------------------------------\r\n\n"
+}

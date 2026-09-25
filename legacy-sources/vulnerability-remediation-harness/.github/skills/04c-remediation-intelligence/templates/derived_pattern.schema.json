@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "derived_pattern — 04c provenance block",
+  "description": "The one field the 04c fallback adds to an otherwise-standard 04a strategy.json (see ../../04a-fix-strategist/templates/strategy.schema.json). Present ONLY on a plan derived because the CWE had no catalog entry. It records where the derived pattern came from so a reviewer and the downstream audit stage can trace every recommendation to a real, local, version-controlled source — never the model's memory.",
+  "type": "object",
+  "required": ["source_type", "sources", "kb_entry", "note"],
+  "additionalProperties": false,
+  "properties": {
+    "source_type": {
+      "type": "string",
+      "enum": ["expanded-catalog", "historical-fix", "external", "blend"],
+      "description": "Where the pattern came from. 'expanded-catalog'/'historical-fix' are local and citable (preferred). 'external' means an out-of-repo source and must be treated as lowest confidence."
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Repo-relative paths (ideally with #Ln) the pattern was drawn from, e.g. knowledge/refs/path-traversal.md#L1."
+    },
+    "kb_entry": {
+      "type": ["string", "null"],
+      "description": "The CWE key looked up in knowledge/remediation-kb.json, e.g. CWE-22."
+    },
+    "ranked_examples": {
+      "type": "array",
+      "description": "The historical fixes considered, most-relevant first, ranked by a hybrid score: keyword/synonym overlap, TF-IDF cosine similarity, and (when the local embedding model is set up) real sentence-embedding cosine similarity, weighted-averaged against the root-cause text (see ../ranking-weights.json and scripts/lib/fallback.js: rankExamples).",
+      "items": {
+        "type": "object",
+        "required": ["id", "pattern", "score"],
+        "properties": {
+          "id": { "type": "string" },
+          "pattern": { "type": "string" },
+          "summary": { "type": "string" },
+          "source": { "type": "string" },
+          "score": { "type": "number", "minimum": 0, "maximum": 1, "description": "Weighted average of keyword_score, tfidf_score, and embedding_score (whichever are available), renormalized to 0-1." },
+          "keyword_score": { "type": "number", "minimum": 0, "maximum": 1, "description": "Normalized exact + synonym keyword overlap (0-1)." },
+          "tfidf_score": { "type": "number", "minimum": 0, "maximum": 1, "description": "TF-IDF cosine similarity against the root-cause text, corpus = every historical fix in the KB (0-1)." },
+          "embedding_score": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "Cosine similarity between real local sentence-transformer embeddings of the root-cause text and this fix's text (0-1). `null` if the local model isn't set up on this machine -- the other two signals are used instead, never a crash." },
+          "matched_keywords": { "type": "array", "items": { "type": "string" }, "description": "Exact keyword hits." },
+          "matched_synonyms": { "type": "array", "items": { "type": "string" }, "description": "Synonym hits, as \"keyword -> matched synonym\" strings." }
+        }
+      }
+    },
+    "note": {
+      "type": "string",
+      "description": "One line stating the plan was derived via fallback and needs human review."
+    }
+  }
+}

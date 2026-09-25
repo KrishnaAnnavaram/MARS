@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Runtime report",
+  "description": "Agent 16 output. Startup is one observation, not migration success (R19).",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "modules_started",
+    "modules_attempted",
+    "environment_mode",
+    "modules"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "modules_started": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "modules_attempted": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "environment_mode": {
+      "enum": [
+        "MANAGED",
+        "DELEGATED"
+      ]
+    },
+    "environment_provider": {
+      "type": "string"
+    },
+    "equivalence_gaps": {
+      "type": "array"
+    },
+    "modules": {
+      "type": "array"
+    }
+  }
+}

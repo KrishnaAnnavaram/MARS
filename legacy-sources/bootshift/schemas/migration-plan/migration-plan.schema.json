@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Migration plan",
+  "description": "The frozen plan (spec section 22). Execution reads the planned depth; it never invents its own.",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "source_version",
+    "target_version",
+    "edge_count",
+    "deterministic_coverage",
+    "frozen"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "source_version": {
+      "type": "string"
+    },
+    "target_version": {
+      "type": "string"
+    },
+    "edge_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "deterministic_coverage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "verified_facts": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "impacted_files": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "required_differential_dimensions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "frozen": {
+      "const": true
+    },
+    "edge_summary": {
+      "type": "array"
+    }
+  }
+}

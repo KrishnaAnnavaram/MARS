@@ -1,0 +1,57 @@
+{
+  "name": "retention",
+  "version": "1.0.0",
+  "description": "How long each class of evidence is kept, and what pruning is allowed to do to the manifest.",
+  "tiers": [
+    {
+      "tier": "EVIDENCE_MANIFEST",
+      "contents": [
+        "evidence-manifest.json",
+        "change-ledger.jsonl",
+        "change-ledger-head.json",
+        "approval-report.json",
+        "migration-report.md",
+        "migration-result.json"
+      ],
+      "retain_days": null,
+      "retain": "INDEFINITE",
+      "rationale": "This is the record that the run happened and what it concluded"
+    },
+    {
+      "tier": "PRIMARY_ARTIFACTS",
+      "contents": [
+        "output/<stage>/<timestamp>/*.json"
+      ],
+      "retain_days": 365,
+      "rationale": "Enough to re-audit a migration through a typical audit cycle"
+    },
+    {
+      "tier": "LARGE_BLOBS",
+      "contents": [
+        "documentation snapshots",
+        "fetched jars",
+        "build logs",
+        "surefire dumpstreams"
+      ],
+      "retain_days": 90,
+      "rationale": "Reproducible from their content hashes and the source URLs"
+    },
+    {
+      "tier": "WORKSPACES",
+      "contents": [
+        "original/",
+        "runtime-old/",
+        "migration/",
+        "runtime-new/"
+      ],
+      "retain_days": 7,
+      "rationale": "Regenerable from the sealed snapshot and the checkpoint history"
+    }
+  ],
+  "pruning": {
+    "manifest_rewritten_on_prune": false,
+    "verdict_after_prune": "ARCHIVED",
+    "rationale": "Dropping a reference so a later verification looks clean would defeat the purpose of the manifest. ARCHIVED and TAMPERED are distinct verdicts because absence is not the same as alteration."
+  },
+  "sensitive_data": "Nothing in any tier contains a plaintext sensitive value, so retention does not extend the exposure of one. See policies/security/sensitive-data-policy.json."
+}

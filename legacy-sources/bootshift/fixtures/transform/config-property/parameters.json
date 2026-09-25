@@ -1,0 +1,5 @@
+{
+  "recipe": "config.property-migration",
+  "rules_from": "migration-rules/generated-properties/property-migration-rules.json",
+  "assert": "Unrelated keys and comment lines are untouched."
+}

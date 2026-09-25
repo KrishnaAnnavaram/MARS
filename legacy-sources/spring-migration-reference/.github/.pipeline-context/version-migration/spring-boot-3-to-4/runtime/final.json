@@ -1,0 +1,144 @@
+{
+  "slug": "spring-boot-3-to-4",
+  "phase": "final",
+  "generated_at": "2026-09-06T14:35:51.827Z",
+  "jdk": {
+    "major": 21,
+    "version": "21.0.12.1",
+    "home": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot"
+  },
+  "artifact": "target/spring-boot-migration-demo-1.0.0.jar",
+  "base_url": "http://localhost:8081",
+  "packaging": {
+    "ran": true,
+    "exit_code": 0,
+    "log_tail": "[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] ---------------< com.example:spring-boot-migration-demo >---------------\r\n[INFO] Building Spring Boot 3 to 4 Migration Demo 1.0.0\r\n[INFO]   from pom.xml\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[WARNING] Parameter 'executable' is unknown for plugin 'spring-boot-maven-plugin:4.1.1:repackage (repackage)'\r\n[INFO] \r\n[INFO] --- clean:3.5.0:clean (default-clean) @ spring-boot-migration-demo ---\r\n[INFO] Deleting D:\\Office Research\\SDLC_Harness\\sample-java-project\\.github\\.pipeline-context\\version-migration\\spring-boot-3-to-4\\workspace\\target\r\n[INFO] \r\n[INFO] --- resources:3.5.0:resources (default-resources) @ spring-boot-migration-demo ---\r\n[INFO] Copying 1 resource from src\\main\\resources to target\\classes\r\n[INFO] Copying 0 resource from src\\main\\resources to target\\classes\r\n[INFO] \r\n[INFO] --- compiler:3.15.0:compile (default-compile) @ spring-boot-migration-demo ---\r\n[INFO] Recompiling the module because of changed source code.\r\n[INFO] Compiling 17 source files with javac [debug parameters release 21] to target\\classes\r\n[INFO] \r\n[INFO] --- resources:3.5.0:testResources (default-testResources) @ spring-boot-migration-demo ---\r\n[INFO] Copying 1 resource from src\\test\\resources to target\\test-classes\r\n[INFO] \r\n[INFO] --- compiler:3.15.0:testCompile (default-testCompile) @ spring-boot-migration-demo ---\r\n[INFO] Recompiling the module because of changed dependency.\r\n[INFO] Compiling 5 source files with javac [debug parameters release 21] to target\\test-classes\r\n[INFO] \r\n[INFO] --- surefire:3.5.6:test (default-test) @ spring-boot-migration-demo ---\r\n[INFO] Tests are skipped.\r\n[INFO] \r\n[INFO] --- jar:3.5.1:jar (default-jar) @ spring-boot-migration-demo ---\r\n[INFO] Building jar: D:\\Office Research\\SDLC_Harness\\sample-java-project\\.github\\.pipeline-context\\version-migration\\spring-boot-3-to-4\\workspace\\target\\spring-boot-migration-demo-1.0.0.jar\r\n[INFO] \r\n[INFO] --- spring-boot:4.1.1:repackage (repackage) @ spring-boot-migration-demo ---\r\n[INFO] Replacing main artifact D:\\Office Research\\SDLC_Harness\\sample-java-project\\.github\\.pipeline-context\\version-migration\\spring-boot-3-to-4\\workspace\\target\\spring-boot-migration-demo-1.0.0.jar with repackaged archive, adding nested dependencies in BOOT-INF/.\r\n[INFO] The original artifact has been renamed to D:\\Office Research\\SDLC_Harness\\sample-java-project\\.github\\.pipeline-context\\version-migration\\spring-boot-3-to-4\\workspace\\target\\spring-boot-migration-demo-1.0.0.jar.original\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  6.780 s\r\n[INFO] Finished at: 2026-09-06T20:05:39+05:30\r\n[INFO] ------------------------------------------------------------------------\r\n\n"
+  },
+  "started": true,
+  "startup_seconds": 8.848,
+  "readiness": {
+    "path": "/actuator/health",
+    "status": 200,
+    "ready_after_ms": 10735
+  },
+  "probes": [
+    {
+      "name": "health is public",
+      "method": "GET",
+      "path": "/actuator/health",
+      "authenticated": false,
+      "duration_ms": 15,
+      "ok": true,
+      "status": 200,
+      "content_type": "application/vnd.spring-boot.actuator.v3+json",
+      "body_length": 657,
+      "body_hash": "ba0e60f7a269734d",
+      "body_excerpt": "{\"components\":{\"database\":{\"details\":{\"database\":\"H2\",\"status\":\"Connected\"},\"status\":\"UP\"},\"db\":{\"details\":{\"database\":\"H2\",\"validationQuery\":\"isValid()\"},\"status\":\"UP\"},\"diskSpace\":{\"details\":{\"total\":701152358400,\"free\":63916920832,\"threshold\":10485760,\"path\":\"D:\\\\Office Research\\\\SDLC_Harness\\\\sample-java-project\\\\.github\\\\.pipeline-context\\\\version-migration\\\\spring-boot-3-to-4\\\\workspace\\\\.\",\"exists\":true},\"status\":\"UP\"},\"livenessState\":{\"status\":\"UP\"},\"ping\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"},\"ssl\":{\"details\":{\"expiringChains\":[],\"invalidChains\":[],\"validChains\":[]},\"status\":\"UP\"}},\"groups\":[\"liveness\",\"readiness\"],\"status\":\"UP\"}"
+    },
+    {
+      "name": "list all employees",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "authenticated": true,
+      "duration_ms": 144,
+      "ok": true,
+      "status": 200,
+      "content_type": "application/json",
+      "body_length": 1238,
+      "body_hash": "9fedfdb0f779a375",
+      "body_excerpt": "[{\"id\":1,\"employeeNumber\":\"EMP001\",\"firstName\":\"John\",\"lastName\":\"Smith\",\"email\":\"john.smith@example.com\",\"department\":\"Technology\",\"salary\":95000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.483605\",\"updatedAt\":\"2026-09-06T20:05:20.483605\"},{\"id\":2,\"employeeNumber\":\"EMP002\",\"firstName\":\"Sarah\",\"lastName\":\"Johnson\",\"email\":\"sarah.johnson@example.com\",\"department\":\"Finance\",\"salary\":85000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.563375\",\"updatedAt\":\"2026-09-06T20:05:20.563375\"},{\"id\":3,\"employeeNumber\":\"EMP003\",\"firstName\":\"Michael\",\"lastName\":\"Brown\",\"email\":\"michael.brown@example.com\",\"department\":\"Technology\",\"salary\":88000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.566381\",\"updatedAt\":\"2026-09-06T20:05:20.566381\"},{\"id\":4,\"employeeNumber\":\"EMP004\",\"firstName\":\"Emily\",\"lastName\":\"Davis\",\"email\":\"emily.davis@example.com\",\"department\":\"Operations\",\"salary\":72000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.568381\",\"updatedAt\":\"2026-09-06T20:05:20.568381\"},{\"id\":5,\"employeeNumber\":\"EMP005\",\"firstName\":\"James\",\"lastName\":\"Wilson\",\"email\":\"james.wilson@example.com\",\"department\":\"HR\",\"salary\":68000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.571161\",\"updatedAt\":\"2026-09-06T20:05:20.571161\"}]"
+    },
+    {
+      "name": "get employee 1",
+      "method": "GET",
+      "path": "/api/v1/employees/1",
+      "authenticated": true,
+      "duration_ms": 100,
+      "ok": true,
+      "status": 200,
+      "content_type": "application/json",
+      "body_length": 245,
+      "body_hash": "6dbac6dbd50535c4",
+      "body_excerpt": "{\"id\":1,\"employeeNumber\":\"EMP001\",\"firstName\":\"John\",\"lastName\":\"Smith\",\"email\":\"john.smith@example.com\",\"department\":\"Technology\",\"salary\":95000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.483605\",\"updatedAt\":\"2026-09-06T20:05:20.483605\"}"
+    },
+    {
+      "name": "missing employee is 404",
+      "method": "GET",
+      "path": "/api/v1/employees/99999",
+      "authenticated": true,
+      "duration_ms": 102,
+      "ok": true,
+      "status": 404,
+      "content_type": "application/json",
+      "body_length": 150,
+      "body_hash": "968a9a806719b8c3",
+      "body_excerpt": "{\"timestamp\":\"2026-09-06T20:05:50\",\"status\":404,\"error\":\"Not Found\",\"message\":\"Employee with id 99999 was not found\",\"path\":\"/api/v1/employees/99999\"}"
+    },
+    {
+      "name": "search by department",
+      "method": "GET",
+      "path": "/api/v1/employees/search?department=Engineering",
+      "authenticated": true,
+      "duration_ms": 149,
+      "ok": true,
+      "status": 200,
+      "content_type": "application/json",
+      "body_length": 2,
+      "body_hash": "4f53cda18c2baa0c",
+      "body_excerpt": "[]"
+    },
+    {
+      "name": "high earners",
+      "method": "GET",
+      "path": "/api/v1/employees/high-earners?salary=50000",
+      "authenticated": true,
+      "duration_ms": 148,
+      "ok": true,
+      "status": 200,
+      "content_type": "application/json",
+      "body_length": 1238,
+      "body_hash": "9572d2c3f592351b",
+      "body_excerpt": "[{\"id\":1,\"employeeNumber\":\"EMP001\",\"firstName\":\"John\",\"lastName\":\"Smith\",\"email\":\"john.smith@example.com\",\"department\":\"Technology\",\"salary\":95000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.483605\",\"updatedAt\":\"2026-09-06T20:05:20.483605\"},{\"id\":3,\"employeeNumber\":\"EMP003\",\"firstName\":\"Michael\",\"lastName\":\"Brown\",\"email\":\"michael.brown@example.com\",\"department\":\"Technology\",\"salary\":88000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.566381\",\"updatedAt\":\"2026-09-06T20:05:20.566381\"},{\"id\":2,\"employeeNumber\":\"EMP002\",\"firstName\":\"Sarah\",\"lastName\":\"Johnson\",\"email\":\"sarah.johnson@example.com\",\"department\":\"Finance\",\"salary\":85000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.563375\",\"updatedAt\":\"2026-09-06T20:05:20.563375\"},{\"id\":4,\"employeeNumber\":\"EMP004\",\"firstName\":\"Emily\",\"lastName\":\"Davis\",\"email\":\"emily.davis@example.com\",\"department\":\"Operations\",\"salary\":72000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.568381\",\"updatedAt\":\"2026-09-06T20:05:20.568381\"},{\"id\":5,\"employeeNumber\":\"EMP005\",\"firstName\":\"James\",\"lastName\":\"Wilson\",\"email\":\"james.wilson@example.com\",\"department\":\"HR\",\"salary\":68000.00,\"active\":true,\"createdAt\":\"2026-09-06T20:05:20.571161\",\"updatedAt\":\"2026-09-06T20:05:20.571161\"}]"
+    },
+    {
+      "name": "unauthenticated is rejected",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "authenticated": false,
+      "duration_ms": 40,
+      "ok": true,
+      "status": 401,
+      "content_type": "application/json",
+      "body_length": 103,
+      "body_hash": "30719fc01f9f5907",
+      "body_excerpt": "{\"timestamp\":\"2026-09-06T14:35:50.560Z\",\"status\":401,\"error\":\"Unauthorized\",\"path\":\"/api/v1/employees\"}"
+    },
+    {
+      "name": "bad credentials rejected",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "authenticated": false,
+      "duration_ms": 89,
+      "ok": true,
+      "status": 401,
+      "content_type": "application/json",
+      "body_length": 103,
+      "body_hash": "1ca5645df359ccee",
+      "body_excerpt": "{\"timestamp\":\"2026-09-06T14:35:50.648Z\",\"status\":401,\"error\":\"Unauthorized\",\"path\":\"/api/v1/employees\"}"
+    },
+    {
+      "name": "validation rejects empty body",
+      "method": "POST",
+      "path": "/api/v1/employees",
+      "authenticated": true,
+      "duration_ms": 165,
+      "ok": true,
+      "status": 400,
+      "content_type": "application/json",
+      "body_length": 266,
+      "body_hash": "6dfcc49a525a2467",
+      "body_excerpt": "{\"timestamp\":\"2026-09-06T20:05:50\",\"status\":400,\"error\":\"Bad Request\",\"message\":\"Validation failed: firstName: First name is required, email: Email is required, lastName: Last name is required, employeeNumber: Employee number is required\",\"path\":\"/api/v1/employees\"}"
+    }
+  ],
+  "app_log_tail": "…(truncated, showing last 6000 chars)…\nt-migration-demo] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]\r\n2026-09-06T20:05:44.475+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.4.5.Final\r\n2026-09-06T20:05:44.961+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer\r\n2026-09-06T20:05:45.008+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...\r\n2026-09-06T20:05:45.263+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:file:./data/employee_db user=SA\r\n2026-09-06T20:05:45.266+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.\r\n2026-09-06T20:05:45.324+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:\n\tDatabase JDBC URL [jdbc:h2:file:./data/employee_db]\n\tDatabase driver: H2 JDBC Driver\n\tDatabase dialect: H2Dialect\n\tDatabase version: 2.4.240\n\tDefault catalog/schema: EMPLOYEE_DB/PUBLIC\n\tAutocommit mode: undefined/unknown\n\tIsolation level: READ_COMMITTED [default READ_COMMITTED]\n\tJDBC fetch size: 100\n\tPool: DataSourceConnectionProvider\n\tMinimum pool size: undefined/unknown\n\tMaximum pool size: undefined/unknown\r\n2026-09-06T20:05:46.200+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)\r\n2026-09-06T20:05:46.269+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'\r\n2026-09-06T20:05:46.396+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.\r\n2026-09-06T20:05:48.058+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsService\r\n2026-09-06T20:05:48.791+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'\r\n2026-09-06T20:05:48.883+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8081 (http) with context path '/'\r\n2026-09-06T20:05:48.892+05:30  INFO 33032 --- [spring-boot-migration-demo] [           main] c.e.m.MigrationDemoApplication           : Started MigrationDemoApplication in 8.848 seconds (process running for 9.707)\r\n2026-09-06T20:05:49.166+05:30 DEBUG 33032 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    select\r\n        count(*) \r\n    from\r\n        employees e1_0\r\n2026-09-06T20:05:49.418+05:30  INFO 33032 --- [spring-boot-migration-demo] [nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\r\n2026-09-06T20:05:49.419+05:30  INFO 33032 --- [spring-boot-migration-demo] [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\r\n2026-09-06T20:05:49.422+05:30  INFO 33032 --- [spring-boot-migration-demo] [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms\r\n2026-09-06T20:05:49.991+05:30 DEBUG 33032 --- [spring-boot-migration-demo] [nio-8081-exec-5] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0\r\n2026-09-06T20:05:50.118+05:30 DEBUG 33032 --- [spring-boot-migration-demo] [nio-8081-exec-4] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        e1_0.id=?\r\n2026-09-06T20:05:50.208+05:30 DEBUG 33032 --- [spring-boot-migration-demo] [nio-8081-exec-6] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        e1_0.id=?\r\n2026-09-06T20:05:50.368+05:30 DEBUG 33032 --- [spring-boot-migration-demo] [nio-8081-exec-3] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        upper(e1_0.department)=upper(?)\r\n2026-09-06T20:05:50.500+05:30 DEBUG 33032 --- [spring-boot-migration-demo] [nio-8081-exec-9] org.hibernate.SQL                        : \r\n    select\r\n        * \r\n    from\r\n        employees \r\n    where\r\n        salary > ? \r\n        and active = true \r\n    order by\r\n        salary desc \r\n"
+}

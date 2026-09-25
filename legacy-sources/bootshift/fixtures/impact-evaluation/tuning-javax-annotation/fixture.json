@@ -1,0 +1,15 @@
+{
+  "id": "tuning-javax-annotation",
+  "description": "Tuning case used while writing the relocation table. Excluded from reported accuracy.",
+  "tuning": true,
+  "fact": {
+    "type": "API_RENAMED",
+    "subject": "javax.annotation.PostConstruct",
+    "from": "javax.annotation",
+    "to": "jakarta.annotation"
+  },
+  "true_affected_paths": [
+    "a/src/main/java/com/example/A.java"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

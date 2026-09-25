@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.bootshift</groupId>
+    <artifactId>bootshift-parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+  <artifactId>bootshift-adapters</artifactId>
+  <name>Bootshift :: Adapters</name>
+  <description>Port implementations bound to concrete OSS tools (Git/JGit, Maven, Gradle, JavaParser, JDK tools, filesystem stores).</description>
+  <dependencies>
+    <dependency><groupId>com.bootshift</groupId><artifactId>bootshift-ports</artifactId><version>${project.version}</version></dependency>
+    <dependency><groupId>org.eclipse.jgit</groupId><artifactId>org.eclipse.jgit</artifactId></dependency>
+    <dependency><groupId>com.github.javaparser</groupId><artifactId>javaparser-symbol-solver-core</artifactId></dependency>
+    <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-xml</artifactId></dependency>
+
+    <!--
+      OpenRewrite: Apache-2.0 core, java, maven, yaml and properties modules. These are the engine,
+      not a recipe estate. Bootshift owns the recipes it runs; nothing here loads rewrite-spring or
+      any source-available pack, and the license gate blocks those coordinates independently.
+    -->
+    <dependency><groupId>org.openrewrite</groupId><artifactId>rewrite-core</artifactId></dependency>
+    <dependency><groupId>org.openrewrite</groupId><artifactId>rewrite-java</artifactId></dependency>
+    <dependency><groupId>org.openrewrite</groupId><artifactId>rewrite-java-21</artifactId></dependency>
+    <dependency><groupId>org.openrewrite</groupId><artifactId>rewrite-maven</artifactId></dependency>
+    <dependency><groupId>org.openrewrite</groupId><artifactId>rewrite-yaml</artifactId></dependency>
+    <dependency><groupId>org.openrewrite</groupId><artifactId>rewrite-properties</artifactId></dependency>
+
+    <!-- Real YAML parsing for configuration transformation. Apache-2.0. -->
+    <dependency><groupId>org.yaml</groupId><artifactId>snakeyaml</artifactId></dependency>
+  </dependencies>
+</project>

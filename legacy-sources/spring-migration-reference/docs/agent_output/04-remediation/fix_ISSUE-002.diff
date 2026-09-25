@@ -1,0 +1,43 @@
+diff --git a/employee-service/pom.xml b/employee-service/pom.xml
+index 81349ea..9a92f52 100644
+--- a/employee-service/pom.xml
++++ b/employee-service/pom.xml
+@@ -27,6 +27,10 @@
+ 			<groupId>org.springframework.boot</groupId>
+ 			<artifactId>spring-boot-starter-web</artifactId>
+ 		</dependency>
++		<dependency>
++			<groupId>org.springframework.boot</groupId>
++			<artifactId>spring-boot-starter-security</artifactId>
++		</dependency>
+ 		<dependency>
+ 			<groupId>org.springframework.cloud</groupId>
+ 			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+diff --git a/employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java b/employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java
+index 2e4d9b4..8739dbf 100644
+--- a/employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java
++++ b/employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java
+@@ -30,7 +30,7 @@ public class EmployeeController {
+ 
+     @PostMapping("employee")
+     public ResponseEntity<StandardResponse> createEmployee(@RequestBody Employee employee) {
+-        log.trace("EmployeeController - createEmployee - employee {}", employee);
++        log.trace("EmployeeController - createEmployee - employeeId {}", employee.getEmployeeId());
+         EmployeeResponse employeeResponse = employeeService.createEmployee(employee);
+ 
+         return new ResponseEntity<StandardResponse>(
+diff --git a/employee-service/src/main/resources/application.properties b/employee-service/src/main/resources/application.properties
+index 0d1d35a..67b016a 100644
+--- a/employee-service/src/main/resources/application.properties
++++ b/employee-service/src/main/resources/application.properties
+@@ -1,4 +1,9 @@
+-logging.level.com.aura.vihanga.employeeservice.controller = trace
++#logging.level.com.aura.vihanga.employeeservice.controller = trace
++
++# Interim HTTP Basic credential so every endpoint requires authentication by default
++# (spring-boot-starter-security). Replace with real identity-provider integration.
++spring.security.user.name=employee-service-admin
++spring.security.user.password=${EMPLOYEE_SERVICE_ADMIN_PASSWORD:changeit-interim-credential}
+ 
+ #spring.data.mongodb.uri=mongodb+srv://vmihiranga:dvpRulz22365@cluster0.63upslh.mongodb.net/?retryWrites=true&w=majority
+ #spring.data.mongodb.database=citi-assignment
