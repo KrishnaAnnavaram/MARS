@@ -1,0 +1,16 @@
+{
+  "id": "enable-eureka-client-removed",
+  "description": "@EnableEurekaClient was removed from the Spring Cloud Netflix train. The annotated application class is affected. A second class merely mentions the annotation inside a comment and a string literal, and a third declares an unrelated annotation whose simple name shares a prefix; a matcher keying on raw text will wrongly flag both.",
+  "tuning": true,
+  "fact": {
+    "type": "API_REMOVED",
+    "subject": "org.springframework.cloud.netflix.eureka.EnableEurekaClient",
+    "from": "EnableEurekaClient",
+    "to": null
+  },
+  "true_affected_paths": [
+    "employee-service/src/main/java/com/example/EmployeeApplication.java"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict.",
+  "tuning_reason": "The two false positives this fixture exposed (a prose mention in a comment and a longer identifier sharing a prefix) drove the identifier-boundary check and the comment/literal stripping in ImpactStage. The harness must not grade itself on a case its rules were derived from."
+}

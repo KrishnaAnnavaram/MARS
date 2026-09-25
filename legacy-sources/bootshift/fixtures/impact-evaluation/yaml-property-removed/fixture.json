@@ -1,0 +1,16 @@
+{
+  "id": "yaml-property-removed",
+  "description": "server.max-http-header-size moved under a different prefix. Only the YAML that binds it is affected. A second YAML uses four-space indentation and a value containing a colon, both of which defeat a matcher that assumes two-space nesting or splits on the first colon.",
+  "tuning": true,
+  "fact": {
+    "type": "PROPERTY_REMOVED",
+    "subject": "server.max-http-header-size",
+    "from": "server.max-http-header-size",
+    "to": null
+  },
+  "true_affected_paths": [
+    "gateway-service/src/main/resources/application.yml"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict.",
+  "tuning_reason": "The miss this fixture exposed drove structural YAML key resolution in the property matcher. Derived-from, therefore excluded."
+}

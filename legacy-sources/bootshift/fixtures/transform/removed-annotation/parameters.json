@@ -1,0 +1,18 @@
+{
+  "recipe": "java.remove-annotation",
+  "annotation": "org.springframework.cloud.netflix.eureka.EnableEurekaClient",
+  "removed_at": "Spring Cloud 2022.0.0",
+  "assert_removed": [
+    "the @EnableEurekaClient usage",
+    "its import",
+    "the blank line it left"
+  ],
+  "assert_preserved": [
+    "@SpringBootApplication",
+    "@EnableConfigServer \u2014 a different Spring Cloud annotation that still exists",
+    "every other import",
+    "preserved.java entirely: a same-named annotation from another package"
+  ],
+  "why": "Removing on simple name alone would delete the annotation in preserved.java and silently disable whatever it enables. Deleting the usage but leaving the import turns 'cannot find symbol' into 'package does not exist', which is not progress. Both directions are asserted by TransformerTest.",
+  "why_curated": "This transformer deletes only annotations whose entire effect was to opt into behaviour the target performs unconditionally. 'The type is gone' does not imply 'deleting the reference is safe' \u2014 for most removed types the reference is load-bearing. Each entry carries the evidence for its own removal, and anything not on the list stays residual."
+}

@@ -1,0 +1,16 @@
+{
+  "name": "01d-blueprint-scribe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Synthesizes Code Cartographer artifacts (and, optionally, live Neo4j graph stats) into a Markdown architecture document",
+  "type": "commonjs",
+  "scripts": {
+    "docs": "node scripts/generate-docs.js",
+    "function-ref": "node scripts/generate-function-reference.js",
+    "all": "npm run docs && npm run function-ref"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "neo4j-driver": "^5.27.0"
+  }
+}

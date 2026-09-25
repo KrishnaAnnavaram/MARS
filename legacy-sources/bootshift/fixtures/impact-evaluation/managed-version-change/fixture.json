@@ -1,0 +1,15 @@
+{
+  "id": "managed-version-change",
+  "description": "A managed version change is a build-descriptor fact. Source files are not affected by it, and a matcher that widens to 'everything in the module' will say otherwise.",
+  "tuning": false,
+  "fact": {
+    "type": "MANAGED_VERSION_CHANGED",
+    "subject": "org.springframework.boot:spring-boot-starter-web",
+    "from": "2.7.12",
+    "to": "3.5.16"
+  },
+  "true_affected_paths": [
+    "report-service/pom.xml"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

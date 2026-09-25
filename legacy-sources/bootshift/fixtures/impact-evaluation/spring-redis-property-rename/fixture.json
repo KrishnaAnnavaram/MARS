@@ -1,0 +1,15 @@
+{
+  "id": "spring-redis-property-rename",
+  "description": "spring.redis.* moves to spring.data.redis.*. Only the properties file that sets those keys is affected; the Java sources are not.",
+  "tuning": false,
+  "fact": {
+    "type": "PROPERTY_RENAMED",
+    "subject": "spring.redis.host",
+    "from": "spring.redis.host",
+    "to": "spring.data.redis.host"
+  },
+  "true_affected_paths": [
+    "report-service/src/main/resources/application.properties"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

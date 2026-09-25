@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Characterization scenarios",
+  "description": "Agent 10 output. Executable behavioural contracts, executed against the ORIGINAL application before any migration change exists. A scenario becomes an oracle by being executed, never by being written: AWAITING_OLD_OBSERVATION is explicitly not a protected state.",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "count",
+    "scenarios",
+    "oracle_rule"
+  ],
+  "properties": {
+    "pipeline_stage": { "type": "string" },
+    "schema_version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "generated_at": { "type": "string" },
+    "run_id": { "type": "string", "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$" },
+    "edge_id": { "type": ["string", "null"] },
+    "upstream": { "type": "object" },
+    "mutating": { "type": "boolean" },
+    "repo_state": { "type": "object" },
+    "baseline_binding": { "type": "object" },
+    "environment_fingerprint": { "type": ["string", "null"] },
+    "blind_spots": { "type": "array" },
+    "gaps": { "type": "array" },
+    "stats": { "type": "object" },
+
+    "count": { "type": "integer", "minimum": 0 },
+    "frozen": { "type": "integer", "minimum": 0 },
+    "unobservable": { "type": "integer", "minimum": 0 },
+    "awaiting_old_observation": { "type": "integer", "minimum": 0 },
+    "rejected": { "type": "integer", "minimum": 0 },
+    "external_infrastructure_available": { "type": "boolean" },
+    "by_state": { "type": "object" },
+    "oracle_rule": { "type": "string" },
+
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scenario_id", "dimension", "state", "capture", "input"],
+        "properties": {
+          "scenario_id": { "type": "string", "pattern": "^SCN-\\d{5}$" },
+          "edge_id": { "type": ["string", "null"] },
+          "impact_id": { "type": ["string", "null"] },
+          "dimension": {
+            "enum": [
+              "HTTP_API",
+              "SECURITY_AUTHORIZATION",
+              "SERIALIZATION",
+              "CONFIGURATION_BINDING",
+              "SPRING_CONTEXT",
+              "PERSISTENCE_STATE",
+              "QUERY_RESULT",
+              "TRANSACTION_EFFECT",
+              "EVENT_MESSAGE",
+              "EXTERNAL_INTEGRATION",
+              "BATCH_RESULT",
+              "BUSINESS_RULE_OUTCOME"
+            ]
+          },
+          "module": { "type": ["string", "null"] },
+          "target": { "type": ["string", "null"] },
+          "setup": { "type": "object" },
+          "input": {
+            "type": "object",
+            "description": "The concrete request. A scenario that cannot be executed is a description, not a contract."
+          },
+          "capture": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Exactly what is recorded. Capturing everything and normalizing afterwards is how a comparison ends up dominated by fields nobody meant to compare."
+          },
+          "normalizer": { "type": "string" },
+          "old_observation_ref": {
+            "type": ["string", "null"],
+            "description": "Hash of the observation taken against the ORIGINAL application. Null means this scenario is not an oracle."
+          },
+          "state": {
+            "enum": [
+              "DRAFT",
+              "AWAITING_OLD_OBSERVATION",
+              "FROZEN",
+              "MAPPED_TO_EXISTING_VERIFIED_TEST",
+              "UNOBSERVABLE_WITH_EXPLICIT_GAP",
+              "HUMAN_EXCEPTION_REQUIRED",
+              "REJECTED"
+            ]
+          },
+          "reason": { "type": ["string", "null"] },
+          "critical": { "type": "boolean" },
+          "is_oracle": {
+            "type": "boolean",
+            "description": "True only for FROZEN and MAPPED_TO_EXISTING_VERIFIED_TEST."
+          },
+          "accounted_for": { "type": "boolean" },
+          "knowledge_refs": { "type": "array", "items": { "type": "string" } },
+          "requires_external_infrastructure": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

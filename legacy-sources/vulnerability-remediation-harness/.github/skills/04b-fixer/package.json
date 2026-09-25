@@ -1,0 +1,13 @@
+{
+  "name": "04b-fixer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Drafts the smallest diff for an Approved fix plan, verifies it by applying and building it inside an isolated git worktree (never the real working tree), and renders docs/agent_output/04-remediation/fix_<issue_id>.md plus a standalone fix_<issue_id>.diff.",
+  "type": "commonjs",
+  "scripts": {
+    "workload": "node scripts/list-fix-workload.js",
+    "verify": "node scripts/verify-patch.js --all",
+    "render": "node scripts/render-fix-report.js --all"
+  },
+  "dependencies": {}
+}

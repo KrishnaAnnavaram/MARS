@@ -1,0 +1,35 @@
+{
+  "name": "production",
+  "version": "1.0.0",
+  "description": "Default strict posture. Blocks anything the harness cannot prove, and requires an explicit exception for every shortfall.",
+
+  "coverage_gate_enabled": true,
+  "coverage_drop_block_percentage_points": 5.0,
+
+  "residual_no_escalation_threshold": 0.90,
+  "residual_one_level_threshold": 0.60,
+
+  "impact_recall_floor": 0.80,
+  "similarity_threshold": 0.72,
+
+  "allow_milestone_targets": false,
+  "allow_eol_landing_target": false,
+  "minimum_support_horizon_months": 6,
+
+  "allow_checkpoint_collapse": true,
+  "unknown_internal_component_action": "BLOCK",
+
+  "ai_allowed_in_production": false,
+  "ai_max_total_attempts": 12,
+  "ai_max_attempts_per_root_cause": 3,
+  "ai_max_files_per_patch": 3,
+  "ai_max_changed_lines_per_patch": 80,
+
+  "repair_max_attempts_per_root_cause": 4,
+  "repair_max_total_rounds": 10,
+
+  "unexplained_difference_blocks": true,
+
+  "graph_java_coverage_floor": 0.98,
+  "graph_attribution_floor": 0.70
+}

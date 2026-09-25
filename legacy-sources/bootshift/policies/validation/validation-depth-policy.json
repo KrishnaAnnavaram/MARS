@@ -1,0 +1,80 @@
+{
+  "name": "validation-depth",
+  "version": "1.0.0",
+  "rule_r14": "Validation depth is computed once per edge, frozen into the plan before any mutation, and never lowered afterwards.",
+  "ladder": [
+    "NONE",
+    "BUILD",
+    "TESTS",
+    "RUNTIME",
+    "DIFFERENTIAL"
+  ],
+  "computation": "DEPTH = MAX(edge class floor, residual risk, impact severity, policy minimum)",
+  "edge_class_floor": {
+    "PREPARATORY": "TESTS",
+    "PATCH": "TESTS",
+    "MINOR": "RUNTIME",
+    "MAJOR": "DIFFERENTIAL",
+    "PLATFORM": "RUNTIME",
+    "ECOSYSTEM": "RUNTIME"
+  },
+  "escalation_triggers": [
+    {
+      "trigger": "Any accepted AI-authored repair on the edge",
+      "raise_to": "DIFFERENTIAL"
+    },
+    {
+      "trigger": "HIGH impact touching security, persistence or transactions",
+      "raise_to": "DIFFERENTIAL"
+    },
+    {
+      "trigger": "Namespace relocation applied (javax to jakarta)",
+      "raise_to": "DIFFERENTIAL"
+    },
+    {
+      "trigger": "Configuration property migration affecting a bound key",
+      "raise_to": "RUNTIME"
+    },
+    {
+      "trigger": "Measured impact recall below the policy floor",
+      "raise_to": "one level"
+    },
+    {
+      "trigger": "Deterministic coverage below residual_one_level_threshold",
+      "raise_to": "one level"
+    }
+  ],
+  "unreachable_depth": {
+    "action": "RAISE_EVIDENCE_SHORTFALL_AND_BLIND_SPOTS",
+    "never": "Pass the edge at a lower depth than the one frozen for it"
+  },
+  "lowering_depth": "Requires a new run with a new plan and a recorded decision. There is no runtime path that lowers a frozen depth.",
+  "test_validation": {
+    "baselines": [
+      "SEALED_ORIGINAL",
+      "PREVIOUS_SUCCESSFUL_EDGE"
+    ],
+    "blocking_classifications": [
+      "CUMULATIVE_REGRESSION",
+      "EDGE_LOCAL_REGRESSION",
+      "UNEXPLAINED"
+    ],
+    "expected_framework_change_requires": "A VERIFIED migration fact whose subject appears in the failure detail",
+    "intentionally_changed_contract_requires": "A signed approval naming that test",
+    "coverage_gate": {
+      "enabled": true,
+      "block_above_drop_percentage_points": 5.0,
+      "when_not_comparable": "REPORT_AS_NOT_EVALUATED"
+    },
+    "forbidden_autonomous_actions": [
+      "Adding @Disabled",
+      "Deleting a test",
+      "Weakening an assertion",
+      "Swallowing an exception",
+      "Excluding a failing module",
+      "Lowering a coverage gate",
+      "Altering an expected value",
+      "Narrowing instrumentation scope to hide a regression"
+    ]
+  }
+}

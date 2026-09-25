@@ -1,0 +1,41 @@
+{
+  "purpose": "Exact tracked-file exports (git archive HEAD) of the three source repositories. Reference/imported material during convergence; the unified harness builds Bootshift's modules from here unchanged and reads the VRH and Spring-migration knowledge files from here.",
+  "method": "git archive HEAD | tar -x (tracked files only, no .git, no build outputs)",
+  "exported_on": "2026-09-24",
+  "history_note": "Git history is NOT consolidated into this repository. The original clones (with history) remain under merged_repos/. History consolidation (git subtree / git filter-repo) is a separate task from architecture consolidation and is recommended as follow-up work; it requires creating commits, which was not authorized in this session.",
+  "sources": [
+    {
+      "name": "bootshift",
+      "path": "legacy-sources/bootshift",
+      "remote": "https://github.com/KrishnaAnnavaram/bootshift.git",
+      "branch": "main",
+      "commit": "eacdca1997c30b329be6ca683588e46f2c4584ed",
+      "tracked_files": 447,
+      "exported_files": 447
+    },
+    {
+      "name": "vulnerability-remediation-harness",
+      "path": "legacy-sources/vulnerability-remediation-harness",
+      "remote": "https://github.com/kaajalkrish/Vulnerability-Remediation-Harness.git",
+      "branch": "main",
+      "commit": "767bf5a8ff605c6b62b48766668d2d124f56e09f",
+      "tracked_files": 368,
+      "exported_files": 368
+    },
+    {
+      "name": "spring-migration-reference",
+      "path": "legacy-sources/spring-migration-reference",
+      "remote": "https://github.com/Udaradg/sample-java-project.git",
+      "branch": "feature/springboot-3-to-4",
+      "commit": "9616523198599f024038119306ec6a4f6c7bf27d",
+      "tracked_files": 262,
+      "exported_files": 261,
+      "export_gaps": [
+        {
+          "path": ".github/.pipeline-context/version-migration/spring-boot-3-to-4/workspace",
+          "reason": "Tracked as a gitlink (mode 160000, commit c692e9f74f7759102e0e30079c21d1194e2b974d) with no .gitmodules entry: a nested sandbox repository was committed by reference only. Its content does not exist in the source repository, so an empty directory is the faithful export."
+        }
+      ]
+    }
+  ]
+}

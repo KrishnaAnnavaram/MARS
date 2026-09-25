@@ -1,0 +1,14 @@
+{
+  "measured_at" : "2026-09-10T20:02:19.095827500Z",
+  "method" : "ImpactStage's own matcher is executed over each held-out fixture tree; the fixture supplies the input and the ground truth, never the prediction",
+  "evaluated" : true,
+  "held_out_fixtures" : 11,
+  "true_positives" : 9,
+  "false_positives" : 0,
+  "false_negatives" : 0,
+  "precision" : 1.0,
+  "recall" : 1.0,
+  "f1" : 1.0,
+  "notes" : [ "5 tuning fixture(s) excluded from the reported numbers" ],
+  "scope_warning" : "These figures describe this corpus of 11 held-out fixture(s). They are not a general accuracy claim about the analyzer on arbitrary repositories, and must not be quoted as one."
+}

@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Edge plan",
+  "description": "Per-edge frozen execution plan including the validation depth calculation.",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "edge_count",
+    "edges"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "edge_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "reconciliation_decisions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "edge_id",
+          "edge_class",
+          "frozen_validation_depth",
+          "checkpoint_reconciliation"
+        ],
+        "properties": {
+          "edge_id": {
+            "type": "string"
+          },
+          "edge_class": {
+            "description": "LANDING is distinct from MINOR because a version can be a legal transit checkpoint while being an illegal place to stop, and the two carry different validation depth.",
+            "enum": [
+              "PATCH",
+              "MINOR",
+              "PREPARATORY",
+              "MAJOR_BOUNDARY",
+              "LANDING"
+            ]
+          },
+          "risk": {
+            "enum": ["LOW", "MEDIUM", "HIGH"]
+          },
+          "edge_java": {
+            "type": "string",
+            "description": "The Java release this edge builds, tests and runs on. Selected from installed JDKs intersected with what the target Boot line supports; never derived from the JDK running the harness."
+          },
+          "edge_java_home": {
+            "type": ["string", "null"]
+          },
+          "edge_java_selection_reason": {
+            "type": ["string", "null"]
+          },
+          "edge_java_resolved": {
+            "type": "boolean"
+          },
+          "edge_java_is_lts": {
+            "type": "boolean"
+          },
+          "spring_cloud_train": {
+            "type": ["string", "null"],
+            "description": "The train published for THIS edge's Boot line, not for the landing target."
+          },
+          "deterministic_coverage": {
+            "type": "number",
+            "description": "Computed from this edge's own verified fact set, never inherited from the migration as a whole."
+          },
+          "verified_fact_count": {
+            "type": "integer"
+          },
+          "knowledge_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "impact_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "characterization_refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "ordered_transformations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "recipe_id": { "type": "string" },
+                "capability_id": { "type": ["string", "null"] },
+                "capability_status": { "type": ["string", "null"] },
+                "parameters": { "type": "object" }
+              }
+            }
+          },
+          "source_state": {
+            "type": "string"
+          },
+          "target_state": {
+            "type": "string"
+          },
+          "landing": {
+            "type": "boolean"
+          },
+          "transit": {
+            "type": "boolean"
+          },
+          "mandatory_checkpoint": {
+            "type": "boolean"
+          },
+          "frozen_validation_depth": {
+            "enum": [
+              "BUILD_ONLY",
+              "BUILD_AND_TESTS",
+              "BUILD_TESTS_RUNTIME",
+              "IMPACTED_DIFFERENTIAL",
+              "FULL_DIFFERENTIAL"
+            ]
+          },
+          "validation_depth_calculation": {
+            "type": "object"
+          },
+          "checkpoint_reconciliation": {
+            "enum": [
+              "DECOMPOSED",
+              "COLLAPSE_WITH_ESCALATED_VALIDATION",
+              "BLOCK"
+            ]
+          },
+          "tests_required": {
+            "type": "boolean"
+          },
+          "runtime_required": {
+            "type": "boolean"
+          },
+          "differential_required": {
+            "type": "boolean"
+          },
+          "affected_file_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

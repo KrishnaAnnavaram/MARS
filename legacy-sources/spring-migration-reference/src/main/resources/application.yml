@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: spring-boot-migration-demo
+
+  datasource:
+    url: ${DB_URL:jdbc:h2:file:./data/employee_db}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+
+  jpa:
+    # MIGRATION-DEMO: Hibernate JPA configuration for Spring Boot 3
+    # During Boot 4 migration, Hibernate compatibility and query parsing will be validated
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jackson:
+    # Jackson serialization/deserialization settings
+    default-property-inclusion: non_null
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+  endpoint:
+    health:
+      show-details: always
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    root: INFO
+    com.example.migrationdemo: DEBUG
+    org.hibernate.SQL: DEBUG

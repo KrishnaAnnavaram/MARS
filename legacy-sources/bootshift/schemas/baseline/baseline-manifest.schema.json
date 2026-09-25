@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Baseline manifest",
+  "description": "The sealed baseline (spec section 15). After mutation begins this may not be rewritten (R30).",
+  "type": "object",
+  "required": [
+    "pipeline_stage",
+    "schema_version",
+    "generated_at",
+    "run_id",
+    "mutating",
+    "blind_spots",
+    "gaps",
+    "stats",
+    "observation_hashes",
+    "sealed",
+    "baseline_manifest_hash",
+    "environment_mode"
+  ],
+  "properties": {
+    "pipeline_stage": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^RUN-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "edge_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "upstream": {
+      "type": "object"
+    },
+    "mutating": {
+      "type": "boolean"
+    },
+    "repo_state": {
+      "type": "object"
+    },
+    "baseline_binding": {
+      "type": "object"
+    },
+    "environment_fingerprint": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "blind_spots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "dimension",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "impact": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object"
+    },
+    "original_tree_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "old_workspace_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "old_workspace_matches_original": {
+      "type": "boolean"
+    },
+    "source_commit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "file_registry_seal": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sealed_environment_fingerprint": {
+      "type": "string"
+    },
+    "environment_mode": {
+      "enum": [
+        "MANAGED",
+        "DELEGATED"
+      ]
+    },
+    "observation_hashes": {
+      "type": "object"
+    },
+    "tool_digests": {
+      "type": "object"
+    },
+    "normalization_policy_hash": {
+      "type": "string"
+    },
+    "sealed": {
+      "const": true
+    },
+    "sealed_at": {
+      "type": "string"
+    },
+    "baseline_manifest_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

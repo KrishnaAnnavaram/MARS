@@ -1,0 +1,89 @@
+diff --git a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/repository/EmployeeSchedulerRepository.java b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/repository/EmployeeSchedulerRepository.java
+index 20df816..b407f0e 100644
+--- a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/repository/EmployeeSchedulerRepository.java
++++ b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/repository/EmployeeSchedulerRepository.java
+@@ -1,7 +1,11 @@
+ package com.aura.vihanga.shedulerservice.repository;
+ 
+ import com.aura.vihanga.shedulerservice.entity.Employee;
++import com.aura.vihanga.shedulerservice.utill.GenderType;
+ import org.springframework.data.mongodb.repository.MongoRepository;
+ 
++import java.util.List;
++
+ public interface EmployeeSchedulerRepository extends MongoRepository<Employee, String> {
++    List<Employee> findByGender(GenderType gender);
+ }
+diff --git a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/EmployeeSchedulerService.java b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/EmployeeSchedulerService.java
+index 8af2490..c776adf 100644
+--- a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/EmployeeSchedulerService.java
++++ b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/EmployeeSchedulerService.java
+@@ -6,4 +6,6 @@ import java.util.List;
+ 
+ public interface EmployeeSchedulerService {
+     List<Employee> getAllEmployees();
++
++    List<Employee> getFemaleEmployees();
+ }
+diff --git a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/EmployeeSchedulerServiceImpl.java b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/EmployeeSchedulerServiceImpl.java
+index a15f664..f9c260f 100644
+--- a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/EmployeeSchedulerServiceImpl.java
++++ b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/EmployeeSchedulerServiceImpl.java
+@@ -3,18 +3,27 @@ package com.aura.vihanga.shedulerservice.service.implementation;
+ import com.aura.vihanga.shedulerservice.entity.Employee;
+ import com.aura.vihanga.shedulerservice.repository.EmployeeSchedulerRepository;
+ import com.aura.vihanga.shedulerservice.service.EmployeeSchedulerService;
++import com.aura.vihanga.shedulerservice.utill.GenderType;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.data.domain.PageRequest;
+ import org.springframework.stereotype.Service;
+ 
+ import java.util.List;
+ 
+ @Service
+ public class EmployeeSchedulerServiceImpl implements EmployeeSchedulerService {
++    private static final int MAX_PAGE_SIZE = 500;
++
+     @Autowired
+     private EmployeeSchedulerRepository employeeSchedulerRepository;
+ 
+     @Override
+     public List<Employee> getAllEmployees() {
+-        return employeeSchedulerRepository.findAll();
++        return employeeSchedulerRepository.findAll(PageRequest.of(0, MAX_PAGE_SIZE)).getContent();
++    }
++
++    @Override
++    public List<Employee> getFemaleEmployees() {
++        return employeeSchedulerRepository.findByGender(GenderType.FEMALE);
+     }
+ }
+diff --git a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/WomenDaySchedulerImpl.java b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/WomenDaySchedulerImpl.java
+index b129ba2..109b33d 100644
+--- a/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/WomenDaySchedulerImpl.java
++++ b/sheduler-service/src/main/java/com/aura/vihanga/shedulerservice/service/implementation/WomenDaySchedulerImpl.java
+@@ -2,13 +2,11 @@ package com.aura.vihanga.shedulerservice.service.implementation;
+ 
+ import com.aura.vihanga.shedulerservice.entity.Employee;
+ import com.aura.vihanga.shedulerservice.service.EmployeeSchedulerService;
+-import com.aura.vihanga.shedulerservice.utill.GenderType;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.scheduling.annotation.Scheduled;
+ import org.springframework.stereotype.Service;
+ 
+ import java.util.List;
+-import java.util.stream.Collectors;
+ 
+ @Service
+ public class WomenDaySchedulerImpl {
+@@ -18,9 +16,7 @@ public class WomenDaySchedulerImpl {
+ 
+     @Scheduled(cron = "0 0 0 8 3 *")
+     public void printWomenDayMessage() {
+-        List<Employee> womenEmployees = employeeSchedulerService.getAllEmployees().stream()
+-                .filter(employee -> employee.getGender() == GenderType.FEMALE)
+-                .collect(Collectors.toList());
++        List<Employee> womenEmployees = employeeSchedulerService.getFemaleEmployees();
+ 
+         System.out.println("Happy Women's Day!");
+         for (Employee employee : womenEmployees) {

@@ -1,0 +1,13 @@
+{
+  "id": "websecurityconfigureradapter-removed",
+  "description": "WebSecurityConfigurerAdapter is removed in Spring Security 6. The class that extends it is affected; nothing else in the tree is.",
+  "tuning": false,
+  "fact": {
+    "type": "API_REMOVED",
+    "subject": "org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter"
+  },
+  "true_affected_paths": [
+    "employee-service/src/main/java/com/example/config/SecurityConfig.java"
+  ],
+  "ground_truth_source": "Hand-declared by inspection of the tree below. The harness runs ImpactStage's matcher over the tree and compares its output to this list; the fixture never states what the matcher should predict."
+}

@@ -1,0 +1,7 @@
+{
+  "issue_id": "ISSUE-000",
+  "narrative": "Illustrative example only. Re-scan confirms the injection mechanism is closed (FIXED); red-team found no working bypass across two attempted vectors; behavior-guard found no out-of-scope changes; the new mocked regression test passed; the build gate passed with no dependency drift. Score 100/100 against a threshold of 90 (Critical severity) — cleared with no reservations.",
+  "override": {
+    "applied": false
+  }
+}

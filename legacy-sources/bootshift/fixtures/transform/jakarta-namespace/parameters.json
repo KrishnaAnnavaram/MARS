@@ -1,0 +1,14 @@
+{
+  "recipe": "jakarta.namespace",
+  "assert_relocated": [
+    "javax.persistence",
+    "javax.servlet",
+    "javax.validation"
+  ],
+  "assert_preserved": [
+    "javax.crypto",
+    "javax.sql",
+    "javax.naming"
+  ],
+  "why": "28 prefixes moved and 26 did not. Rewriting a preserved JDK package compiles fine and fails at runtime, which is the worst kind of migration defect."
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Scribe Content — agent input",
+  "description": "Written by the scribe agent to .github/.pipeline-context/scribe/<issue_id>.content.json after reading <issue_id>.chain.facts.md, then consumed by scripts/render-scribe.js to produce both docs/agent_output/07-ship/audit_<id>.md and docs/agent_output/07-ship/pr_<id>.md. The Cleared/Blocked banner and decision are pulled by the render script directly from the merge verdict, never from this file — the agent does not restate or decide the outcome here.",
+  "type": "object",
+  "required": ["issue_id", "audit_narrative", "pr_title", "pr_summary", "pr_test_plan"],
+  "additionalProperties": false,
+  "properties": {
+    "issue_id": { "type": "string" },
+    "audit_narrative": {
+      "type": "string",
+      "description": "The full chain-of-custody prose: issue found -> root cause -> blast radius -> fix plan (+ approval) -> fix drafted + compiled -> three Step 1 verdicts -> QA + build gate -> score -> decision. Every claim must link to its source document (already gathered in the chain facts) — do not restate a fact without its link."
+    },
+    "pr_title": {
+      "type": "string",
+      "description": "A single-line PR title, e.g. 'fix(employee-service): parameterise employee search query (CWE-943)'."
+    },
+    "pr_summary": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Bullet points for the PR body's summary section — what changed and why, written for a reviewer who has not read any of the upstream reports."
+    },
+    "pr_test_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Checklist items for the PR body's test plan, drawn from what the QA and build gates actually ran (and what they could not, e.g. anything requiring a live dependency)."
+    },
+    "pr_additional_notes": {
+      "type": "string",
+      "description": "Optional. Anything a reviewer should know that doesn't fit the summary or test plan — residual risk, deviations from the plan, open questions carried forward from upstream reports."
+    }
+  }
+}

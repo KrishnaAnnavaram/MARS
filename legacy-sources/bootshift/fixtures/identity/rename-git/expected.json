@@ -1,0 +1,6 @@
+{
+  "reattachment_rule": 3,
+  "rename_source": "GIT",
+  "same_file_id": true,
+  "why": "Git rename detection sees the move, so identity is preserved without falling through to content hashing or similarity."
+}
