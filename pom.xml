@@ -9,9 +9,9 @@
   <version>1.0.0</version>
   <packaging>pom</packaging>
 
-  <name>MARS Unified Harness</name>
+  <name>MARS - Migration and Remediation System</name>
   <description>
-    Unified Modernization, Assessment, Remediation and Security harness: one kernel (identity, graph,
+    MARS - Migration and Remediation System: one kernel (identity, graph,
     evidence, ledger, decisions, mutation gateway, validation) with two capability packs (Spring
     migration, vulnerability remediation).
 

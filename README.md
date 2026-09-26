@@ -1,4 +1,4 @@
-# MARS — Modernization, Assessment, Remediation & Security
+# MARS — Migration and Remediation System
 
 **A developer harness that upgrades Java/Spring applications and fixes their security vulnerabilities in one audited run.**
 
@@ -787,7 +787,7 @@ Results from the latest full runs (JDK 21, Maven 3.8.7):
 | Parity (96 tests) | Java ports vs the **original JavaScript**, run through Node: register reading, routing, KB ranking, research assembly, arbiter (1,152 combinations), build-error parsing (all recorded logs), probe comparison, diffs | pass |
 | Integration | Crash/resume without duplicate changes, bypass detection, full CLI flow, apply-to-project safety | pass |
 | End to end | Acceptance scenarios 1–10 and every sequencing scenario | pass |
-| **Total harness** | | **174 run, 0 failures** |
+| **Total harness** | | **175 run, 0 failures** |
 | **Real toolchain** | Real Maven and real running apps: employee service **Spring Boot 3.5.0 → 4.1.1** reaches GREEN in 8 rounds, with behaviour matching the recorded reference run; composite service migrated and SQL fix **Cleared** | **2 run, 0 failures** |
 
 ```bash
