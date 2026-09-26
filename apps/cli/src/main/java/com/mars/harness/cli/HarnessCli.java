@@ -30,7 +30,7 @@ import java.util.concurrent.Callable;
  * recorded decision.
  */
 @Command(name = "harness", mixinStandardHelpOptions = true, version = "harness " + HarnessEngine.HARNESS_VERSION,
-        description = "Unified Modernization & Vulnerability Remediation Harness (MARS)",
+        description = "MARS - Migration and Remediation System",
         subcommands = {HarnessCli.Analyze.class, HarnessCli.Status.class, HarnessCli.MigrationAssessmentCmd.class,
                 HarnessCli.Findings.class, HarnessCli.Proposals.class, HarnessCli.Decide.class, HarnessCli.Approve.class,
                 HarnessCli.SubmitPatch.class, HarnessCli.SubmitResearch.class, HarnessCli.Resume.class, HarnessCli.Report.class,

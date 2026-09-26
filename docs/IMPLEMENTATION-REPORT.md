@@ -1,4 +1,4 @@
-# MARS Unified Harness — Implementation Report
+# MARS - Migration and Remediation System — Implementation Report
 
 **Scope.** This report covers the unified migration and security harness built from three source
 repositories, as specified in `docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md`. It states what
@@ -16,7 +16,7 @@ and what remains limited. Related documents:
 |---|---|
 | Does the unified monorepo build? | Yes. `mvn -o install`: BUILD SUCCESS, 21 min 11 s |
 | Is Bootshift's behaviour intact? | Yes. Its own suite: **190 run, 0 failures, 0 errors, 3 skipped**, identical to the pre-change baseline (the skips are environmental, see analysis §3). All 1,076 legacy files are byte-identical to the export. |
-| Do the harness suites pass? | Yes. **174 run, 0 failures, 0 errors, 0 skipped** (unit, architecture, contract, schema, parity, integration, E2E) |
+| Do the harness suites pass? | Yes. **175 run, 0 failures, 0 errors, 0 skipped** (unit, architecture, contract, schema, parity, integration, E2E) |
 | Does it work on the real toolchain? | Yes. `RealToolchainAcceptanceIT`: **2 run, 0 failures** (real Maven, real `java -jar` runtimes, 9 min 22 s) |
 | Pre-existing failures kept separate | VRH `employee-service` does not build on JDK 21 (Lombok 1.18.28, pre-existing, analysis §3). Bootshift's 3 environmental skips. Testcontainers tests skip without Docker. None of these was "fixed" or hidden. |
 
@@ -33,8 +33,8 @@ and what remains limited. Related documents:
 | Contract and schema (§32.3, Phase E) | `CapabilityContractTest`, `SchemaValidationTest` | 7 | pass |
 | Parity vs legacy (§32.4): the legacy JavaScript runs unchanged through Node | 8 `*ParityTest` classes | 96 | pass (including 1,152 arbiter combinations and all 8 recorded round logs) |
 | Integration (§32.14, §32.15, CLI, apply) | `ResumeRecoveryIT`, `MutationBypassIT`, `CliWorkflowIT`, `ApplyToProjectIT` | 7 | pass |
-| End to end (§32.6–32.13, Scenarios 1–10) | 7 `*E2ETest` classes | 15 | pass |
-| **Total harness** | 28 classes | **174** | **0 failures, 0 errors** |
+| End to end (§32.6–32.13, Scenarios 1–10) | 7 `*E2ETest` classes | 16 | pass |
+| **Total harness** | 28 classes | **175** | **0 failures, 0 errors** |
 
 The E2E and integration suites use the production composition root with one substitution: a
 content-aware **test double** for Maven and the running application (`SimulatedToolchain`). It
@@ -336,6 +336,7 @@ never by weakening the test.
 | CLI workflow IT | the NEEDS_HUMAN summary echoed a stale note written before later decisions | derived from the verdict's outstanding decisions |
 | Issue-register parity | Java `trim()` / `\s` kept Unicode spaces (e.g. NBSP) that JavaScript `trim()` strips | JS-equivalent trimming in `Xlsx` / `IssueRegister` |
 | KB parity | an empty (not null) root-cause statement did not fall back to the title, as `fallback.js:296` does | empty treated like null |
+| Complete demo run | A DEFERRED decision on a strategy-only proposal was recorded and reported as a rejection (technical refusal checked before the human decision) | the human's REJECTED/DEFERRED decision is the reason of record; `HumanApprovalsE2ETest.aDeferralIsReportedAsADeferral…` |
 | **Real-toolchain acceptance** | Baseline and final runtimes ran in different fresh `exec/` copies, so an H2 file database (`./data/…`) was reseeded and bodies differed for reasons that were not the migration's | the runtime's working directory is one per-run `exec/runtime-state`, as the reference's single project directory was; the result now matches the recorded run (9 probes, 4 identical, 5 explained) |
 | **Real-toolchain acceptance** | The simulated compiler did not know that Boot 4 moved `AutoConfigureTestDatabase`; the real compiler stopped the run for a human | the test double reproduces it. Both the simulated and real E2E now exercise the human-patch path. The new location was resolved from the 4.1.1 jar (`spring-boot-jdbc-test`), not guessed. |
 
