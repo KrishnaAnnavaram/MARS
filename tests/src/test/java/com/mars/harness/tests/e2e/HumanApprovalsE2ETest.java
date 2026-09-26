@@ -126,6 +126,28 @@ class HumanApprovalsE2ETest {
     }
 
     @Test
+    void aDeferralIsReportedAsADeferralEvenForAStrategyOnlyProposal(@TempDir Path temp) {
+        TestHarness h = TestHarness.over(temp, "composite/inventory-service");
+        String run = h.analyzeComposite(true).runId();
+        h.engine.decideExecution(run, "SECURITY_ONLY", "dev.lead", "owner", "Security only");
+        h.engine.resume(run, false);
+        ChangeProposal key = h.proposalFor(run, "INV-104");
+        ChangeProposal research = h.proposalFor(run, "INV-103");
+        assertThat(key.strategyOnly()).isTrue();
+        h.engine.decideProposal(run, key.proposalId(), "DEFERRED", "dev.lead", "owner", "Needs a secrets-manager decision");
+        h.engine.decideProposal(run, research.proposalId(), "REJECTED", "dev.lead", "owner", "Deserialization endpoint is being removed");
+        h.engine.resume(run, true);
+        h.engine.decidePostSecurityMigration(run, "SKIP", "dev.lead", "owner", "No");
+        h.engine.resume(run, false);
+        assertThat(h.session(run).record.proposalStatus.get(key.proposalId())).isEqualTo("DEFERRED");
+        var items = h.json(run, "reports/verdict.json").path("items");
+        assertThat(find(items, "item_id", h.finding(run, "INV-104").findingId()).path("status").asText())
+                .isEqualTo("DEFERRED_BY_DEVELOPER");
+        assertThat(find(items, "item_id", h.finding(run, "INV-103").findingId()).path("status").asText())
+                .isEqualTo("REJECTED_BY_DEVELOPER");
+    }
+
+    @Test
     void yellowMigrationDeclinedDoesNotExecute(@TempDir Path temp) {
         TestHarness h = TestHarness.over(temp, "migration/employee-demo-sb3");
         HarnessEngine.RunSummary summary = h.analyzeEmployee();
