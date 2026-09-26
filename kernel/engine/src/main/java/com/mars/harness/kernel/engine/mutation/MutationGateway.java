@@ -143,6 +143,15 @@ public final class MutationGateway implements MutationPort {
             return new Outcome(id, ProposalSink.Status.APPLIED, "already applied (idempotent resume; not re-applied)",
                     session.record.proposalChanges.getOrDefault(id, List.of()), proposal.affectedFileIds(), null);
         }
+        // a human's REJECTED / DEFERRED decision is the reason of record, ahead of any technical refusal
+        // (e.g. a strategy-only proposal the developer deferred must read as deferred, not as rejected)
+        Optional<Decision> human = session.approvals.latestForProposal(id);
+        if (human.isPresent() && !human.get().approved()
+                && !session.approvals.verifyIntegrity().contains(human.get().decisionId())) {
+            Decision d = human.get();
+            return refuse(proposal, ProposalSink.Status.REJECTED, d.selected() + "_BY_DECISION: " + d.decisionId() + " ("
+                    + d.actor() + ": " + d.rationale() + ")", d.decisionId());
+        }
         String denial = identityAndScope(proposal);
         if (denial != null) {
             return refuse(proposal, denial.startsWith("STALE") ? ProposalSink.Status.STALE : ProposalSink.Status.REJECTED,
