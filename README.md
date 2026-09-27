@@ -818,13 +818,17 @@ change.
 | `approve remediation --run … --proposal PROP-… --verdict …` | Gate B (per proposal) |
 | `approve migration --run …` | Migration plan approval (when policy requires it) |
 | `approve apply --run …` | Authorize applying the result to your project |
-| `submit-patch --run … --file path=local [--rename old=new] [--provider manual\|llm …]` | Register a human- or LLM-written patch as a proposal |
+| `submit-patch --run … --reason "…" --file repo/path=local [--rename old=new] [--finding ID…] [--provider manual\|llm …]` | Register a human- or LLM-written patch as a proposal. `--finding` links it to findings (omit for a migration or manual patch). An `llm` patch is refused at apply time unless it gives `--model`, `--prompt-hash` and `--response-hash` (`--model-version` and `--context-hash` are recorded when given). |
 | `submit-research --run … --finding ID --analysis analysis.json` | Supply a research analysis for a double-gap finding |
 | `resume --run … [--accept-pending]` | Advance to the next gate or the verdict |
 | `report --run …` | Render the final evidence report |
 | `lineage <ID> --run …` · `finding <ID> --run …` · `change <ID> --run …` | Audit any identity, finding or change |
 | `apply --run … --decision DEC-…` | Write the verified result into your project (decision-bound) |
 | `verify --run …` | Recompute every hash chain and integrity check |
+
+Every `decide` and `approve` command also requires `--actor <name>`, `--role <role>` and
+`--rationale "<why>"`. For `approve`, `--verdict` defaults to `APPROVED`, so pass `--verdict
+REJECTED` or `--verdict DEFERRED` explicitly when you mean that.
 
 Every command accepts these common options: `--harness-root`, `--runs-root`, `--policy`, `--today`,
 `--maven-offline`, `--network` and `--json`.
