@@ -69,8 +69,10 @@ New here? Read [§1](#1-why-mars-exists), [§2](#2-the-five-non-negotiable-rules
 21. [Testing and quality evidence](#21-testing-and-quality-evidence)
 22. [Extending MARS](#22-extending-mars)
 23. [Limitations](#23-limitations)
-24. [Further documentation](#24-further-documentation)
-25. [License](#25-license)
+24. [Glossary](#24-glossary)
+25. [Troubleshooting](#25-troubleshooting)
+26. [Further documentation](#26-further-documentation)
+27. [License](#27-license)
 
 ---
 
@@ -964,7 +966,55 @@ The full list is in [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT
 
 ---
 
-## 24. Further documentation
+## 24. Glossary
+
+| Term | Meaning |
+|---|---|
+| **Run** | One analysis-to-verdict session, stored in `runs/RUN-…/`. Every command after `analyze` names it with `--run`. |
+| **Bootshift** | The Java migration engine MARS is built on. It provides file identity, the snapshot and workspace, and the change ledger, and it runs unchanged. |
+| **VRH** | Vulnerability Remediation Harness: the source security pipeline whose rules, catalog, knowledge base and scoring MARS ports or reads in place. |
+| **Capability** | A domain module plugged into the kernel: `spring-migration` or `vulnerability-remediation`. |
+| **Baseline seal** | The hashed record of "round 0": the build, tests and probes of the untouched project. No change can happen before it exists. |
+| **Round** | One migration build attempt in a disposable copy. Round 0 is the baseline; later rounds apply rules for the errors they hit. |
+| **Reference pack** | A Markdown migration guide (e.g. Spring Boot 3 → 4) plus a machine-readable `*.rules.json` pinned to it by SHA-256. |
+| **Symptom rule** | A migration rule applied only when a build fails with the exact error text it quotes. |
+| **Traffic light** | The Migration Advisor's answer: GREEN (not required), YELLOW (recommended), RED (a prerequisite for a requested fix), UNKNOWN. |
+| **Gate A / A2 / B** | Human decisions: A picks the execution strategy, A2 asks again about migrating after security work, B approves each individual proposal. |
+| **Proposal (`PROP-`)** | An immutable, hashed change request. It is the only way code changes. |
+| **Decision (`DEC-`)** | A recorded human decision, HMAC-protected and bound to the hash of what it decides about. |
+| **Mutation Gateway** | The single code path allowed to write tracked source. |
+| **Identity (`FILE-`, `MOD-`, `PU-`, `SYM-`, `STMT-`)** | Persistent IDs for files, modules, classes, members and statements that survive renames and edits. |
+| **Finding** | A vulnerability in canonical form, anchored to an identity rather than a path and line. |
+| **Catalog / KB / Research** | The three routing levels for a finding: VRH's CWE catalog, the remediation knowledge base, then a supplied research analysis. |
+| **Double gap** | A finding whose CWE is in neither the catalog nor the KB. It needs a research analysis, or it gets an `EVIDENCE_GAP` plan. |
+| **Strategy-only plan** | A plan with no concrete patch. Approving it authorizes producing a fix, which then needs its own approval. |
+| **`BLOCKED_BY_PLATFORM`** | A fix that cannot be applied until the migration is done (e.g. the fixed library needs Spring Boot 4). |
+| **Probe** | An HTTP request replayed against the running app before and after, to compare behaviour. |
+| **Evidence (`EVID-`)** | A hash-chained record backing every claim MARS makes. |
+| **Verdict** | The final outcome: `CLEARED`, `PARTIAL`, `NEEDS_HUMAN`, `INSUFFICIENT_EVIDENCE` or `BLOCKED`. |
+
+---
+
+## 25. Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| `Cannot locate the harness installation` | Run from inside the MARS checkout, pass `--harness-root`, or set `HARNESS_HOME` to the folder that contains `policies/default/unified-policy.json`. |
+| `reserved machine identity` (exit 2) | `--actor` is a machine name such as `llm`, `agent`, `copilot`, `harness` or `ci`. Decisions must be made by a person; use your own name. |
+| A proposal is rejected with `STALE_PROPOSAL` | The file it edits changed after the proposal was computed (its base hash no longer matches), it was computed against another baseline, or the migration plan changed after it was frozen. MARS never applies it over newer content; review the current state and submit or approve a fresh proposal. |
+| The run ends in `NEEDS_HUMAN` with "decision(s) outstanding" | You continued with `--accept-pending` while some proposals were undecided. Run `harness proposals`, decide each one, then `harness resume`. |
+| Migration stops in `NEEDS_HUMAN` | A build error matched no rule in the reference pack, and MARS does not guess. Write the fix yourself (a local file with the full new content), register it with `harness submit-patch --run … --file repo/relative/path=local/file --reason "…"`, approve it with `harness approve remediation`, then `harness resume`. |
+| Migration refuses: "reference pack text changed after its rules were derived" | The pack Markdown was edited, so its SHA-256 no longer matches `pack_sha256` in the `*.rules.json`. Re-derive the rules (see [`docs/writing-a-reference-pack.md`](docs/writing-a-reference-pack.md)). |
+| Migration refuses: "Round 0 … did not run" | The run was analyzed with `--skip-build`. Migration needs a real baseline build; analyze again without `--skip-build`. |
+| Validation shows `NOT_RUN` or `TOOL_UNAVAILABLE` | A tool (Maven, Java runtime, Docker) was missing or a step was skipped (e.g. `--skip-build`). MARS never counts these as a pass. Install the tool and start a new run. |
+| Tests that use Testcontainers are skipped | Docker is not available. They are skipped on both sides of every comparison (baseline and final), so they cannot hide a regression, but they are not evidence either. |
+| `harness verify` exits 3 | A ledger, evidence chain or decision file was changed after it was written. The output names the altered item. |
+
+Exit codes are listed in [§17](#17-cli-reference).
+
+---
+
+## 26. Further documentation
 
 | Document | Contents |
 |---|---|
@@ -979,7 +1029,7 @@ The full list is in [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT
 
 ---
 
-## 25. License
+## 27. License
 
 MIT — see [LICENSE](LICENSE). The systems under `legacy-sources/` retain their original licenses
 and provenance.
