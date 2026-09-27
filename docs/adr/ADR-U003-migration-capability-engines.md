@@ -2,7 +2,7 @@
 
 **Status:** Accepted
 **Date:** 2026-09-24
-**Deciders:** Unified harness architecture
+**Deciders:** MARS architecture
 
 ## Context
 
