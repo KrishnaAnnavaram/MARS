@@ -1,4 +1,4 @@
-# Phased Implementation Plan
+# MARS: Phased Implementation Plan
 
 This plan follows spec §30. Each phase ends with compile, relevant tests, architecture/contract
 tests, a diff review and notes. Bootshift's own suite (190 tests) runs in every reactor build.

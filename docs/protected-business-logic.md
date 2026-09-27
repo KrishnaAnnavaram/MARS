@@ -1,6 +1,6 @@
-# Protected Business Logic and Parity Map
+# MARS: Protected Business Logic and Parity Map
 
-"Protected" means the behaviour must stay functionally unchanged. The unified harness either calls
+"Protected" means the behaviour must stay functionally unchanged. MARS either calls
 this logic unchanged or reproduces its business rules exactly behind an adapter. A parity or guard
 test pins each row.
 
