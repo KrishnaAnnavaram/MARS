@@ -610,16 +610,53 @@ gate, close the terminal and continue days later with `harness resume`.
 ```bash
 git clone https://github.com/KrishnaAnnavaram/MARS.git
 cd MARS
-mvn install            # builds Bootshift + MARS and runs all default test suites
+mvn install -DskipTests   # fast build: just the CLI jar
 # CLI jar: apps/cli/target/harness.jar
 ```
 
-Add `-DskipTests` for a fast build. Add `-o` when all dependencies are already in your local repository.
+A plain `mvn install` also runs every default test suite, including Bootshift's 190 tests. That
+takes about **20 minutes** (21 min 11 s in the recorded run). Add `-o` when all dependencies are
+already in your local repository.
+
+### Make `harness` a command
+
+```bash
+# bash / zsh
+alias harness='java -jar /path/to/MARS/apps/cli/target/harness.jar'
+```
+
+```powershell
+# Windows PowerShell (add to $PROFILE to keep it)
+function harness { java -jar D:\path\to\MARS\apps\cli\target\harness.jar @args }
+```
+
+MARS finds its installation root (the folder containing `policies/default/unified-policy.json`
+and `legacy-sources/bootshift`) in this order: `--harness-root`, the `HARNESS_HOME` environment
+variable, the current directory and its parents, then the jar's own location and its parents.
+Running the jar from inside a MARS checkout therefore needs no setup. Runs are written to
+`<harness-root>/runs` unless you pass `--runs-root` or set `HARNESS_RUNS_ROOT`.
+
+### Getting the run ID
+
+Every command after `analyze` needs `--run RUN-…`. `analyze` prints it on its first line
+(`run      : RUN-…`), and each run is also a folder under `runs/`. To capture it in a script:
+
+```bash
+RUN=$(harness analyze /path/to/your-service --json | jq -r .run_id)
+harness status --run "$RUN"
+```
+
+```powershell
+$RUN = (harness analyze D:\path\to\your-service --json | ConvertFrom-Json).run_id
+harness status --run $RUN
+```
+
+When the run is waiting for you, `status` ends with a `next:` list of the commands you can run
+now.
 
 ### First run
 
 ```bash
-alias harness='java -jar apps/cli/target/harness.jar'
 
 # 1. analyze (read-only) — stops at Gate A
 harness analyze /path/to/your-service \
