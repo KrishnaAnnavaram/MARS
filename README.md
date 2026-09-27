@@ -17,6 +17,31 @@ MARS gives them one identity model, one change ledger, one approval process and 
 > recommends, waits for your decisions, applies only what you authorize, verifies the result on the
 > real toolchain, and produces an evidence package you can audit.
 
+MARS ships as the **`harness`** command-line tool (`apps/cli/target/harness.jar`).
+
+---
+
+## TL;DR
+
+- **Analyze** a Java/Spring service. MARS finds its vulnerabilities, assesses whether it should
+  migrate (GREEN / YELLOW / RED), and recommends an order: migrate first, or fix security first.
+- **Decide** at human gates. You pick the strategy and approve each individual fix. No AI or tool
+  can approve on your behalf.
+- **Verify** the result. Every approved change is built, tested, probed and re-scanned, and ends
+  in one verdict: `CLEARED`, `PARTIAL`, `NEEDS_HUMAN`, `INSUFFICIENT_EVIDENCE` or `BLOCKED`.
+
+```bash
+harness analyze ./my-service --findings issues.xlsx     # read-only; stops at Gate A
+harness decide execution --run RUN-… --strategy SECURITY_FIRST --actor you --role owner --rationale "…"
+harness resume  --run RUN-…                             # advances to Gate B
+harness approve remediation --run RUN-… --proposal PROP-… --verdict APPROVED --actor you --role owner --rationale "…"
+harness resume  --run RUN-… --accept-pending            # applies, verifies, produces the verdict
+harness report  --run RUN-…                             # the evidence report
+```
+
+New here? Read [§1](#1-why-mars-exists), [§2](#2-the-five-non-negotiable-rules) and
+[§15](#15-quick-start), then try the [worked example](#16-worked-example-a-composite-run).
+
 ---
 
 ## Table of Contents
