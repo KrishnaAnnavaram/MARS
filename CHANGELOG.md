@@ -6,7 +6,7 @@ All notable changes to MARS are recorded here. Versions follow the project versi
 
 ### Documentation
 
-- README: TL;DR, Windows and run-ID tips, step-by-step worked example, glossary, troubleshooting,
+- README: overview section, Windows and run-ID tips, step-by-step worked example, glossary, troubleshooting,
   and a CLI reference corrected against the actual command options.
 - New: [user guide](docs/user-guide.md), [writing a reference pack](docs/writing-a-reference-pack.md),
   [documentation index](docs/README.md), [contributing guide](CONTRIBUTING.md) and
