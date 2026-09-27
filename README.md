@@ -23,11 +23,13 @@ MARS ships as the **`harness`** command-line tool (`apps/cli/target/harness.jar`
 
 ## Overview
 
-- **Analyze** a Java/Spring service. MARS finds its vulnerabilities, assesses whether it should
-  migrate (GREEN / YELLOW / RED), and recommends an order: migrate first, or fix security first.
+- **Analyze** a Java/Spring service. MARS takes in vulnerability findings from your scanners
+  (Excel issue register, SARIF, dependency advisories), confirms and pinpoints them (and flags new ones) with its own
+  built-in checks for seven common weakness types, assesses whether the service should migrate
+  (GREEN / YELLOW / RED), and recommends an order: migrate first, or fix security first.
 - **Decide** at human gates. You pick the strategy and approve each individual fix. No AI or tool
   can approve on your behalf.
-- **Verify** the result. Every approved change is built, tested, probed and re-scanned, and ends
+- **Verify** the result. It is built, tested, probed and re-scanned, and ends
   in one verdict: `CLEARED`, `PARTIAL`, `NEEDS_HUMAN`, `INSUFFICIENT_EVIDENCE` or `BLOCKED`.
 
 ```bash
@@ -35,7 +37,7 @@ harness analyze ./my-service --findings issues.xlsx     # read-only; stops at Ga
 harness decide execution --run RUN-… --strategy SECURITY_FIRST --actor you --role owner --rationale "…"
 harness resume  --run RUN-…                             # advances to Gate B
 harness approve remediation --run RUN-… --proposal PROP-… --verdict APPROVED --actor you --role owner --rationale "…"
-harness resume  --run RUN-… --accept-pending            # applies, verifies, produces the verdict
+harness resume  --run RUN-… --accept-pending            # applies, verifies; undecided proposals keep the verdict at NEEDS_HUMAN
 harness report  --run RUN-…                             # the evidence report
 ```
 
