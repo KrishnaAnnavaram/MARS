@@ -1,4 +1,4 @@
-# Current System Analysis (Phase A)
+# MARS: Current System Analysis (Phase A)
 
 Date: 2026-09-24. Scope: the three source repositories named in
 `docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md` §1, inspected at the exact branches it names,
@@ -309,7 +309,7 @@ Java 21, `webmvc`, Jackson 3 `JsonMapperBuilderCustomizer`, the health-contribut
   - VRH `04c-remediation-intelligence` versus repo C `04c-dependency-upgrader`;
   - VRH `04d-remediation-research` versus repo C `04d-version-migration`.
 
-  The unified harness names capabilities by function, not by skill number.
+  MARS names capabilities by function, not by skill number.
 - **Every approval mechanism is text-based**: a VRH Markdown status cell, repo C's explicit "apply"
   request, and Bootshift's local decision store. Only Bootshift's is machine-structured. The unified
   kernel adopts Bootshift's `DecisionStore` semantics, extended for scope and staleness.

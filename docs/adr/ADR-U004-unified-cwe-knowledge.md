@@ -2,13 +2,13 @@
 
 **Status:** Accepted
 **Date:** 2026-09-24
-**Deciders:** Unified harness architecture
+**Deciders:** MARS architecture
 
 ## Context
 
 VRH routes a finding through the 04a catalog (`cwe-patterns.json`), then the 04c remediation KB
 (`remediation-kb.json` with `ranking-weights.json`), then 04d research. It scores verification with
-07a `scoring.json`. The unified harness also needs dependency advisories (CWE-1104), which the VRH
+07a `scoring.json`. MARS also needs dependency advisories (CWE-1104), which the VRH
 catalog does not cover.
 
 ## Decision

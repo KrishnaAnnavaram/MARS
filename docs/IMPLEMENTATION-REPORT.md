@@ -1,6 +1,6 @@
-# MARS - Migration and Remediation System — Implementation Report
+# MARS — Migration and Remediation System: Implementation Report
 
-**Scope.** This report covers the unified migration and security harness built from three source
+**Scope.** This report covers MARS, the unified migration and security harness built from three source
 repositories, as specified in `docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md`. It states what
 was built, what was preserved and how, what changed, the test evidence (from commands actually run),
 and what remains limited. Related documents:
