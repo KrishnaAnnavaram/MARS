@@ -1023,6 +1023,7 @@ Exit codes are listed in [§17](#17-cli-reference).
 | Document | Contents |
 |---|---|
 | [`docs/README.md`](docs/README.md) | Index of all documentation |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md) · [`CHANGELOG.md`](CHANGELOG.md) | How to contribute, how to report a vulnerability, what changed |
 | [`docs/user-guide.md`](docs/user-guide.md) | Task-based guide: analyze, decide, review proposals, submit patches, apply, audit |
 | [`docs/writing-a-reference-pack.md`](docs/writing-a-reference-pack.md) | How to add a migration path: pack format, rule kinds, pinning, testing |
 | [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT.md) | Final architecture, preserved behaviour, changes, full test evidence, defects found and fixed, limitations |
