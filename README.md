@@ -733,6 +733,73 @@ What happens:
 | If you choose `SECURITY_ONLY` | SQL fix applied and **Cleared**; advisory **BLOCKED_BY_PLATFORM**; Gate A2 asks again about migration |
 | If you choose `MIGRATE_FIRST` | Boot 4.1.1 migration → springdoc moves to 3.1.0 → advisory re-matched as **already remediated** → fixes applied against migrated code |
 
+The fixture's finding IDs:
+
+| ID | Finding |
+|---|---|
+| `INV-101` | SQL injection (CWE-89) |
+| `INV-102` | Path traversal (CWE-22) |
+| `INV-103` | Unsafe deserialization (CWE-502), with a supplied research analysis |
+| `INV-104` | Hard-coded key (CWE-798) |
+| `FIXTURE-ADV-SPRINGDOC-0001` | Synthetic springdoc advisory that needs Spring Boot 4 |
+
+### Walkthrough A: `SECURITY_ONLY`, then migrate at Gate A2
+
+These are the steps `CliWorkflowIT` and `CompositeSequencingE2ETest` drive. The `…` parts are the
+IDs your run prints.
+
+```bash
+# 1. analyze (the command above). The run stops at Gate A:
+#    phase   : WAITING_FOR_EXECUTION_DECISION   (migration-assessment shows "traffic_light" : "RED")
+
+# 2. choose security only
+harness decide execution --run $RUN --strategy SECURITY_ONLY \
+  --actor dev.lead --role owner --rationale "Security this sprint"
+harness resume --run $RUN                 # -> WAITING_FOR_REMEDIATION_APPROVAL
+
+# 3. review and approve the SQL injection fix (find its PROP- ID in the list)
+harness proposals --run $RUN
+harness approve remediation --run $RUN --proposal PROP-… --verdict APPROVED \
+  --actor dev.lead --role owner --rationale "Reviewed the parameterized query"
+
+# 4. apply and verify. The springdoc advisory is BLOCKED_BY_PLATFORM, so MARS asks again about migrating
+harness resume --run $RUN --accept-pending   # -> WAITING_FOR_POST_SECURITY_MIGRATION_DECISION
+#    migration is re-assessed: still RED (discovery/migration/post-security-reassessment.json says why)
+
+# 5. Gate A2: migrate now
+harness decide migration --run $RUN --decision PROCEED \
+  --actor dev.lead --role owner --rationale "Unblocks the springdoc fix"
+harness resume --run $RUN
+
+# 6. inspect and check integrity
+harness report --run $RUN
+harness verify --run $RUN
+```
+
+Outcome: the migration reaches GREEN, and the verdict lists `MIGRATION` as `MIGRATED`, the SQL
+injection as `FIXED` and the springdoc advisory as `FIXED`. Choosing `SKIP` at step 5 instead
+leaves the advisory `BLOCKED_BY_PLATFORM`.
+
+`--accept-pending` lets the run continue while some proposals are still undecided. They are
+**not** approved: they stay `PENDING_APPROVAL`, and the run ends in `NEEDS_HUMAN` ("N decision(s)
+outstanding") until you decide them.
+
+### Walkthrough B: `MIGRATE_FIRST`
+
+```bash
+harness decide execution --run $RUN --strategy MIGRATE_FIRST \
+  --actor dev.lead --role owner --rationale "Follow the recommendation"
+harness resume --run $RUN          # migration rounds run; stops at Gate B
+harness proposals --run $RUN       # fixes are now computed against the migrated code
+harness approve remediation --run $RUN --proposal PROP-… --verdict APPROVED \
+  --actor dev.lead --role owner --rationale "…"      # repeat for INV-101 and INV-102
+harness resume --run $RUN --accept-pending
+```
+
+Outcome: the pom moves to Spring Boot 4.1.1 and springdoc 3.1.0, and the advisory is re-matched as
+`ALREADY_REMEDIATED`. In the change ledger, every migration change comes before every security
+change.
+
 ---
 
 ## 17. CLI reference
