@@ -940,7 +940,7 @@ that the production parser reads. The real-toolchain suite uses no doubles.
 
 | To add… | Do this |
 |---|---|
-| A new migration path (e.g. another framework jump) | Add a reference pack. Derive a `*.rules.json` pinned to its SHA-256 (build-file rules + symptom rules). The engine and advisor pick it up. |
+| A new migration path (e.g. Spring Boot 2 → 3) | Add a reference pack and derive a `*.rules.json` pinned to its SHA-256 (build-file rules + symptom rules). The engine and advisor pick it up with no code change if it uses the existing rule kinds. New rule kinds or non-Spring frameworks need code. See [`docs/writing-a-reference-pack.md`](docs/writing-a-reference-pack.md). |
 | A new finding source | Implement `FindingNormalizer` (anchor to identity via `FindingAnchoring`) and register it in `HarnessFactory`. |
 | A new deterministic fix | Add a fixer in `capabilities/vulnerability-remediation/.../fix/Fixers` and route to it from the catalog or KB plan. |
 | A new build tool or runtime | Implement `BuildPort` / `RuntimePort` in `kernel/adapters`. The architecture tests keep processes inside adapters. |
