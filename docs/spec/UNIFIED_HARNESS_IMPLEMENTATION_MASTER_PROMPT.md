@@ -1,3 +1,7 @@
+> **Historical document.** This is the original specification MARS was implemented from. It is kept
+> for traceability (other docs cite its section numbers). For what MARS does today, see the
+> [README](../../README.md) and the [implementation report](../IMPLEMENTATION-REPORT.md).
+
 # Unified Modernization & Vulnerability Remediation Harness
 ## Master Implementation Prompt for Cloud Code / Repository Coding Agent
 
