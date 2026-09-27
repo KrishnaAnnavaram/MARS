@@ -1,7 +1,7 @@
 # MARS: Current System Analysis (Phase A)
 
 Date: 2026-09-24. Scope: the three source repositories named in
-`docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md` §1, inspected at the exact branches it names,
+`docs/spec/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md` §1, inspected at the exact branches it names,
 before any integration code was written.
 
 ## 1. Sources verified
