@@ -1027,7 +1027,7 @@ Exit codes are listed in [§17](#17-cli-reference).
 | [`docs/protected-business-logic.md`](docs/protected-business-logic.md) | Every protected behaviour, how it is preserved, and the test that guards it |
 | [`docs/implementation-plan.md`](docs/implementation-plan.md) | The phased plan |
 | [`docs/adr/`](docs/adr) | Architecture decision records ADR-U001 … U007 |
-| [`docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md`](docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md) | The original specification |
+| [`docs/spec/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md`](docs/spec/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md) | The original specification MARS was built from (historical) |
 | [`legacy-sources/SOURCES.json`](legacy-sources/SOURCES.json) | Provenance of the three imported systems (repositories, branches, commits) |
 | [`schemas/v1/`](schemas/v1) | JSON Schemas for findings, proposals, decisions, assessments, evidence, lineage, validation, verdict |
 
