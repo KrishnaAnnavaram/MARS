@@ -23,8 +23,10 @@ MARS ships as the **`harness`** command-line tool (`apps/cli/target/harness.jar`
 
 ## Overview
 
-- **Analyze** a Java/Spring service. MARS finds its vulnerabilities, assesses whether it should
-  migrate (GREEN / YELLOW / RED), and recommends an order: migrate first, or fix security first.
+- **Analyze** a Java/Spring service. MARS takes in vulnerability findings from your scanners
+  (Excel issue register, SARIF, dependency advisories), confirms and pinpoints them with its own
+  built-in checks for seven common weakness types, assesses whether the service should migrate
+  (GREEN / YELLOW / RED), and recommends an order: migrate first, or fix security first.
 - **Decide** at human gates. You pick the strategy and approve each individual fix. No AI or tool
   can approve on your behalf.
 - **Verify** the result. Every approved change is built, tested, probed and re-scanned, and ends
