@@ -1,0 +1,106 @@
+# MARS Control Center API
+#
+# Defaults are for a local developer harness: bound to localhost, development identities, the
+# harness's own fixtures as the only repository root. See docs/control-center-security.md before
+# exposing it to anyone else.
+
+server:
+  address: ${MARS_CC_ADDRESS:127.0.0.1}
+  port: ${MARS_CC_PORT:8080}
+  shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: strict
+        name: MARS_SESSION
+
+spring:
+  application:
+    name: mars-control-center
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  mvc:
+    async:
+      request-timeout: 1800000
+  task:
+    scheduling:
+      pool:
+        size: 4
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+mars:
+  control-center:
+    # harness-root: auto-detected like the CLI (HARNESS_HOME, then parent directories)
+    # runs-root: defaults to <harness-root>/runs, the same runs the CLI writes
+    repository-roots:
+      - fixtures
+    max-concurrent-runs: 2
+    maven-offline: false
+    network: false
+    auth:
+      mode: ${MARS_CC_AUTH_MODE:dev}
+      # DEVELOPMENT ONLY. These identities are not authentication; decisions record DEVELOPMENT_ASSERTED.
+      dev-users:
+        viewer:
+          password: ${MARS_CC_DEV_PASSWORD:mars-dev}
+          display-name: Dev Viewer
+          roles: [VIEWER]
+        operator:
+          password: ${MARS_CC_DEV_PASSWORD:mars-dev}
+          display-name: Dev Operator
+          roles: [OPERATOR]
+        approver:
+          password: ${MARS_CC_DEV_PASSWORD:mars-dev}
+          display-name: Dev Approver
+          roles: [APPROVER]
+        admin:
+          password: ${MARS_CC_DEV_PASSWORD:mars-dev}
+          display-name: Dev Admin
+          roles: [ADMIN]
+      # OIDC mode (set MARS_CC_AUTH_MODE=oidc and the issuer below)
+      roles-claim: roles
+      name-claim: preferred_username
+      role-mapping: {}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  tracing:
+    # traces are exported only when an OTLP endpoint is configured (management.otlp.tracing.endpoint)
+    sampling:
+      probability: ${MARS_CC_TRACE_SAMPLING:1.0}
+  otlp:
+    tracing:
+      export:
+        enabled: ${MARS_CC_OTLP_ENABLED:false}
+  info:
+    env:
+      enabled: true
+
+info:
+  application: MARS Control Center
+  description: Observation and human-decision interface over the MARS engine
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  pattern:
+    level: "%5p [corr=%X{correlation_id:-} run=%X{mars.run.id:-}]"
+  level:
+    com.bootshift: WARN

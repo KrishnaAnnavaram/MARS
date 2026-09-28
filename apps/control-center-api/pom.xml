@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.mars</groupId>
+    <artifactId>mars-harness-parent</artifactId>
+    <version>1.0.0</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>control-center-api</artifactId>
+  <name>MARS :: Control Center API</name>
+  <description>
+    The web composition root: a read/observe/decide interface over the unchanged MARS engine. It wires the same
+    adapters and capability packs as the CLI (HarnessFactory), serves run snapshots and the execution event stream
+    (SSE), and records human decisions only through HarnessEngine, which records them through the ApprovalPort.
+  </description>
+
+  <properties>
+    <spring-boot.version>3.5.0</spring-boot.version>
+    <springdoc.version>2.8.9</springdoc.version>
+    <!-- what org.openrewrite:rewrite-core/rewrite-maven 8.90.4 declare; see the dependencyManagement note -->
+    <cli.jackson.modules.version>2.21.6</cli.jackson.modules.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- The engine must run on exactly the Jackson the CLI runs on: KernelJson registers every Jackson module on
+           the classpath, and canonical JSON is what decision-bound hashes are computed over. So this module resolves
+           Jackson the way the CLI does: core and annotations on the kernel's version (explicit entries win), then the
+           same OpenRewrite BOM the parent imports (first import wins), and only then Spring Boot's BOM. The
+           JacksonClasspathParityTest in the tests module fails if the two classpaths drift apart. -->
+      <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId><version>${jackson.version}</version></dependency>
+      <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-annotations</artifactId><version>${jackson.version}</version></dependency>
+      <!-- the modules the CLI receives transitively from OpenRewrite (Spring Boot's BOM would move them) -->
+      <dependency><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-parameter-names</artifactId><version>${cli.jackson.modules.version}</version></dependency>
+      <dependency><groupId>com.fasterxml.jackson.module</groupId><artifactId>jackson-module-jaxb-annotations</artifactId><version>${cli.jackson.modules.version}</version></dependency>
+      <dependency><groupId>com.fasterxml.jackson.datatype</groupId><artifactId>jackson-datatype-jdk8</artifactId><version>${cli.jackson.modules.version}</version></dependency>
+      <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-smile</artifactId><version>${cli.jackson.modules.version}</version></dependency>
+      <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId><version>2.17.1</version></dependency>
+      <!-- libraries Bootshift and OpenRewrite parse and cache with, on the CLI's versions -->
+      <dependency><groupId>com.fasterxml.woodstox</groupId><artifactId>woodstox-core</artifactId><version>6.7.0</version></dependency>
+      <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><version>2.9.3</version></dependency>
+      <dependency><groupId>commons-codec</groupId><artifactId>commons-codec</artifactId><version>1.17.0</version></dependency>
+      <dependency><groupId>org.apache.commons</groupId><artifactId>commons-lang3</artifactId><version>3.20.0</version></dependency>
+      <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>1.18.46</version></dependency>
+      <dependency>
+        <groupId>org.openrewrite</groupId>
+        <artifactId>rewrite-bom</artifactId>
+        <version>8.90.4</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- the one composition root: identical engine wiring to the CLI -->
+    <dependency>
+      <groupId>com.mars</groupId>
+      <artifactId>harness-cli</artifactId>
+      <exclusions>
+        <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- javax.activation for the javax JAXB API the CLI's Jackson JAXB module uses; the jakarta artifact of the same
+         name is taken by Spring's jakarta.xml.bind 4 -->
+    <dependency><groupId>javax.activation</groupId><artifactId>javax.activation-api</artifactId><version>1.2.0</version><scope>runtime</scope></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-oauth2-resource-server</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
+
+    <!-- operational observability (optional at runtime: exporting is off unless an OTLP endpoint is configured) -->
+    <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-tracing-bridge-otel</artifactId></dependency>
+    <dependency><groupId>io.opentelemetry</groupId><artifactId>opentelemetry-exporter-otlp</artifactId></dependency>
+
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Spring MVC binds request parameters by name. Only this module is compiled with -parameters: the kernel's
+           Jackson behaviour (ParameterNamesModule is on the classpath) must stay exactly as the CLI's. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <parameters>true</parameters>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
+        <configuration>
+          <mainClass>com.mars.harness.controlcenter.ControlCenterApplication</mainClass>
+          <!-- the plain jar stays usable as a dependency (the tests module and ArchUnit import it) -->
+          <classifier>exec</classifier>
+        </configuration>
+        <executions>
+          <execution><goals><goal>repackage</goal></goals></execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- mvn -pl apps/control-center-api -am package -Pui : builds the React UI and packages it as static content -->
+    <profile>
+      <id>ui</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+              <execution>
+                <id>npm-ci</id>
+                <phase>generate-resources</phase>
+                <goals><goal>exec</goal></goals>
+                <configuration>
+                  <executable>npm</executable>
+                  <workingDirectory>${project.basedir}/../../ui/mars-control-center</workingDirectory>
+                  <arguments><argument>ci</argument><argument>--include=dev</argument></arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm-build</id>
+                <phase>generate-resources</phase>
+                <goals><goal>exec</goal></goals>
+                <configuration>
+                  <executable>npm</executable>
+                  <workingDirectory>${project.basedir}/../../ui/mars-control-center</workingDirectory>
+                  <arguments><argument>run</argument><argument>build</argument></arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-ui</id>
+                <phase>process-resources</phase>
+                <goals><goal>copy-resources</goal></goals>
+                <configuration>
+                  <outputDirectory>${project.build.outputDirectory}/static</outputDirectory>
+                  <resources>
+                    <resource><directory>${project.basedir}/../../ui/mars-control-center/dist</directory></resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

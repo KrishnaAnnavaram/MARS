@@ -36,6 +36,7 @@
     <module>capabilities/spring-migration</module>
     <module>capabilities/vulnerability-remediation</module>
     <module>apps/cli</module>
+    <module>apps/control-center-api</module>
     <module>tests</module>
   </modules>
 
@@ -72,6 +73,7 @@
       <dependency><groupId>com.mars</groupId><artifactId>capability-spring-migration</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.mars</groupId><artifactId>capability-vulnerability-remediation</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.mars</groupId><artifactId>harness-cli</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.mars</groupId><artifactId>control-center-api</artifactId><version>${project.version}</version></dependency>
 
       <!-- Mirrors Bootshift's parent dependencyManagement exactly, so every module resolves the same
            versions Bootshift was built and tested against (no silent transitive upgrades). -->
