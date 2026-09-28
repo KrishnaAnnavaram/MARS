@@ -86,7 +86,10 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/api/v1/session", "/api/v1/session/dev-users").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/session/login", "/api/v1/session/logout").permitAll()
                 .requestMatchers("/actuator/**").hasRole(MarsRole.ADMIN.name())
-                .requestMatchers(HttpMethod.POST, "/api/v1/runs", "/api/v1/runs/*/resume").hasRole(MarsRole.OPERATOR.name())
+                .requestMatchers(HttpMethod.POST, "/api/v1/runs").hasRole(MarsRole.OPERATOR.name())
+                // resuming authorizes nothing (it advances by the recorded decisions), so approvers may continue too
+                .requestMatchers(HttpMethod.POST, "/api/v1/runs/*/resume")
+                .hasAnyRole(MarsRole.OPERATOR.name(), MarsRole.APPROVER.name())
                 .requestMatchers(HttpMethod.POST, "/api/v1/runs/*/decisions/**", "/api/v1/runs/*/proposals/*/decision")
                 .hasRole(MarsRole.APPROVER.name())
                 .requestMatchers("/api/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")

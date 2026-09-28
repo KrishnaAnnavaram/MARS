@@ -22,6 +22,7 @@ public enum ExecutionEventType {
     // ---------------------------------------------------------------- phases 0 to 3 (kernel)
     INGEST_STARTED(Category.KERNEL, false),
     INGEST_STAGE_COMPLETED(Category.KERNEL, false),
+    INGEST_COMPLETED(Category.KERNEL, false),
     INVENTORY_COMPLETED(Category.KERNEL, false),
     IDENTITY_STARTED(Category.KERNEL, false),
     IDENTITY_COMPLETED(Category.KERNEL, false),

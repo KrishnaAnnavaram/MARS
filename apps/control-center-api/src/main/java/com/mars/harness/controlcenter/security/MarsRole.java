@@ -9,7 +9,7 @@ import java.util.Optional;
  * <ul>
  *   <li>VIEWER: read runs, events, evidence</li>
  *   <li>OPERATOR: VIEWER + start runs and resume them (no decisions)</li>
- *   <li>APPROVER: VIEWER + record human decisions (Gate A, A2, B, plan approval)</li>
+ *   <li>APPROVER: VIEWER + record human decisions (Gate A, A2, B, plan approval) and resume</li>
  *   <li>ADMIN: everything</li>
  * </ul>
  *

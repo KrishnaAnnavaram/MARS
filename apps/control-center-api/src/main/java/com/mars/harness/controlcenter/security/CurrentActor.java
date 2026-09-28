@@ -68,6 +68,11 @@ public class CurrentActor {
         return roles.contains(MarsRole.OPERATOR) || roles.contains(MarsRole.ADMIN);
     }
 
+    /** Resuming advances by recorded decisions only; operators and approvers may do it. */
+    public boolean mayResume() {
+        return mayOperate() || mayDecide();
+    }
+
     private Set<MarsRole> safeRoles() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || auth instanceof AnonymousAuthenticationToken) {

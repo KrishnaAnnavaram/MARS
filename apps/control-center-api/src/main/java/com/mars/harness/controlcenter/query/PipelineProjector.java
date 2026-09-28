@@ -60,6 +60,16 @@ public final class PipelineProjector {
     private static final Set<String> ANALYSIS_STAGES = Set.of("SNAPSHOT", "INVENTORY", "IDENTITY", "GRAPH", "BASELINE",
             "DISCOVERY");
 
+    /**
+     * The analysis spine's states record completion ({@code INVENTORY_READY} means the inventory is
+     * done), so each analysis stage is finished by its state and is in progress while the run sits in
+     * the previous one. Execution-branch states name the work in progress and map directly.
+     */
+    private static final List<Map.Entry<String, RunPhase>> ANALYSIS_COMPLETION = List.of(
+            Map.entry("SNAPSHOT", RunPhase.SOURCE_SNAPSHOTTED), Map.entry("INVENTORY", RunPhase.INVENTORY_READY),
+            Map.entry("IDENTITY", RunPhase.IDENTITY_SEALED), Map.entry("GRAPH", RunPhase.GRAPH_READY),
+            Map.entry("BASELINE", RunPhase.BASELINE_SEALED), Map.entry("DISCOVERY", RunPhase.DISCOVERY_READY));
+
     private PipelineProjector() {
     }
 
@@ -96,7 +106,12 @@ public final class PipelineProjector {
         Set<String> applicable = applicableBranches(record);
 
         List<RunDtos.PipelineStage> stages = new ArrayList<>();
+        Map<String, RunDtos.PipelineStage> analysis = analysisStages(record, context);
         for (StageDef def : STAGES) {
+            if (analysis.containsKey(def.id())) {
+                stages.add(analysis.get(def.id()));
+                continue;
+            }
             Visit visit = visits.get(def.id());
             String status;
             if (visit == null) {
@@ -128,6 +143,55 @@ public final class PipelineProjector {
                     visit == null ? 0 : visit.entries));
         }
         return stages;
+    }
+
+    private static Map<String, RunDtos.PipelineStage> analysisStages(RunRecord record, Context context) {
+        Map<RunPhase, String> reachedAt = new LinkedHashMap<>();
+        Map<RunPhase, String> reason = new LinkedHashMap<>();
+        for (RunStateMachine.Transition t : record.machine.history) {
+            reachedAt.putIfAbsent(t.to(), t.at());
+            reason.putIfAbsent(t.to(), t.reason());
+        }
+        RunPhase current = record.machine.current;
+        Map<String, RunDtos.PipelineStage> out = new LinkedHashMap<>();
+        String previousEnd = record.createdAt;
+        boolean inProgressAssigned = false;
+        for (Map.Entry<String, RunPhase> entry : ANALYSIS_COMPLETION) {
+            StageDef def = STAGES.stream().filter(s -> s.id().equals(entry.getKey())).findFirst().orElseThrow();
+            String end = reachedAt.get(entry.getValue());
+            String status;
+            String enteredAt = previousEnd;
+            if (end != null) {
+                status = "COMPLETED";
+            } else if (!inProgressAssigned && previousEnd != null) {
+                inProgressAssigned = true;
+                status = current == RunPhase.FAILED ? "FAILED" : context.advancing() ? "ACTIVE"
+                        : PhaseText.analysisPhase(current) ? "IDLE" : "PENDING";
+            } else {
+                status = "PENDING";
+                enteredAt = null;
+            }
+            Long duration = enteredAt != null && end != null
+                    ? Duration.between(Instant.parse(enteredAt), Instant.parse(end)).toMillis() : null;
+            String summary = context.summaries().getOrDefault(def.id(), reason.get(entry.getValue()));
+            out.put(def.id(), new RunDtos.PipelineStage(def.id(), def.label(), def.group(), status,
+                    def.phases().stream().map(Enum::name).toList(), status.equals("PENDING") ? null : enteredAt, end, duration,
+                    reason.get(entry.getValue()), summary, next(def, current), end != null || !status.equals("PENDING") ? 1 : 0));
+            previousEnd = end;
+        }
+        return out;
+    }
+
+    /** The stages in the order this run entered them (a stage appears again when it was re-entered). */
+    public static List<String> path(RunRecord record) {
+        List<String> path = new ArrayList<>();
+        for (RunStateMachine.Transition t : record.machine.history) {
+            String stage = stageOfTransition(t);
+            if (stage != null && (path.isEmpty() || !path.get(path.size() - 1).equals(stage))) {
+                path.add(stage);
+            }
+        }
+        return path;
     }
 
     /** Stages completed, out of the stages that apply to this run's path so far. */
