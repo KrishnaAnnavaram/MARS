@@ -127,6 +127,13 @@ blast radius or migration issues. Views are bounded, and a truncated view says s
 **Evidence.** The hash-chained evidence records in order, with the chain status recomputed from
 disk. Filter them and open any record and its artifact.
 
+**Reports and other artifacts** open in a reader. Markdown reports (the analysis and final reports,
+fix plans, decision records) are rendered as documents: tables are tables, and `mermaid` blocks such
+as the final report's executed flow are drawn as diagrams (actual size scrolls; **Fit width** scales
+it down). **Markdown source** shows the file verbatim. A diagram that cannot be drawn says so and
+shows its source. Finding descriptions, root causes, fix plans and proposal reasons are rendered the
+same way.
+
 **Validation.** Each validation dimension separately, with dimensions that have no result listed
 as such, plus migration validation, per-fix security verification, proposal validation and the
 baseline.

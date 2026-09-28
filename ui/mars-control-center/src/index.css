@@ -212,3 +212,14 @@ body {
 .diff-split .diff-code {
   width: calc(50% - 52px);
 }
+
+/* Mermaid diagrams from reports: actual size scrolls, "fit width" scales the drawing down */
+.mars-mermaid svg {
+  display: block;
+  margin: 0 auto;
+  max-width: none;
+}
+.mars-mermaid-fit svg {
+  max-width: 100%;
+  height: auto;
+}

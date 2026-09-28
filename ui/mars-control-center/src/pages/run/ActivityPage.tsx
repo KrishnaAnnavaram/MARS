@@ -3,6 +3,7 @@ import { Pause, Play, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ExecutionEvent } from '../../api/types';
 import { EventRow } from '../../components/run';
+import { InlineMarkdown, Markdown } from '../../components/Markdown';
 import { Button, EmptyState, KeyValues, Panel, ProgressBar, StatusBadge, Tabs } from '../../components/ui';
 import { useLiveRun, useRunEvents } from '../../live/LiveRun';
 import { formatDateTime } from '../../lib/format';
@@ -25,7 +26,7 @@ function EventDetail({ event, onClose }: { event: ExecutionEvent; onClose: () =>
       <div className="mb-2 flex items-start justify-between gap-2">
         <div>
           <div className="mono text-[11px] text-faint">#{event.sequence} · {event.event_id}</div>
-          <div className="font-semibold text-strong">{event.title ?? event.type}</div>
+          <div className="font-semibold text-strong">{event.title ? <InlineMarkdown>{event.title}</InlineMarkdown> : event.type}</div>
         </div>
         <button type="button" onClick={onClose} aria-label="Close event details" className="rounded p-1 text-muted hover:text-text">
           <X aria-hidden className="size-4" />
@@ -39,7 +40,7 @@ function EventDetail({ event, onClose }: { event: ExecutionEvent; onClose: () =>
           ['Activity', <span key="a" className="mono">{event.activity}</span>],
           ['Run state', <span key="p" className="mono">{event.phase}</span>],
           ['Time', formatDateTime(event.timestamp)],
-          ['Message', event.message],
+          ['Message', event.message ? <Markdown key="m">{event.message}</Markdown> : undefined],
         ]} />
         {event.progress && <ProgressBar progress={event.progress} />}
         {event.human_action && (
@@ -47,7 +48,7 @@ function EventDetail({ event, onClose }: { event: ExecutionEvent; onClose: () =>
             <KeyValues rows={[
               ['Gate', event.human_action.gate],
               ['Decision', event.human_action.decision_type],
-              ['Reason', event.human_action.reason],
+              ['Reason', <InlineMarkdown key="r">{event.human_action.reason}</InlineMarkdown>],
               ['Options', event.human_action.options.join(', ')],
             ]} />
           </Panel>
