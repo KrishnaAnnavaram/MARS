@@ -67,6 +67,7 @@ class ArchitectureTest {
         ArchRule rule = noClasses().that().resideInAPackage("com.mars.harness..")
                 .and().doNotBelongToAnyOf(com.mars.harness.kernel.adapters.store.FilesystemArtifactStore.class,
                         com.mars.harness.kernel.adapters.store.FilesystemApprovalStore.class,
+                        com.mars.harness.kernel.adapters.store.FilesystemExecutionEventStore.class,
                         com.mars.harness.kernel.adapters.excel.Xlsx.class,
                         com.mars.harness.kernel.core.evidence.EvidenceLog.class,
                         com.mars.harness.kernel.engine.exec.WorkspaceSandbox.class,
@@ -165,6 +166,23 @@ class ArchitectureTest {
                 .should().dependOnClassesThat().resideInAPackage("com.mars.harness.kernel.ports.approval..")
                 .orShould().callConstructorWhere(DescribedPredicate.<JavaConstructorCall>describe("Decision constructor", c ->
                         c.getTargetOwner().getName().equals("com.mars.harness.kernel.core.decision.Decision")))
+                .check(classes);
+    }
+
+    @Test
+    void capabilitiesReportActivityButNeverWriteTheEventPlane() {
+        noClasses().that().resideInAPackage("com.mars.harness.capabilities..")
+                .should().dependOnClassesThat().haveFullyQualifiedName(
+                        "com.mars.harness.kernel.ports.event.ExecutionEventStore")
+                .orShould().dependOnClassesThat().resideInAPackage("com.mars.harness.kernel.engine.event..")
+                .because("a capability describes its own work through ActivityReporter; the kernel stamps, sequences "
+                        + "and persists events, and only the kernel may report decisions, mutations, state or verdicts")
+                .check(classes);
+        noClasses().that().resideInAPackage("com.mars.harness..")
+                .and().doNotHaveFullyQualifiedName("com.mars.harness.kernel.engine.run.RunSession")
+                .should().callConstructorWhere(DescribedPredicate.<JavaConstructorCall>describe("new ExecutionEventRecorder",
+                        c -> c.getTargetOwner().getName().equals("com.mars.harness.kernel.engine.event.ExecutionEventRecorder")))
+                .because("one recorder per run session: events are emitted by the kernel for the run it is advancing")
                 .check(classes);
     }
 

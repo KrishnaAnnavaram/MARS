@@ -6,6 +6,7 @@ import com.mars.harness.kernel.core.policy.UnifiedPolicy;
 import com.mars.harness.kernel.ports.analysis.CodeModelPort;
 import com.mars.harness.kernel.ports.build.BuildModelView;
 import com.mars.harness.kernel.ports.build.BuildPort;
+import com.mars.harness.kernel.ports.event.ActivityReporter;
 import com.mars.harness.kernel.ports.evidence.ArtifactStore;
 import com.mars.harness.kernel.ports.evidence.EvidenceStore;
 import com.mars.harness.kernel.ports.execution.ExecutionSandbox;
@@ -72,4 +73,12 @@ public interface CapabilityContext {
 
     /** The date the run evaluates lifecycle facts against. Fixed per run, so results are reproducible. */
     LocalDate today();
+
+    /**
+     * Where the capability reports its own activity (rounds, root-cause and blast-radius analysis,
+     * routing) as it happens. Reporting is observation only and authorizes nothing.
+     */
+    default ActivityReporter activity() {
+        return ActivityReporter.NONE;
+    }
 }

@@ -5,6 +5,8 @@ import com.mars.harness.kernel.adapters.bootshift.BootshiftBridge;
 import com.mars.harness.kernel.core.KernelJson;
 import com.mars.harness.kernel.core.change.ChangeProposal;
 import com.mars.harness.kernel.core.decision.Decision;
+import com.mars.harness.kernel.core.event.ActivityStatus;
+import com.mars.harness.kernel.core.event.ExecutionEventType;
 import com.mars.harness.kernel.core.evidence.EvidenceRecord;
 import com.mars.harness.kernel.core.findings.Finding;
 import com.mars.harness.kernel.core.graph.CanonicalGraph;
@@ -14,6 +16,7 @@ import com.mars.harness.kernel.core.validation.ValidationResult;
 import com.mars.harness.kernel.core.verdict.Verdict;
 import com.mars.harness.kernel.core.verdict.VerdictCalculator;
 import com.mars.harness.kernel.engine.capability.KernelCapabilityContext;
+import com.mars.harness.kernel.engine.event.Components;
 import com.mars.harness.kernel.engine.graph.CanonicalGraphBuilder;
 import com.mars.harness.kernel.engine.identity.IdentitySynchronizer;
 import com.mars.harness.kernel.engine.mutation.KernelProposalSink;
@@ -116,6 +119,18 @@ final class RunAdvancer {
         session.record.migrationPlanId = plan.planId();
         session.record.migrationPlanHash = KernelJson.hash(plan);
         session.saveRecord();
+        session.events.event(ExecutionEventType.MIGRATION_PLAN_CREATED)
+                .status(plan.stopConditions().isEmpty() ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                .component(Components.MIGRATION_ENGINE).activity("migration.plan")
+                .title("Migration plan " + plan.planId() + ": " + plan.framework() + " " + plan.fromVersion() + " → "
+                        + plan.toVersion() + (plan.stopConditions().isEmpty() ? "" : " (cannot execute)"))
+                .message(plan.stopConditions().isEmpty() ? plan.allowedRuleIds().size() + " allowed rule(s), at most "
+                        + plan.maxRounds() + " round(s), reference pack " + plan.referencePackId()
+                        : String.join("; ", plan.stopConditions()))
+                .subject("PLAN", plan.planId(), plan.referencePackId()).evidence(plan.evidenceRefs())
+                .artifact("plans/migration-plan.json").attribute("plan_hash", session.record.migrationPlanHash)
+                .attribute("reference_pack", plan.referencePackId()).attribute("max_rounds", plan.maxRounds())
+                .attribute("stop_conditions", plan.stopConditions().size()).emit();
         if (!plan.stopConditions().isEmpty()) {
             session.note("Migration plan cannot execute: " + plan.stopConditions());
             session.evidence.record(EvidenceRecord.EvidenceKind.UNKNOWN, "Migration stopped before execution",
@@ -150,8 +165,29 @@ final class RunAdvancer {
                 session.approvals.all(), new LinkedHashSet<>(plan.allowedRuleIds()), plan.planId(),
                 session.record.migrationPlanHash);
         ProposalSink sink = new KernelProposalSink(gateway, authorization);
+        session.events.event(ExecutionEventType.MIGRATION_EXECUTION_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.MIGRATION_ENGINE).activity("migration.execute")
+                .title((previous == null ? "Migration execution started" : "Migration execution resumed after "
+                        + previous.rounds().size() + " recorded round(s)") + " (plan " + plan.planId() + ")")
+                .message("authorized by " + authorization.executionDecision().decisionId() + "; rule allowlist of "
+                        + plan.allowedRuleIds().size())
+                .subject("PLAN", plan.planId(), plan.referencePackId())
+                .subject("DECISION", authorization.executionDecision().decisionId(), null)
+                .attribute("max_rounds", plan.maxRounds()).emit();
         MigrationCapability.MigrationExecution execution = config.migration().execute(context(), plan, sink, previous);
         session.artifacts.writeJson("plans", "migration-execution.json", execution);
+        session.events.event(ExecutionEventType.MIGRATION_EXECUTION_COMPLETED)
+                .status(execution.status() == MigrationCapability.ExecutionStatus.GREEN ? ActivityStatus.COMPLETED
+                        : execution.status() == MigrationCapability.ExecutionStatus.NEEDS_HUMAN ? ActivityStatus.WAITING
+                        : ActivityStatus.FAILED)
+                .component(Components.MIGRATION_ENGINE).activity("migration.execute")
+                .title("Migration execution " + execution.status() + " after " + execution.rounds().size() + " round(s)")
+                .message(execution.needsHumanReason()).evidence(execution.evidenceRefs())
+                .subject("PLAN", plan.planId(), plan.referencePackId()).artifact("plans/migration-execution.json")
+                .artifact(execution.reportRef() == null ? null : "reports/migration")
+                .attribute("status", execution.status()).attribute("rounds", execution.rounds().size())
+                .attribute("proposals", execution.proposalIds().size()).attribute("changes", execution.changeIds().size())
+                .emit();
         if (execution.status() == MigrationCapability.ExecutionStatus.NEEDS_HUMAN) {
             session.note("MIGRATION NEEDS_HUMAN: " + execution.needsHumanReason());
             return to(RunPhase.NEEDS_HUMAN, "migration needs a human: " + execution.needsHumanReason());
@@ -163,10 +199,22 @@ final class RunAdvancer {
         MigrationCapability.MigrationPlan plan = KernelJson.read(session.layout.area("plans").resolve("migration-plan.json"),
                 MigrationCapability.MigrationPlan.class);
         MigrationCapability.MigrationExecution execution = readExecution().orElseThrow();
+        session.events.event(ExecutionEventType.MIGRATION_VALIDATION_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.MIGRATION_ENGINE).activity("migration.validate")
+                .title("Migration validation started").subject("PLAN", plan.planId(), null).emit();
         MigrationCapability.CapabilityValidation validation = config.migration().validate(context(), plan, execution);
         session.artifacts.writeJson("validation", "migration-validation.json", validation);
         boolean passed = execution.status() == MigrationCapability.ExecutionStatus.GREEN
                 && validation.dimensions().stream().noneMatch(d -> d.status().failed());
+        var validated = session.events.event(ExecutionEventType.MIGRATION_VALIDATION_COMPLETED)
+                .status(passed ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                .component(Components.MIGRATION_ENGINE).activity("migration.validate")
+                .title("Migration validation " + (passed ? "passed" : "did not pass") + " (" + execution.status() + ")")
+                .subject("PLAN", plan.planId(), null).artifact("validation/migration-validation.json")
+                .attribute("passed", passed);
+        validation.dimensions().forEach(d -> validated.attribute("dimension_" + d.dimension().name().toLowerCase(
+                java.util.Locale.ROOT), d.status()));
+        validated.emit();
         for (String proposalId : execution.proposalIds()) {
             if ("APPLIED".equals(session.record.proposalStatus.get(proposalId))) {
                 gateway.recordValidation(proposalId, passed, "validation/migration-validation.json",
@@ -238,6 +286,12 @@ final class RunAdvancer {
             session.saveRecord();
         }
         List<Finding> open = openFindings().stream().filter(f -> !settled.contains(f.findingId())).toList();
+        session.events.event(ExecutionEventType.REMEDIATION_PLANNING_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.REMEDIATION_PLANNER).activity("security.plan")
+                .title("Remediation planning started for " + open.size() + " finding(s)"
+                        + (previous.isEmpty() ? "" : " (" + settled.size() + " already planned)"))
+                .progress(0, open.size(), "findings")
+                .attribute("platform_upgrade_applied", session.record.migrationExecuted).emit();
         List<RemediationCapability.RemediationPlan> plans = open.isEmpty() ? List.of() : config.remediation().plan(
                 context(), open, session.record.researchInputs, session.record.migrationExecuted);
         List<RemediationCapability.RemediationPlan> merged = new ArrayList<>(previous.stream()
@@ -256,6 +310,15 @@ final class RunAdvancer {
                 registered++;
             }
         }
+        Map<String, Long> routes = new LinkedHashMap<>();
+        plans.forEach(plan -> routes.merge(plan.route(), 1L, Long::sum));
+        var planned = session.events.event(ExecutionEventType.REMEDIATION_PLANNING_COMPLETED)
+                .status(ActivityStatus.COMPLETED).component(Components.REMEDIATION_PLANNER).activity("security.plan")
+                .title("Remediation planning: " + plans.size() + " plan(s), " + registered + " new proposal(s) registered")
+                .message(routes.isEmpty() ? null : "routes " + routes).progress(plans.size(), open.size(), "findings")
+                .artifact("plans/remediation-plans.json").attribute("registered", registered);
+        routes.forEach((route, n) -> planned.attribute("route_" + route.toLowerCase(java.util.Locale.ROOT), n));
+        planned.emit();
         new ReportRenderer(session, config).renderLegacyPlans();
         long awaiting = session.proposals.all().stream()
                 .filter(p -> p.capability() != ChangeProposal.Capability.MIGRATION)
@@ -365,10 +428,31 @@ final class RunAdvancer {
             session.note("Applied " + proposal.proposalId() + " matches no remediation plan; verified by unified validation only");
             return;
         }
+        session.events.event(ExecutionEventType.FIX_VERIFICATION_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.FIX_VERIFIER).activity("security.verify." + plan.get().planId())
+                .title("Verifying the fix for " + plan.get().issueId() + " (" + plan.get().cwe() + ")")
+                .message("re-scan, red-team vectors, behaviour, QA and build; the arbiter decides Cleared or Blocked")
+                .subject("FINDING", plan.get().findingId(), plan.get().issueId())
+                .subject("PROPOSAL", proposal.proposalId(), null).subject("PLAN", plan.get().planId(), plan.get().route())
+                .emit();
         RemediationCapability.VerificationReport report = config.remediation().verify(context(), plan.get(),
                 new RemediationCapability.AppliedFix(plan.get().planId(), proposal.proposalId(), outcome.changeIds(),
                         outcome.changedFileIds(), null, null));
         session.artifacts.writeJson("validation/security", plan.get().planId() + ".json", report);
+        session.events.event(ExecutionEventType.FIX_VERIFICATION_COMPLETED)
+                .status("Cleared".equals(report.decision()) ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                .component(Components.FIX_VERIFIER).activity("security.verify." + plan.get().planId())
+                .title("Fix verification for " + plan.get().issueId() + ": " + report.decision() + " (score "
+                        + report.score() + "/" + report.threshold() + ")")
+                .message("rescan " + report.rescan() + ", red-team " + report.redteam() + ", behaviour " + report.behavior()
+                        + ", QA " + report.qa() + ", build " + report.build()
+                        + (report.gatesTriggered().isEmpty() ? "" : "; gates " + report.gatesTriggered()))
+                .subject("FINDING", plan.get().findingId(), plan.get().issueId())
+                .subject("PROPOSAL", proposal.proposalId(), null).subject("PLAN", plan.get().planId(), plan.get().route())
+                .evidence(report.evidenceRefs()).artifact("validation/security/" + plan.get().planId() + ".json")
+                .attribute("decision", report.decision()).attribute("score", report.score())
+                .attribute("threshold", report.threshold()).attribute("rescan", report.rescan())
+                .attribute("build", report.build()).emit();
         session.record.verification.put(plan.get().planId(), report.decision());
         session.saveRecord();
         gateway.recordValidation(proposal.proposalId(), "Cleared".equals(report.decision()),
@@ -398,6 +482,9 @@ final class RunAdvancer {
             session.saveRecord();
             return to(RunPhase.FINAL_VALIDATION, "migration was GREEN; no post-security migration prompt");
         }
+        session.events.event(ExecutionEventType.POST_SECURITY_REASSESSMENT_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.MIGRATION_ADVISOR).activity("migration.reassessment")
+                .title("Re-assessing migration after the security work (was " + previous.trafficLight() + ")").emit();
         MigrationAssessment current = config.migration().assess(context(), HarnessEngine.objectives(openFindings()));
         Map<String, Object> comparison = new LinkedHashMap<>();
         comparison.put("previous_assessment_id", previous.assessmentId());
@@ -435,6 +522,15 @@ final class RunAdvancer {
         session.artifacts.writeJson("discovery/migration", "post-security-reassessment.json", comparison);
         session.record.postSecurityReassessed = true;
         session.saveRecord();
+        session.events.event(ExecutionEventType.POST_SECURITY_REASSESSMENT_COMPLETED).status(ActivityStatus.COMPLETED)
+                .component(Components.MIGRATION_ADVISOR).activity("migration.reassessment")
+                .title("Post-security reassessment: " + previous.trafficLight() + " → " + current.trafficLight())
+                .message(String.valueOf(comparison.get("why")))
+                .subject("ASSESSMENT", current.assessmentId(), current.trafficLight().name())
+                .artifact("discovery/migration/post-security-reassessment.json")
+                .attribute("previous_traffic_light", previous.trafficLight())
+                .attribute("current_traffic_light", current.trafficLight())
+                .attribute("assessment_hash", comparison.get("current_assessment_hash")).emit();
         if (current.trafficLight() == MigrationAssessment.TrafficLight.GREEN) {
             return to(RunPhase.FINAL_VALIDATION, "reassessed GREEN after security; no pointless migration prompt");
         }
@@ -491,6 +587,10 @@ final class RunAdvancer {
     // ------------------------------------------------------------------ final validation and verdict
 
     private boolean finalValidation() {
+        session.events.event(ExecutionEventType.FINAL_VALIDATION_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.VALIDATOR).activity("kernel.final-validation")
+                .title("Final validation started").message("every dimension is reported separately; unknown is never PASS")
+                .emit();
         boolean mutated = session.record.proposalChanges.values().stream().anyMatch(c -> !c.isEmpty());
         List<ValidationResult.DimensionResult> capabilityDims = new ArrayList<>();
         Map<String, String> explanations = new LinkedHashMap<>();
@@ -524,6 +624,17 @@ final class RunAdvancer {
         ValidationResult validation = new UnifiedValidator(session, config, gateway).validate(new UnifiedValidator.Inputs(
                 mutated, session.record.migrationExecuted || execution.isPresent(), securityApplied, capabilityDims,
                 explanations, authorizedFiles));
+        var validated = session.events.event(ExecutionEventType.FINAL_VALIDATION_COMPLETED)
+                .status(validation.mandatoryFailed().isEmpty() ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                .component(Components.VALIDATOR).activity("kernel.final-validation")
+                .title("Final validation: " + validation.dimensions().size() + " dimension(s), "
+                        + validation.mandatoryFailed().size() + " mandatory failed, " + validation.mandatoryUnknown().size()
+                        + " mandatory unknown")
+                .subject("VALIDATION", validation.validationId(), validation.scope())
+                .artifact("validation/" + validation.validationId() + ".json").artifact("validation/latest.json");
+        validation.dimensions().forEach(d -> validated.attribute("dimension_" + d.dimension().name().toLowerCase(
+                java.util.Locale.ROOT), d.status()));
+        validated.emit();
         List<Verdict.ItemResult> items = new VerdictItems(session, config).items(execution.orElse(null));
         List<String> pending = new ArrayList<>();
         List<String> hard = new ArrayList<>();
@@ -535,6 +646,16 @@ final class RunAdvancer {
         session.artifacts.writeJson("reports", "verdict.json", verdict);
         session.record.verdict = verdict.outcome().name();
         session.saveRecord();
+        session.events.event(ExecutionEventType.VERDICT_COMPUTED)
+                .status(verdict.outcome() == Verdict.Outcome.CLEARED ? ActivityStatus.COMPLETED
+                        : verdict.outcome() == Verdict.Outcome.NEEDS_HUMAN ? ActivityStatus.WAITING : ActivityStatus.INFO)
+                .component(Components.VERDICT).activity("kernel.verdict").title("Verdict: " + verdict.outcome())
+                .message(verdict.reasons().isEmpty() ? null : String.join("; ", verdict.reasons().subList(0,
+                        Math.min(3, verdict.reasons().size())))).evidence(verdict.evidenceRefs())
+                .artifact("reports/verdict.json").attribute("outcome", verdict.outcome())
+                .attribute("items", verdict.items().size()).attribute("hard_failures", verdict.hardFailures().size())
+                .attribute("pending_decisions", verdict.pendingDecisions().size())
+                .attribute("unknown_dimensions", verdict.unknownDimensions().size()).emit();
         new ReportRenderer(session, config).renderFinal();
         RunPhase terminal = switch (verdict.outcome()) {
             case CLEARED -> RunPhase.CLEARED;
@@ -622,5 +743,11 @@ final class RunAdvancer {
         session.artifacts.writeJson("graph", "graph-diff-" + batch + ".json", diff);
         session.graph = after;
         session.saveGraph();
+        session.events.event(ExecutionEventType.GRAPH_REBUILT).status(ActivityStatus.COMPLETED).component(Components.GRAPH)
+                .activity("kernel.graph.rebuild").title("Graph rebuilt after " + batch + ": " + after.nodeCount()
+                        + " nodes, " + after.edgeCount() + " edges")
+                .message(changed.size() + " changed file(s)" + (base == null ? "; Bootshift graph unavailable" : ""))
+                .artifact("graph/graph-diff-" + batch + ".json").attribute("batch", batch)
+                .attribute("changed_files", changed.size()).emit();
     }
 }

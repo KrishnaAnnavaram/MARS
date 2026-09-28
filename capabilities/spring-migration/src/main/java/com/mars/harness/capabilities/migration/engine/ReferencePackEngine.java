@@ -8,6 +8,9 @@ import com.mars.harness.capabilities.migration.transform.PomEditor;
 import com.mars.harness.kernel.core.KernelJson;
 import com.mars.harness.kernel.core.change.ChangeProposal;
 import com.mars.harness.kernel.core.change.UnifiedDiff;
+import com.mars.harness.kernel.core.event.ActivityStatus;
+import com.mars.harness.kernel.core.event.ExecutionEvent;
+import com.mars.harness.kernel.core.event.ExecutionEventType;
 import com.mars.harness.kernel.core.evidence.EvidenceRecord;
 import com.mars.harness.kernel.core.ids.HarnessIds;
 import com.mars.harness.kernel.core.identity.ProviderHints;
@@ -18,6 +21,7 @@ import com.mars.harness.kernel.core.validation.ValidationResult;
 import com.mars.harness.kernel.ports.build.BuildModelView;
 import com.mars.harness.kernel.ports.build.BuildPort;
 import com.mars.harness.kernel.ports.capability.CapabilityContext;
+import com.mars.harness.kernel.ports.event.ActivityReporter;
 import com.mars.harness.kernel.ports.identity.IdentityView;
 import com.mars.harness.kernel.ports.migration.MigrationCapability;
 import com.mars.harness.kernel.ports.mutation.ProposalSink;
@@ -144,6 +148,7 @@ public final class ReferencePackEngine {
                         pendingRules.add(rule.path("id").asText());
                         pendingProposals.add(s.proposalId());
                         pendingChanges.addAll(s.changeIds());
+                        ruleApplied(context, rule, s, 1, "build-file rule");
                     } else if (s.status() != null) {
                         return needsHuman(plan, rounds, proposalIds, changeIds, evidence, List.of(),
                                 "Build-file rule " + rule.path("id").asText() + " was " + s.status() + ": " + s.reason());
@@ -159,6 +164,15 @@ public final class ReferencePackEngine {
             int number = rounds.size();
             Path exec = context.sandbox().prepare(String.format("round-%02d", number));
             Path log = exec.resolveSibling(String.format("round-%02d.log", number));
+            String intentName = intent.name().toLowerCase(Locale.ROOT).replace('_', '-');
+            context.activity().report(new ActivityReporter.ActivityReport(ExecutionEventType.MIGRATION_ROUND_STARTED,
+                    ActivityStatus.STARTED, COMPONENT, "migration.round." + number,
+                    String.format("Migration round %02d (%s) started", number, intentName),
+                    pendingRules.isEmpty() ? "no new change since the previous round" : "after " + String.join(", ", pendingRules),
+                    ExecutionEvent.Progress.indeterminate(number, "rounds"),
+                    List.of(new ExecutionEvent.SubjectRef("ROUND", String.valueOf(number), intentName)), List.of(),
+                    List.of("exec/" + log.getFileName()), Map.of("round", String.valueOf(number), "intent", intentName,
+                    "max_rounds", String.valueOf(plan.maxRounds()))));
             BuildPort.BuildResult result = context.build().build(exec, intent, log);
             proposalIds.addAll(pendingProposals);
             changeIds.addAll(pendingChanges);
@@ -174,6 +188,14 @@ public final class ReferencePackEngine {
                     result.errors().size(), result.errors(), result.errors().size() >= 200, result.tests(), pendingRules,
                     pendingProposals, pendingChanges, diagnose(result, pack), "exec/" + log.getFileName(), List.of(ev));
             rounds.add(round);
+            context.activity().report(new ActivityReporter.ActivityReport(ExecutionEventType.MIGRATION_ROUND_COMPLETED,
+                    result.passed() ? ActivityStatus.COMPLETED : ActivityStatus.FAILED, COMPONENT, "migration.round." + number,
+                    String.format("Migration round %02d (%s): %s", number, intentName, result.outcome().legacyId()),
+                    round.diagnosis(), ExecutionEvent.Progress.indeterminate(number, "rounds"),
+                    List.of(new ExecutionEvent.SubjectRef("ROUND", String.valueOf(number), intentName)), List.of(ev),
+                    List.of("exec/" + log.getFileName()), Map.of("round", String.valueOf(number), "intent", intentName,
+                    "outcome", result.outcome().legacyId(), "errors", String.valueOf(result.errors().size()),
+                    "duration_ms", String.valueOf(result.durationMs()), "max_rounds", String.valueOf(plan.maxRounds()))));
             pendingRules = new ArrayList<>();
             pendingProposals = new ArrayList<>();
             pendingChanges = new ArrayList<>();
@@ -221,6 +243,7 @@ public final class ReferencePackEngine {
                 for (Change change : symptomChanges(context, rule, entry.getValue(), plan, humanNotes)) {
                     Submission s = submit(context, sink, change, plan, rule);
                     if (s.applied()) {
+                        ruleApplied(context, rule, s, number + 1, "symptom rule matched in round " + number);
                         if (!pendingRules.contains(rule.path("id").asText())) {
                             pendingRules.add(rule.path("id").asText());
                         }
@@ -257,6 +280,21 @@ public final class ReferencePackEngine {
         Path reportPath = context.artifacts().writeText("reports/migration", "migration_" + slug + ".md", report);
         return new MigrationCapability.MigrationExecution(plan.planId(), status, rounds, proposalIds, changeIds, unmatched,
                 humanReason, behaviour, tests, reportPath.toString(), null, evidence);
+    }
+
+    private static final String COMPONENT = "Migration / Reference Pack Engine";
+
+    private static void ruleApplied(CapabilityContext context, JsonNode rule, Submission s, int forRound, String why) {
+        String ruleId = rule.path("id").asText();
+        List<ExecutionEvent.SubjectRef> subjects = new ArrayList<>();
+        subjects.add(new ExecutionEvent.SubjectRef("RULE", ruleId, rule.path("section").asText(null)));
+        subjects.add(new ExecutionEvent.SubjectRef("PROPOSAL", s.proposalId(), null));
+        s.changeIds().forEach(c -> subjects.add(new ExecutionEvent.SubjectRef("CHANGE", c, null)));
+        context.activity().report(new ActivityReporter.ActivityReport(ExecutionEventType.MIGRATION_RULE_APPLIED,
+                ActivityStatus.COMPLETED, COMPONENT, "migration.rule." + ruleId,
+                "Rule " + ruleId + " applied (" + s.changeIds().size() + " change(s)) for round " + forRound,
+                why + ": " + rule.path("description").asText(rule.path("title").asText("")), null, subjects, List.of(),
+                List.of(), Map.of("rule_id", ruleId, "round", String.valueOf(forRound))));
     }
 
     private MigrationCapability.MigrationExecution needsHuman(MigrationCapability.MigrationPlan plan,

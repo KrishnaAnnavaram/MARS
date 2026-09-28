@@ -10,10 +10,14 @@ import com.bootshift.ports.transformation.TransformationPort;
 import com.mars.harness.kernel.adapters.bootshift.BootshiftBridge;
 import com.mars.harness.kernel.core.change.ChangeProposal;
 import com.mars.harness.kernel.core.decision.Decision;
+import com.mars.harness.kernel.core.event.ActivityStatus;
+import com.mars.harness.kernel.core.event.ExecutionEventType;
 import com.mars.harness.kernel.core.evidence.EvidenceRecord;
 import com.mars.harness.kernel.core.identity.SymbolRecord;
 import com.mars.harness.kernel.core.outcome.HarnessOutcomeException;
 import com.mars.harness.kernel.core.outcome.OutcomeCategory;
+import com.mars.harness.kernel.engine.event.Components;
+import com.mars.harness.kernel.engine.event.ExecutionEventRecorder;
 import com.mars.harness.kernel.engine.identity.IdentitySynchronizer;
 import com.mars.harness.kernel.engine.ledger.LineageLedger;
 import com.mars.harness.kernel.engine.proposal.ProposalStore;
@@ -118,8 +122,24 @@ public final class MutationGateway implements MutationPort {
                     .setRejectionReason("proposal " + proposal.proposalId() + " sha256 " + proposal.proposalHash()));
             session.record.proposalStatus.put(proposal.proposalId(), ProposalStore.Status.PROPOSED.name());
             session.saveRecord();
+            proposalEvent(ExecutionEventType.PROPOSAL_REGISTERED, proposal).status(ActivityStatus.COMPLETED)
+                    .title("Proposal " + proposal.proposalId() + " registered (" + proposal.capability() + "/"
+                            + proposal.providerType() + (proposal.strategyOnly() ? ", strategy only" : "") + ")")
+                    .message(proposal.reason()).artifact("proposals/" + proposal.proposalId() + ".json")
+                    .attribute("proposal_hash", proposal.proposalHash()).attribute("capability", proposal.capability())
+                    .attribute("provider_type", proposal.providerType()).attribute("strategy_only", proposal.strategyOnly())
+                    .attribute("edits", proposal.edits().size()).emit();
         }
         return stored;
+    }
+
+    private ExecutionEventRecorder.Builder proposalEvent(ExecutionEventType type, ChangeProposal proposal) {
+        ExecutionEventRecorder.Builder builder = session.events.event(type).component(Components.GATEWAY)
+                .activity("mutation." + proposal.proposalId()).subject("PROPOSAL", proposal.proposalId(),
+                        proposal.capability().name());
+        proposal.findingRefs().forEach(f -> builder.subject("FINDING", f, null));
+        proposal.affectedFileIds().forEach(f -> builder.subject("FILE", f, null));
+        return builder;
     }
 
     @Override
@@ -164,6 +184,10 @@ public final class MutationGateway implements MutationPort {
             if (auth.awaiting()) {
                 session.record.proposalStatus.put(id, ProposalStore.Status.AWAITING_APPROVAL.name());
                 session.saveRecord();
+                proposalEvent(ExecutionEventType.MUTATION_REFUSED, proposal).status(ActivityStatus.WAITING)
+                        .title("Proposal " + id + " not applied: it awaits a human approval").message(auth.denial())
+                        .attribute("outcome", ProposalSink.Status.AWAITING_APPROVAL).attribute("reason_code",
+                                reasonCode(auth.denial())).emit();
                 return new Outcome(id, status, auth.denial(), List.of(), List.of(), null);
             }
             return refuse(proposal, status, auth.denial(), auth.decisionId());
@@ -356,6 +380,12 @@ public final class MutationGateway implements MutationPort {
     private Outcome write(ChangeProposal proposal, String decisionId) {
         String batch = String.format("BATCH-%04d-%s", ++session.record.batchCounter, proposal.proposalId());
         session.saveRecord();
+        proposalEvent(ExecutionEventType.MUTATION_STARTED, proposal).status(ActivityStatus.STARTED)
+                .title("Applying " + proposal.proposalId() + " as " + batch)
+                .message("baseline seal, identity, authorization, scope and base hashes verified; writing through "
+                        + "Bootshift's FileMutationGateway")
+                .subject("DECISION", decisionId, null).attribute("batch", batch).attribute("authorized_by", decisionId)
+                .emit();
         // pre-batch checkpoint: a proposal is atomic. If Bootshift applies part of it, the rest is rolled back.
         String preCheckpoint = "pre/" + session.layout.runId() + "/" + batch;
         boolean preOk = true;
@@ -422,6 +452,10 @@ public final class MutationGateway implements MutationPort {
             if (preOk) {
                 delegate.revertTo(preCheckpoint, "Proposal " + proposal.proposalId() + " is atomic; partial application rolled back: " + reasons);
             }
+            proposalEvent(ExecutionEventType.MUTATION_ROLLED_BACK, proposal).status(ActivityStatus.FAILED)
+                    .title("Proposal " + proposal.proposalId() + " partially applied and rolled back")
+                    .message(reasons).attribute("batch", batch).attribute("pre_checkpoint", preOk ? preCheckpoint : null)
+                    .attribute("rolled_back", preOk).emit();
             // The in-memory registry shared with Bootshift's gateway saw the partial batch. The persisted registry
             // (last successful batch) matches the rolled-back workspace, so the step stops here and a resume reloads it.
             throw new HarnessOutcomeException(OutcomeCategory.FAILURE, "Proposal " + proposal.proposalId()
@@ -433,6 +467,10 @@ public final class MutationGateway implements MutationPort {
             session.record.proposalStatus.put(proposal.proposalId(), ProposalStore.Status.REJECTED.name());
             session.saveRecord();
             lineageRejection(proposal, decisionId, "Bootshift gateway refused: " + reasons);
+            proposalEvent(ExecutionEventType.MUTATION_REFUSED, proposal).status(ActivityStatus.FAILED)
+                    .title("Proposal " + proposal.proposalId() + " refused by Bootshift's FileMutationGateway")
+                    .message(reasons).attribute("outcome", ProposalSink.Status.REJECTED).attribute("batch", batch)
+                    .attribute("reason_code", "BOOTSHIFT_GATEWAY").emit();
             return new Outcome(proposal.proposalId(), ProposalSink.Status.REJECTED, reasons, List.of(), List.of(), null);
         }
 
@@ -505,7 +543,25 @@ public final class MutationGateway implements MutationPort {
             session.evidence.record(EvidenceRecord.EvidenceKind.TOOL_RESULT, "Mutation bypass detected after " + batch,
                     String.join(" | ", bypass), null, List.of(), "FileMutationGateway.detectBypass",
                     EvidenceRecord.Reliability.VERIFIED, null, null, null, "kernel.mutation-gateway");
+            proposalEvent(ExecutionEventType.MUTATION_BYPASS_DETECTED, proposal).status(ActivityStatus.FAILED)
+                    .title("Mutation bypass detected after " + batch).message(String.join(" | ", bypass))
+                    .attribute("batch", batch).attribute("files", bypass.size()).emit();
         }
+        var appliedEvent = proposalEvent(ExecutionEventType.MUTATION_APPLIED, proposal).status(ActivityStatus.COMPLETED)
+                .title("Proposal " + proposal.proposalId() + " applied: " + changeIds.size() + " change(s)")
+                .message(proposal.reason()).subject("DECISION", decisionId, null)
+                .subject("CHECKPOINT", checkpoint.checkpointId(), batch).artifact("mutations/patches")
+                .artifact("checkpoints/" + checkpoint.checkpointId() + ".json").artifact("graph/graph-diff-" + batch + ".json")
+                .attribute("batch", batch).attribute("authorized_by", decisionId)
+                .attribute("checks", "BASELINE_SEALED,IDENTITY_RESOLVED,AUTHORIZED,APPROVAL_INTEGRITY,SCOPE,BASE_HASH,"
+                        + "CONTAINMENT,BUDGET")
+                .attribute("pre_checkpoint", preOk ? preCheckpoint : null).attribute("checkpoint_id", checkpoint.checkpointId())
+                .attribute("change_ids", String.join(",", changeIds))
+                .attribute("identity_sync", sync.unsynchronized().isEmpty() ? "COMPLETE"
+                        : "INCOMPLETE:" + sync.unsynchronized())
+                .attribute("bypass_files", bypass.size());
+        changeIds.forEach(c -> appliedEvent.subject("CHANGE", c, null));
+        appliedEvent.emit();
         return new Outcome(proposal.proposalId(), ProposalSink.Status.APPLIED, sync.unsynchronized().isEmpty() ? null
                 : "identity not re-synchronised for " + sync.unsynchronized(), changeIds, changedFiles,
                 checkpoint.checkpointId());
@@ -536,7 +592,22 @@ public final class MutationGateway implements MutationPort {
         session.record.proposalStatus.put(proposal.proposalId(), stored.name());
         session.saveRecord();
         lineageRejection(proposal, decisionId, reason);
+        proposalEvent(ExecutionEventType.MUTATION_REFUSED, proposal)
+                .status(stored == ProposalStore.Status.DEFERRED || reason.startsWith("REJECTED_BY_DECISION")
+                        ? ActivityStatus.INFO : ActivityStatus.FAILED)
+                .title("Proposal " + proposal.proposalId() + " not applied: " + stored).message(reason)
+                .subject("DECISION", decisionId, null).attribute("outcome", status).attribute("stored_status", stored)
+                .attribute("reason_code", reasonCode(reason)).emit();
         return new Outcome(proposal.proposalId(), status, reason, List.of(), List.of(), null);
+    }
+
+    /** The leading code of a denial, for example {@code STALE_PROPOSAL} or {@code SCOPE_VIOLATION}. */
+    static String reasonCode(String reason) {
+        if (reason == null) {
+            return null;
+        }
+        int colon = reason.indexOf(':');
+        return colon > 0 ? reason.substring(0, colon) : reason;
     }
 
     private void lineageRejection(ChangeProposal proposal, String decisionId, String reason) {
@@ -567,6 +638,11 @@ public final class MutationGateway implements MutationPort {
         session.record.proposalStatus.put(proposalId, passed ? ProposalStore.Status.VALIDATED.name()
                 : ProposalStore.Status.FAILED_VALIDATION.name());
         session.saveRecord();
+        session.events.event(ExecutionEventType.PROPOSAL_VALIDATION_RECORDED)
+                .status(passed ? ActivityStatus.COMPLETED : ActivityStatus.FAILED).component(Components.GATEWAY)
+                .activity("mutation." + proposalId).title("Proposal " + proposalId + (passed ? " VALIDATED" : " FAILED_VALIDATION"))
+                .message(summary).subject("PROPOSAL", proposalId, null).artifact(validationRef)
+                .attribute("passed", passed).attribute("changes", changeIds.size()).emit();
     }
 
     // ------------------------------------------------------------------ helpers

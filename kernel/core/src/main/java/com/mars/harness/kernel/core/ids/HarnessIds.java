@@ -27,6 +27,7 @@ public final class HarnessIds {
         PROPOSAL("PROP"),
         DECISION("DEC"),
         EVIDENCE("EVID"),
+        EVENT("EVT"),
         CHECKPOINT("CKPT"),
         VALIDATION("VAL"),
         PLAN("PLAN"),

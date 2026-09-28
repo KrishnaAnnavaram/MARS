@@ -9,6 +9,7 @@ import com.mars.harness.kernel.adapters.store.FilesystemApprovalStore;
 import com.mars.harness.kernel.adapters.store.FilesystemArtifactStore;
 import com.mars.harness.kernel.adapters.store.FilesystemCheckpointStore;
 import com.mars.harness.kernel.adapters.store.FilesystemEvidenceStore;
+import com.mars.harness.kernel.adapters.store.FilesystemExecutionEventStore;
 import com.mars.harness.kernel.core.KernelJson;
 import com.mars.harness.kernel.core.decision.DecisionValidator;
 import com.mars.harness.kernel.core.findings.Finding;
@@ -18,6 +19,7 @@ import com.mars.harness.kernel.core.outcome.HarnessOutcomeException;
 import com.mars.harness.kernel.core.outcome.OutcomeCategory;
 import com.mars.harness.kernel.core.policy.UnifiedPolicy;
 import com.mars.harness.kernel.core.run.RunLayout;
+import com.mars.harness.kernel.engine.event.ExecutionEventRecorder;
 import com.mars.harness.kernel.engine.ledger.LineageLedger;
 import com.mars.harness.kernel.engine.proposal.ProposalStore;
 import com.mars.harness.kernel.ports.build.BuildModelView;
@@ -48,6 +50,8 @@ public final class RunSession {
     public final ProposalStore proposals;
     public final LineageLedger lineage;
     public final ChangeLedger ledger;
+    /** Execution events: witnesses of what ran, for observers. Never read back as state. */
+    public final ExecutionEventRecorder events;
 
     public FileRegistry fileRegistry;
     public IdentityRegistry identity;
@@ -67,6 +71,8 @@ public final class RunSession {
         this.proposals = new ProposalStore(layout);
         this.lineage = new LineageLedger(layout.lineageLedger());
         this.ledger = ChangeLedger.reopen(layout.ledgerFile(), layout.ledgerHead());
+        this.events = new ExecutionEventRecorder(layout.runId(), new FilesystemExecutionEventStore(layout.events()),
+                () -> record.machine.current);
     }
 
     public static RunSession create(RunLayout layout, RunRecord record, UnifiedPolicy policy) {
@@ -122,8 +128,10 @@ public final class RunSession {
         }
     }
 
+    /** Publishes the record atomically, then the events for any transition it newly contains. */
     public void saveRecord() {
         Json.writeAtomic(layout.state(), KernelJson.tree(record));
+        events.recordTransitions(record.machine.history);
     }
 
     public void saveIdentity() {

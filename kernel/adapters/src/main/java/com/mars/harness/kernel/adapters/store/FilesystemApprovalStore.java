@@ -33,7 +33,9 @@ import java.util.stream.Stream;
  *
  * <p>Integrity is a keyed hash (HMAC-SHA256) with a run-local key, as in Bootshift's
  * FilesystemDecisionStore. It detects modification and does not authenticate the actor. The
- * actor is recorded as {@code LOCALLY_ASSERTED}.
+ * actor is recorded as {@code LOCALLY_ASSERTED} unless the entry point states how it established
+ * the actor ({@link com.mars.harness.kernel.core.decision.DecisionActor}); the validator refuses
+ * any other wording.
  */
 public final class FilesystemApprovalStore implements ApprovalPort {
 
@@ -57,7 +59,9 @@ public final class FilesystemApprovalStore implements ApprovalPort {
                 draft.proposalHash(), draft.findingIds(), draft.affectedFileIds(), draft.affectedSymbolIds(),
                 draft.affectedStatementIds(), draft.planId(), draft.planHash(), draft.assessmentHash(),
                 draft.baselineSeal(), draft.ledgerHead(), draft.actor() == null ? null : draft.actor().trim(),
-                draft.role() == null ? null : draft.role().trim(), ACTOR_AUTHENTICATION,
+                draft.role() == null ? null : draft.role().trim(),
+                draft.actorAuthentication() == null || draft.actorAuthentication().isBlank() ? ACTOR_AUTHENTICATION
+                        : draft.actorAuthentication().trim(),
                 draft.rationale() == null ? null : draft.rationale().trim(), Instant.now().toString(),
                 draft.policyVersion() == null ? policyVersion : draft.policyVersion(), null);
         List<String> errors = validator.validate(candidate);

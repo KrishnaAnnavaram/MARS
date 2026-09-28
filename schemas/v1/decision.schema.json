@@ -27,7 +27,7 @@
     "ledger_head": { "type": "string" },
     "actor": { "type": "string", "minLength": 1 },
     "role": { "type": "string", "minLength": 1 },
-    "actor_authentication": { "const": "LOCALLY_ASSERTED" },
+    "actor_authentication": { "anyOf": [ { "enum": ["LOCALLY_ASSERTED", "DEVELOPMENT_ASSERTED"] }, { "type": "string", "pattern": "^OIDC_AUTHENTICATED:[^\\s]+$" } ] },
     "rationale": { "type": "string", "pattern": "\\S" },
     "timestamp": { "$ref": "common.schema.json#/$defs/timestamp" },
     "policy_version": { "type": "string" },
