@@ -14,6 +14,24 @@
   <description>Unit, architecture, contract, parity, integration and end-to-end suites for the unified harness.</description>
   <dependencies>
     <dependency><groupId>com.mars</groupId><artifactId>harness-cli</artifactId></dependency>
+    <!-- the Control Center is tested here, over the same SimulatedToolchain and under the same ArchUnit rules as the
+         engine. Its logging backend is left out: these tests keep the CLI's slf4j-simple. -->
+    <dependency>
+      <groupId>com.mars</groupId>
+      <artifactId>control-center-api</artifactId>
+      <exclusions>
+        <exclusion><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-logging</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <version>3.5.0</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-logging</artifactId></exclusion>
+      </exclusions>
+    </dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><scope>test</scope></dependency>
