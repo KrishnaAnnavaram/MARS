@@ -186,8 +186,8 @@ public final class FindingProjector {
                 verification.map(v -> v.decision() + " (score " + v.score() + "/" + v.threshold() + ")").orElse(null)));
         steps.add(new FindingDtos.JourneyStep("OUTCOME", "Outcome", item.isPresent() ? "DONE" : "PENDING",
                 item.map(i -> i.status().name() + (i.reason() == null ? "" : ": " + i.reason())).orElse(null)));
-        // the first open step of a live run is where the finding is now
-        if (!phase.terminal()) {
+        // the first open step of a run that can still advance is where the finding is now; after a verdict, nothing is
+        if (!phase.terminal() && run.record().verdict == null) {
             for (int i = 0; i < steps.size(); i++) {
                 FindingDtos.JourneyStep s = steps.get(i);
                 if (s.status().equals("PENDING")) {

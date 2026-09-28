@@ -41,7 +41,7 @@ public final class RunDtos {
                               boolean terminal, Liveness liveness, String verdict, String strategy,
                               String executionDecisionId, String baselineSeal, String harnessVersion, String policyVersion,
                               String evaluationDate, boolean skipBuild, long lastEventSequence, List<PipelineStage> pipeline,
-                              StageProgress stageProgress, CurrentActivity currentActivity, HumanActionsSummary humanActions,
+                              List<String> pipelinePath, StageProgress stageProgress, CurrentActivity currentActivity, HumanActionsSummary humanActions,
                               MigrationSummary migration, SecuritySummary security, ChangesSummary changes,
                               ValidationSummary validation, List<String> notes, Integrity integrity,
                               Environment environment) {

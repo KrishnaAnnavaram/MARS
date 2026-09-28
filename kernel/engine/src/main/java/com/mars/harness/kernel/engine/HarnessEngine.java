@@ -169,6 +169,15 @@ public final class HarnessEngine {
                 .progress(ExecutionEvent.Progress.indeterminate(++stageCount[0], "stages"))
                 .subject("STAGE", stage.stageId(), stage.stageId()).artifact("bootshift-output/" + stage.stageId())
                 .attribute("stage_id", stage.stageId()).attribute("exit_code", stage.exitCode()).emit());
+        session.events.event(ExecutionEventType.INGEST_COMPLETED)
+                .status(bootshift.bootstrapped() && bootshift.inventoried() ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                .component(Components.BOOTSHIFT).activity("kernel.ingest")
+                .title("Ingest " + (bootshift.bootstrapped() && bootshift.inventoried() ? "complete" : "incomplete") + ": "
+                        + bootshift.stages().size() + " Bootshift stage(s)")
+                .message("snapshot " + bootshift.bootstrapped() + ", inventory " + bootshift.inventoried() + ", build model "
+                        + bootshift.buildResolved() + ", graph " + bootshift.graphPublished())
+                .progress(ExecutionEvent.Progress.of(bootshift.stages().size(), bootshift.stages().size(), "stages"))
+                .attribute("graph_verified", bootshift.graphVerified()).emit();
         session.artifacts.writeJson("inventory", "bootshift-stages.json", bootshift.stages());
         for (BootshiftBridge.StageSummary stage : bootshift.stages()) {
             session.evidence.record(EvidenceRecord.EvidenceKind.TOOL_RESULT, "Bootshift " + stage.stageId() + ": "

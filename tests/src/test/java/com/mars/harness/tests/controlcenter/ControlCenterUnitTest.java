@@ -27,6 +27,7 @@ class ControlCenterUnitTest {
 
     private static RunRecord walk(RunPhase... phases) {
         RunRecord record = new RunRecord();
+        record.createdAt = Instant.now().minusSeconds(60).toString();
         record.machine.recordBaselineSeal("seal");
         for (RunPhase p : phases) {
             record.machine.transition(p, "to " + p);
@@ -51,6 +52,29 @@ class ControlCenterUnitTest {
         assertThat(s.get("MIGRATION_ROUNDS")).isEqualTo("PENDING");
         assertThat(s.get("GATE_B")).isEqualTo("PENDING");
         assertThat(s.get("VERDICT")).isEqualTo("PENDING");
+    }
+
+    @Test
+    void analysisStagesAreInProgressBetweenTheirCompletionStates() {
+        RunRecord created = new RunRecord();
+        created.createdAt = Instant.now().toString();
+        // CREATED and advancing: the snapshot (ingest) is what runs now, nothing is finished
+        Map<String, String> ingest = statuses(created, true);
+        assertThat(ingest.get("SNAPSHOT")).isEqualTo("ACTIVE");
+        assertThat(ingest.get("INVENTORY")).isEqualTo("PENDING");
+        // INVENTORY_READY means the inventory is done: identity is the stage in progress
+        RunRecord record = walk(RunPhase.SOURCE_SNAPSHOTTED, RunPhase.INVENTORY_READY);
+        record.createdAt = created.createdAt;
+        Map<String, String> s = statuses(record, true);
+        assertThat(s.get("SNAPSHOT")).isEqualTo("COMPLETED");
+        assertThat(s.get("INVENTORY")).isEqualTo("COMPLETED");
+        assertThat(s.get("IDENTITY")).isEqualTo("ACTIVE");
+        assertThat(s.get("GRAPH")).isEqualTo("PENDING");
+        // nothing advancing it: the analysis was interrupted, shown as such, never as running
+        assertThat(statuses(record, false).get("IDENTITY")).isEqualTo("IDLE");
+        // a failure lands on the stage that was running
+        record.machine.transition(RunPhase.FAILED, "identity crashed");
+        assertThat(statuses(record, false).get("IDENTITY")).isEqualTo("FAILED");
     }
 
     @Test

@@ -1,0 +1,214 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Dark is the primary theme; light reuses the same tokens.
+ * Status is never carried by colour alone: every status also has an icon and a text label.
+ */
+:root {
+  --bg: #090d13;
+  --panel: #0f151d;
+  --panel-2: #141b25;
+  --panel-3: #1a2330;
+  --border: #212a37;
+  --border-strong: #2e3a4b;
+  --text: #d8dfe9;
+  --text-strong: #f1f5f9;
+  --muted: #8a97ab;
+  --faint: #5c687b;
+  --primary: #22d3ee;
+  --primary-strong: #67e8f9;
+  --primary-soft: rgba(34, 211, 238, 0.12);
+  --success: #22c55e;
+  --success-soft: rgba(34, 197, 94, 0.12);
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.13);
+  --danger: #f05252;
+  --danger-soft: rgba(240, 82, 82, 0.13);
+  --human: #a78bfa;
+  --human-soft: rgba(167, 139, 250, 0.14);
+  --idle: #64748b;
+  --idle-soft: rgba(100, 116, 139, 0.16);
+  --focus: #38bdf8;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --panel-2: #f7f9fb;
+  --panel-3: #eef2f6;
+  --border: #dfe4ea;
+  --border-strong: #c8d0da;
+  --text: #1f2937;
+  --text-strong: #0b1220;
+  --muted: #5b677a;
+  --faint: #8a95a6;
+  --primary: #0e7490;
+  --primary-strong: #155e75;
+  --primary-soft: rgba(14, 116, 144, 0.1);
+  --success: #15803d;
+  --success-soft: rgba(21, 128, 61, 0.1);
+  --warning: #b45309;
+  --warning-soft: rgba(180, 83, 9, 0.1);
+  --danger: #c81e1e;
+  --danger-soft: rgba(200, 30, 30, 0.09);
+  --human: #6d28d9;
+  --human-soft: rgba(109, 40, 217, 0.09);
+  --idle: #64748b;
+  --idle-soft: rgba(100, 116, 139, 0.12);
+  --focus: #0369a1;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-strong: var(--text-strong);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-soft: var(--primary-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-human: var(--human);
+  --color-human-soft: var(--human-soft);
+  --color-idle: var(--idle);
+  --color-idle-soft: var(--idle-soft);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+::selection {
+  background: var(--primary-soft);
+}
+
+/* thin, quiet scrollbars for dense panes */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* the active pipeline node: an animated border, never an invented percentage */
+@keyframes mars-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(34, 211, 238, 0);
+  }
+}
+
+.mars-active {
+  animation: mars-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes mars-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+.mars-indeterminate {
+  animation: mars-indeterminate 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mars-active,
+  .mars-indeterminate {
+    animation: none;
+  }
+}
+
+/* react-diff-view, themed with the tokens (its own stylesheet reads these variables) */
+.diff {
+  --diff-background-color: var(--panel-2);
+  --diff-text-color: var(--text);
+  --diff-font-family: var(--font-mono);
+  --diff-selection-background-color: var(--primary-soft);
+  --diff-selection-text-color: var(--text-strong);
+  --diff-gutter-insert-background-color: rgba(34, 197, 94, 0.22);
+  --diff-gutter-insert-text-color: var(--text);
+  --diff-gutter-delete-background-color: rgba(240, 82, 82, 0.22);
+  --diff-gutter-delete-text-color: var(--text);
+  --diff-gutter-selected-background-color: var(--primary-soft);
+  --diff-gutter-selected-text-color: var(--text-strong);
+  --diff-code-insert-background-color: rgba(34, 197, 94, 0.14);
+  --diff-code-insert-text-color: var(--text-strong);
+  --diff-code-delete-background-color: rgba(240, 82, 82, 0.14);
+  --diff-code-delete-text-color: var(--text-strong);
+  --diff-code-insert-edit-background-color: rgba(34, 197, 94, 0.35);
+  --diff-code-insert-edit-text-color: var(--text-strong);
+  --diff-code-delete-edit-background-color: rgba(240, 82, 82, 0.35);
+  --diff-code-delete-edit-text-color: var(--text-strong);
+  --diff-code-selected-background-color: var(--primary-soft);
+  --diff-code-selected-text-color: var(--text-strong);
+  --diff-omit-gutter-line-color: var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.diff-gutter {
+  color: var(--faint);
+  text-align: right;
+  padding: 0 8px;
+  width: 52px;
+  user-select: none;
+  background: var(--panel-2);
+}
+.diff-code {
+  padding: 0 10px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.diff-hunk-header {
+  background: var(--panel-3);
+  color: var(--muted);
+}
+.diff-hunk-header-content {
+  padding: 2px 10px;
+}
+.diff-split .diff-code {
+  width: calc(50% - 52px);
+}

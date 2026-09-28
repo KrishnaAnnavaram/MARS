@@ -66,12 +66,16 @@ public final class RunProjector {
                 actions.actions().isEmpty() ? null : actions.actions().get(0).title());
         List<String> notes = record.notes.stream().map(paths::redact).toList();
         Optional<JsonNode> env = run.environment();
+        RunDtos.Liveness liveness = liveness(run, coordinator, events);
+        // a run MARS stopped on purpose (waiting, finished, failed) has no activity in progress, whatever was left open
+        boolean mayBeWorking = Set.of("ADVANCING", "EXTERNAL_ACTIVITY", "IDLE", "INTERRUPTED_ANALYSIS").contains(liveness.state());
         return new RunDtos.RunSnapshot(run.runId(), application(record), source(record, paths), record.createdAt,
                 updatedAt(run), phase.name(), PhaseText.label(phase), PhaseText.description(phase), phase.waitingForHuman(),
-                phase.terminal(), liveness(run, coordinator, events), record.verdict, record.strategy,
+                phase.terminal(), liveness, record.verdict, record.strategy,
                 record.executionDecisionId, record.machine.baselineSealHash, record.harnessVersion, record.policyVersion,
                 record.today, record.skipBuild, events.isEmpty() ? 0 : events.get(events.size() - 1).sequence(), pipeline,
-                PipelineProjector.progress(pipeline, record), currentActivity(events, advancing), human,
+                PipelineProjector.path(record), PipelineProjector.progress(pipeline, record),
+                mayBeWorking ? currentActivity(events, advancing) : null, human,
                 MigrationProjector.summary(run), FindingProjector.summary(run), ProposalProjector.summary(run),
                 ValidationProjector.summary(run), notes.subList(Math.max(0, notes.size() - 20), notes.size()),
                 new RunDtos.Integrity(run.decisions().size(), run.tamperedDecisions(), run.evidence().size(),
@@ -204,7 +208,12 @@ public final class RunProjector {
         return record.repository == null ? null : paths.display(Path.of(record.repository));
     }
 
+    /** When the run last changed state: the last persisted transition (file times are not evidence). */
     static String updatedAt(RunReader run) {
+        List<RunStateMachine.Transition> history = run.record().machine.history;
+        if (!history.isEmpty()) {
+            return history.get(history.size() - 1).at();
+        }
         try {
             return Files.getLastModifiedTime(run.layout().state()).toInstant().toString();
         } catch (IOException e) {

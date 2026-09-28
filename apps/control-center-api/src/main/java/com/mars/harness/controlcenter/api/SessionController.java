@@ -68,6 +68,9 @@ public class SessionController {
         if (actor.mayOperate()) {
             permissions.add("operate");
         }
+        if (actor.mayResume()) {
+            permissions.add("resume");
+        }
         if (actor.mayDecide()) {
             permissions.add("decide");
         }
