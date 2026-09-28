@@ -11,6 +11,7 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,9 +57,11 @@ public class RunCoordinator {
     private final ConcurrentHashMap<String, Finished> finished = new ConcurrentHashMap<>();
     private final ExecutorService workers;
     private final ControlCenterPaths paths;
+    private final List<RunJobListener> listeners;
 
-    public RunCoordinator(ControlCenterProperties properties, ControlCenterPaths paths) {
+    public RunCoordinator(ControlCenterProperties properties, ControlCenterPaths paths, List<RunJobListener> listeners) {
         this.paths = paths;
+        this.listeners = List.copyOf(listeners);
         AtomicInteger n = new AtomicInteger();
         this.workers = Executors.newFixedThreadPool(properties.maxConcurrentRuns(), r -> {
             Thread t = new Thread(r, "mars-run-worker-" + n.incrementAndGet());
@@ -123,6 +126,7 @@ public class RunCoordinator {
                 }
                 boolean failed = false;
                 String error = null;
+                notify(l -> l.started(descriptor));
                 try {
                     job.run();
                 } catch (RuntimeException e) {
@@ -133,6 +137,9 @@ public class RunCoordinator {
                     running.remove(runId);
                     finished.put(runId, new Finished(runId, kind, descriptor.startedAt(), Instant.now(), failed, error));
                     permit.release();
+                    boolean failedFinal = failed;
+                    String errorFinal = error;
+                    notify(l -> l.finished(descriptor, failedFinal, errorFinal));
                     MDC.clear();
                 }
             });
@@ -142,6 +149,17 @@ public class RunCoordinator {
             throw new ApiException(ApiErrorCode.RUN_BUSY, runId, "The Control Center is shutting down");
         }
         return descriptor;
+    }
+
+    /** Telemetry must never break a run: a failing listener is logged and skipped. */
+    private void notify(java.util.function.Consumer<RunJobListener> call) {
+        for (RunJobListener listener : listeners) {
+            try {
+                call.accept(listener);
+            } catch (RuntimeException e) {
+                LOG.warn("Run job listener {} failed: {}", listener.getClass().getSimpleName(), e.getMessage());
+            }
+        }
     }
 
     public Optional<Job> running(String runId) {

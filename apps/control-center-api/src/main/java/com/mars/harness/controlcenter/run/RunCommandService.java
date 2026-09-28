@@ -5,6 +5,7 @@ import com.mars.harness.controlcenter.api.ApiException;
 import com.mars.harness.controlcenter.api.dto.DecisionDtos;
 import com.mars.harness.controlcenter.api.dto.RunDtos;
 import com.mars.harness.controlcenter.config.ControlCenterPaths;
+import com.mars.harness.controlcenter.observability.RunTelemetry;
 import com.mars.harness.controlcenter.query.DecisionMapper;
 import com.mars.harness.controlcenter.query.PhaseText;
 import com.mars.harness.controlcenter.query.ProposalProjector;
@@ -53,9 +54,12 @@ public class RunCommandService {
     private final ControlCenterPaths paths;
     private final CurrentActor actor;
     private final IdempotencyStore idempotency;
+    private final RunTelemetry telemetry;
 
     public RunCommandService(HarnessEngine engine, RunQueryService queries, RunCoordinator coordinator,
-                             ControlCenterPaths paths, CurrentActor actor, IdempotencyStore idempotency) {
+                             ControlCenterPaths paths, CurrentActor actor, IdempotencyStore idempotency,
+                             RunTelemetry telemetry) {
+        this.telemetry = telemetry;
         this.engine = engine;
         this.queries = queries;
         this.coordinator = coordinator;
@@ -282,6 +286,7 @@ public class RunCommandService {
     // ------------------------------------------------------------------ helpers
 
     private DecisionDtos.DecisionView view(String runId, Decision d) {
+        telemetry.decisionRecorded(d);
         RunReader fresh = queries.reader(runId);
         return DecisionMapper.view(d, fresh.tamperedDecisions(), fresh.decisions());
     }

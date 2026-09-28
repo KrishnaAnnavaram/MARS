@@ -638,6 +638,25 @@ harness verify --run RUN-…
 
 Probes may only target loopback: the app is started locally on a free port.
 
+### Control Center (web)
+
+The same workflow, watched live and decided in a browser. It is a second entry point over the same
+engine and the same runs root: CLI runs appear in it, and every decision it records goes through the
+engine's approval store, bound to the exact assessment, plan or proposal the reviewer saw.
+
+```bash
+mvn -pl apps/control-center-api -am install -DskipTests
+(cd ui/mars-control-center && npm ci --include=dev && npm run build)
+java -jar apps/control-center-api/target/control-center-api-1.0.0-exec.jar \
+     --mars.control-center.ui-dir=ui/mars-control-center/dist
+# http://127.0.0.1:8080 — sign in as approver / mars-dev (development identities; see the security doc)
+```
+
+It shows the pipeline from the state machine, the live execution events (RCA, blast radius, migration
+rounds, Mutation Gateway checks), the Human Action Center for Gate A, B and A2, the exact diffs, the
+evidence chain, validation and the verdict. See the
+[user guide](docs/control-center-user-guide.md) and the [architecture](docs/control-center-architecture.md).
+
 ---
 
 ## 16. Worked example: a composite run
@@ -755,6 +774,8 @@ Each run lives in `runs/RUN-…/` (use `--runs-root` to change the location):
 ```text
 MARS/
 ├── apps/cli/                       # harness CLI (composition root, fat jar)
+├── apps/control-center-api/        # Control Center API (second composition root: REST, SSE, decisions)
+├── ui/mars-control-center/         # Control Center UI (React + TypeScript)
 ├── kernel/
 │   ├── core/                       # domain model: identity, evidence, decisions, proposals, verdict, state
 │   ├── ports/                      # contracts
@@ -843,7 +864,12 @@ The full list is in [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT
 | [`docs/current-system-analysis.md`](docs/current-system-analysis.md) | Analysis of the three source systems and their baseline test state |
 | [`docs/protected-business-logic.md`](docs/protected-business-logic.md) | Every protected behaviour, how it is preserved, and the test that guards it |
 | [`docs/implementation-plan.md`](docs/implementation-plan.md) | The phased plan |
-| [`docs/adr/`](docs/adr) | Architecture decision records ADR-U001 … U007 |
+| [`docs/adr/`](docs/adr) | Architecture decision records ADR-U001 … U008 |
+| [`docs/control-center-user-guide.md`](docs/control-center-user-guide.md) | Running and using the Control Center, demo script, operations |
+| [`docs/control-center-architecture.md`](docs/control-center-architecture.md) | Control Center modules, event sources, read and command sides, invariants |
+| [`docs/control-center-api.md`](docs/control-center-api.md) · [`openapi.json`](docs/control-center-openapi.json) | REST endpoints, decision semantics, errors |
+| [`docs/control-center-events.md`](docs/control-center-events.md) | The execution event model and the SSE protocol |
+| [`docs/control-center-security.md`](docs/control-center-security.md) | Authentication boundary, roles, controls, limitations |
 | [`docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md`](docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md) | The original specification |
 | [`legacy-sources/SOURCES.json`](legacy-sources/SOURCES.json) | Provenance of the three imported systems (repositories, branches, commits) |
 | [`schemas/v1/`](schemas/v1) | JSON Schemas for findings, proposals, decisions, assessments, evidence, lineage, validation, verdict |

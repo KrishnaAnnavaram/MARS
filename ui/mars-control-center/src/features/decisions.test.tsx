@@ -4,7 +4,8 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import type { DecisionRecorded, HumanAction, SessionView } from '../api/types';
-import { GateDecision, ProposalDecision } from './decisions';
+import { useState } from 'react';
+import { DecisionReceipt, GateDecision, ProposalDecision, RecentDecisionsProvider, useRecentDecisions } from './decisions';
 
 const session: SessionView = {
   authenticated: true, username: 'approver', display_name: 'Dev Approver', roles: ['APPROVER'], auth_mode: 'dev',
@@ -105,6 +106,34 @@ describe('GateDecision', () => {
       endpoint="/decisions/execution" field="strategy" hashField="expected_assessment_hash" />));
     screen.getAllByRole('radio').forEach((r) => expect(r).toBeDisabled());
     expect(screen.getByText('Your role cannot record decisions')).toBeInTheDocument();
+  });
+});
+
+describe('receipts', () => {
+  /** A gate that disappears as soon as its decision is recorded, like the real Human Action Center. */
+  function ClosingGate() {
+    const [open, setOpen] = useState(true);
+    const recent = useRecentDecisions();
+    return (
+      <>
+        {open && <GateDecision runId="RUN-X" action={gateA} endpoint="/decisions/execution" field="strategy"
+          hashField="expected_assessment_hash" />}
+        <button type="button" onClick={() => setOpen(false)}>close gate</button>
+        {recent?.items.map((r) => <DecisionReceipt key={r.decision.decision_id} decision={r.decision} />)}
+      </>
+    );
+  }
+
+  it('keeps the receipt after the decided gate goes away', async () => {
+    respond(200, recorded('MIGRATE_FIRST'));
+    render(wrap(<RecentDecisionsProvider><ClosingGate /></RecentDecisionsProvider>));
+    await userEvent.click(screen.getAllByRole('radio')[0]);
+    await userEvent.type(screen.getByLabelText(/Rationale/), 'Migrate first');
+    await userEvent.click(screen.getByRole('button', { name: 'Review decision' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Record decision' }));
+    await waitFor(() => expect(screen.getAllByText('DEC-01M3TEST').length).toBeGreaterThan(0));
+    await userEvent.click(screen.getByRole('button', { name: 'close gate' }));
+    expect(screen.getByText('DEC-01M3TEST')).toBeInTheDocument();
   });
 });
 
