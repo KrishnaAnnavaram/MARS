@@ -2,11 +2,11 @@
 
 **Status:** Accepted
 **Date:** 2026-09-24
-**Deciders:** Unified harness architecture
+**Deciders:** MARS architecture
 
 ## Context
 
-The unified harness needs a persistent file identity, an immutable source snapshot, an isolated
+MARS needs a persistent file identity, an immutable source snapshot, an isolated
 workspace, a hash-chained change ledger, a checkpoint repository and a single mutation gateway.
 Bootshift (`legacy-sources/bootshift`, commit `eacdca19`) already has all of these. Its ADRs
 (ADR-001 to ADR-004) and 190 tests pin their behaviour down.

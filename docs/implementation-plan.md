@@ -1,4 +1,4 @@
-# Phased Implementation Plan
+# MARS: Phased Implementation Plan
 
 This plan follows spec §30. Each phase ends with compile, relevant tests, architecture/contract
 tests, a diff review and notes. Bootshift's own suite (190 tests) runs in every reactor build.
@@ -24,7 +24,7 @@ capabilities/spring-migration          com.mars.harness.capabilities.migration  
 capabilities/vulnerability-remediation com.mars.harness.capabilities.security    intake, root cause, blast radius, routing
                                                      (catalog/KB/research), planning, fixers, verify, gates, arbiter, audit
 apps/cli           com.mars.harness.cli              `harness` (picocli) composition root
-tests              com.mars.harness.tests.{unit,architecture,contract,parity,integration,endtoend}
+tests              com.mars.harness.tests.{unit,architecture,contract,parity,integration,e2e,acceptance}
 schemas/  policies/  fixtures/  docs/ (+ docs/adr)
 ```
 

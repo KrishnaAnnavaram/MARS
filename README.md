@@ -17,6 +17,33 @@ MARS gives them one identity model, one change ledger, one approval process and 
 > recommends, waits for your decisions, applies only what you authorize, verifies the result on the
 > real toolchain, and produces an evidence package you can audit.
 
+MARS ships as the **`harness`** command-line tool (`apps/cli/target/harness.jar`).
+
+---
+
+## Overview
+
+- **Analyze** a Java/Spring service. MARS takes in vulnerability findings from your scanners
+  (Excel issue register, SARIF, dependency advisories), confirms and pinpoints them (and flags new ones) with its own
+  built-in checks for seven common weakness types, assesses whether the service should migrate
+  (GREEN / YELLOW / RED), and recommends an order: migrate first, or fix security first.
+- **Decide** at human gates. You pick the strategy and approve each individual fix. No AI or tool
+  can approve on your behalf.
+- **Verify** the result. It is built, tested, probed and re-scanned, and ends
+  in one verdict: `CLEARED`, `PARTIAL`, `NEEDS_HUMAN`, `INSUFFICIENT_EVIDENCE` or `BLOCKED`.
+
+```bash
+harness analyze ./my-service --findings issues.xlsx     # read-only; stops at Gate A
+harness decide execution --run RUN-… --strategy SECURITY_FIRST --actor you --role owner --rationale "…"
+harness resume  --run RUN-…                             # advances to Gate B
+harness approve remediation --run RUN-… --proposal PROP-… --verdict APPROVED --actor you --role owner --rationale "…"
+harness resume  --run RUN-… --accept-pending            # applies, verifies; undecided proposals keep the verdict at NEEDS_HUMAN
+harness report  --run RUN-…                             # the evidence report
+```
+
+New here? Read [§1](#1-why-mars-exists), [§2](#2-the-five-non-negotiable-rules) and
+[§15](#15-quick-start), then try the [worked example](#16-worked-example-a-composite-run).
+
 ---
 
 ## Table of Contents
@@ -44,8 +71,10 @@ MARS gives them one identity model, one change ledger, one approval process and 
 21. [Testing and quality evidence](#21-testing-and-quality-evidence)
 22. [Extending MARS](#22-extending-mars)
 23. [Limitations](#23-limitations)
-24. [Further documentation](#24-further-documentation)
-25. [License](#25-license)
+24. [Glossary](#24-glossary)
+25. [Troubleshooting](#25-troubleshooting)
+26. [Further documentation](#26-further-documentation)
+27. [License](#27-license)
 
 ---
 
@@ -585,16 +614,53 @@ gate, close the terminal and continue days later with `harness resume`.
 ```bash
 git clone https://github.com/KrishnaAnnavaram/MARS.git
 cd MARS
-mvn install            # builds Bootshift + MARS and runs all default test suites
+mvn install -DskipTests   # fast build: just the CLI jar
 # CLI jar: apps/cli/target/harness.jar
 ```
 
-Add `-DskipTests` for a fast build. Add `-o` when all dependencies are already in your local repository.
+A plain `mvn install` also runs every default test suite, including Bootshift's 190 tests. That
+takes about **20 minutes** (21 min 11 s in the recorded run). Add `-o` when all dependencies are
+already in your local repository.
+
+### Make `harness` a command
+
+```bash
+# bash / zsh
+alias harness='java -jar /path/to/MARS/apps/cli/target/harness.jar'
+```
+
+```powershell
+# Windows PowerShell (add to $PROFILE to keep it)
+function harness { java -jar D:\path\to\MARS\apps\cli\target\harness.jar @args }
+```
+
+MARS finds its installation root (the folder containing `policies/default/unified-policy.json`
+and `legacy-sources/bootshift`) in this order: `--harness-root`, the `HARNESS_HOME` environment
+variable, the current directory and its parents, then the jar's own location and its parents.
+Running the jar from inside a MARS checkout therefore needs no setup. Runs are written to
+`<harness-root>/runs` unless you pass `--runs-root` or set `HARNESS_RUNS_ROOT`.
+
+### Getting the run ID
+
+Every command after `analyze` needs `--run RUN-…`. `analyze` prints it on its first line
+(`run      : RUN-…`), and each run is also a folder under `runs/`. To capture it in a script:
+
+```bash
+RUN=$(harness analyze /path/to/your-service --json | jq -r .run_id)
+harness status --run "$RUN"
+```
+
+```powershell
+$RUN = (harness analyze D:\path\to\your-service --json | ConvertFrom-Json).run_id
+harness status --run $RUN
+```
+
+When the run is waiting for you, `status` ends with a `next:` list of the commands you can run
+now.
 
 ### First run
 
 ```bash
-alias harness='java -jar apps/cli/target/harness.jar'
 
 # 1. analyze (read-only) — stops at Gate A
 harness analyze /path/to/your-service \
@@ -690,6 +756,73 @@ What happens:
 | If you choose `SECURITY_ONLY` | SQL fix applied and **Cleared**; advisory **BLOCKED_BY_PLATFORM**; Gate A2 asks again about migration |
 | If you choose `MIGRATE_FIRST` | Boot 4.1.1 migration → springdoc moves to 3.1.0 → advisory re-matched as **already remediated** → fixes applied against migrated code |
 
+The fixture's finding IDs:
+
+| ID | Finding |
+|---|---|
+| `INV-101` | SQL injection (CWE-89) |
+| `INV-102` | Path traversal (CWE-22) |
+| `INV-103` | Unsafe deserialization (CWE-502), with a supplied research analysis |
+| `INV-104` | Hard-coded key (CWE-798) |
+| `FIXTURE-ADV-SPRINGDOC-0001` | Synthetic springdoc advisory that needs Spring Boot 4 |
+
+### Walkthrough A: `SECURITY_ONLY`, then migrate at Gate A2
+
+These are the steps `CliWorkflowIT` and `CompositeSequencingE2ETest` drive. The `…` parts are the
+IDs your run prints.
+
+```bash
+# 1. analyze (the command above). The run stops at Gate A:
+#    phase   : WAITING_FOR_EXECUTION_DECISION   (migration-assessment shows "traffic_light" : "RED")
+
+# 2. choose security only
+harness decide execution --run $RUN --strategy SECURITY_ONLY \
+  --actor dev.lead --role owner --rationale "Security this sprint"
+harness resume --run $RUN                 # -> WAITING_FOR_REMEDIATION_APPROVAL
+
+# 3. review and approve the SQL injection fix (find its PROP- ID in the list)
+harness proposals --run $RUN
+harness approve remediation --run $RUN --proposal PROP-… --verdict APPROVED \
+  --actor dev.lead --role owner --rationale "Reviewed the parameterized query"
+
+# 4. apply and verify. The springdoc advisory is BLOCKED_BY_PLATFORM, so MARS asks again about migrating
+harness resume --run $RUN --accept-pending   # -> WAITING_FOR_POST_SECURITY_MIGRATION_DECISION
+#    migration is re-assessed: still RED (discovery/migration/post-security-reassessment.json says why)
+
+# 5. Gate A2: migrate now
+harness decide migration --run $RUN --decision PROCEED \
+  --actor dev.lead --role owner --rationale "Unblocks the springdoc fix"
+harness resume --run $RUN
+
+# 6. inspect and check integrity
+harness report --run $RUN
+harness verify --run $RUN
+```
+
+Outcome: the migration reaches GREEN, and the verdict lists `MIGRATION` as `MIGRATED`, the SQL
+injection as `FIXED` and the springdoc advisory as `FIXED`. Choosing `SKIP` at step 5 instead
+leaves the advisory `BLOCKED_BY_PLATFORM`.
+
+`--accept-pending` lets the run continue while some proposals are still undecided. They are
+**not** approved: they stay `PENDING_APPROVAL`, and the run ends in `NEEDS_HUMAN` ("N decision(s)
+outstanding") until you decide them.
+
+### Walkthrough B: `MIGRATE_FIRST`
+
+```bash
+harness decide execution --run $RUN --strategy MIGRATE_FIRST \
+  --actor dev.lead --role owner --rationale "Follow the recommendation"
+harness resume --run $RUN          # migration rounds run; stops at Gate B
+harness proposals --run $RUN       # fixes are now computed against the migrated code
+harness approve remediation --run $RUN --proposal PROP-… --verdict APPROVED \
+  --actor dev.lead --role owner --rationale "…"      # repeat for INV-101 and INV-102
+harness resume --run $RUN --accept-pending
+```
+
+Outcome: the pom moves to Spring Boot 4.1.1 and springdoc 3.1.0, and the advisory is re-matched as
+`ALREADY_REMEDIATED`. In the change ledger, every migration change comes before every security
+change.
+
 ---
 
 ## 17. CLI reference
@@ -706,13 +839,17 @@ What happens:
 | `approve remediation --run … --proposal PROP-… --verdict …` | Gate B (per proposal) |
 | `approve migration --run …` | Migration plan approval (when policy requires it) |
 | `approve apply --run …` | Authorize applying the result to your project |
-| `submit-patch --run … --file path=local [--rename old=new] [--provider manual\|llm …]` | Register a human- or LLM-written patch as a proposal |
+| `submit-patch --run … --reason "…" --file repo/path=local [--rename old=new] [--finding ID…] [--provider manual\|llm …]` | Register a human- or LLM-written patch as a proposal. `--finding` links it to findings (omit for a migration or manual patch). An `llm` patch is refused at apply time unless it gives `--model`, `--prompt-hash` and `--response-hash` (`--model-version` and `--context-hash` are recorded when given). |
 | `submit-research --run … --finding ID --analysis analysis.json` | Supply a research analysis for a double-gap finding |
 | `resume --run … [--accept-pending]` | Advance to the next gate or the verdict |
 | `report --run …` | Render the final evidence report |
 | `lineage <ID> --run …` · `finding <ID> --run …` · `change <ID> --run …` | Audit any identity, finding or change |
 | `apply --run … --decision DEC-…` | Write the verified result into your project (decision-bound) |
 | `verify --run …` | Recompute every hash chain and integrity check |
+
+Every `decide` and `approve` command also requires `--actor <name>`, `--role <role>` and
+`--rationale "<why>"`. For `approve`, `--verdict` defaults to `APPROVED`, so pass `--verdict
+REJECTED` or `--verdict DEFERRED` explicitly when you mean that.
 
 Every command accepts these common options: `--harness-root`, `--runs-root`, `--policy`, `--today`,
 `--maven-offline`, `--network` and `--json`.
@@ -826,7 +963,7 @@ that the production parser reads. The real-toolchain suite uses no doubles.
 
 | To add… | Do this |
 |---|---|
-| A new migration path (e.g. another framework jump) | Add a reference pack. Derive a `*.rules.json` pinned to its SHA-256 (build-file rules + symptom rules). The engine and advisor pick it up. |
+| A new migration path (e.g. Spring Boot 2 → 3) | Add a reference pack and derive a `*.rules.json` pinned to its SHA-256 (build-file rules + symptom rules). The engine and advisor pick it up with no code change if it uses the existing rule kinds. New rule kinds or non-Spring frameworks need code. See [`docs/writing-a-reference-pack.md`](docs/writing-a-reference-pack.md). |
 | A new finding source | Implement `FindingNormalizer` (anchor to identity via `FindingAnchoring`) and register it in `HarnessFactory`. |
 | A new deterministic fix | Add a fixer in `capabilities/vulnerability-remediation/.../fix/Fixers` and route to it from the catalog or KB plan. |
 | A new build tool or runtime | Implement `BuildPort` / `RuntimePort` in `kernel/adapters`. The architecture tests keep processes inside adapters. |
@@ -856,10 +993,62 @@ The full list is in [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT
 
 ---
 
-## 24. Further documentation
+## 24. Glossary
+
+| Term | Meaning |
+|---|---|
+| **Run** | One analysis-to-verdict session, stored in `runs/RUN-…/`. Every command after `analyze` names it with `--run`. |
+| **Bootshift** | The Java migration engine MARS is built on. It provides file identity, the snapshot and workspace, and the change ledger, and it runs unchanged. |
+| **VRH** | Vulnerability Remediation Harness: the source security pipeline whose rules, catalog, knowledge base and scoring MARS ports or reads in place. |
+| **Capability** | A domain module plugged into the kernel: `spring-migration` or `vulnerability-remediation`. |
+| **Baseline seal** | The hashed record of "round 0": the build, tests and probes of the untouched project. No change can happen before it exists. |
+| **Round** | One migration build attempt in a disposable copy. Round 0 is the baseline; later rounds apply rules for the errors they hit. |
+| **Reference pack** | A Markdown migration guide (e.g. Spring Boot 3 → 4) plus a machine-readable `*.rules.json` pinned to it by SHA-256. |
+| **Symptom rule** | A migration rule applied only when a build fails with the exact error text it quotes. |
+| **Traffic light** | The Migration Advisor's answer: GREEN (not required), YELLOW (recommended), RED (a prerequisite for a requested fix), UNKNOWN. |
+| **Gate A / A2 / B** | Human decisions: A picks the execution strategy, A2 asks again about migrating after security work, B approves each individual proposal. |
+| **Proposal (`PROP-`)** | An immutable, hashed change request. It is the only way code changes. |
+| **Decision (`DEC-`)** | A recorded human decision, HMAC-protected and bound to the hash of what it decides about. |
+| **Mutation Gateway** | The single code path allowed to write tracked source. |
+| **Identity (`FILE-`, `MOD-`, `PU-`, `SYM-`, `STMT-`)** | Persistent IDs for files, modules, classes, members and statements that survive renames and edits. |
+| **Finding** | A vulnerability in canonical form, anchored to an identity rather than a path and line. |
+| **Catalog / KB / Research** | The three routing levels for a finding: VRH's CWE catalog, the remediation knowledge base, then a supplied research analysis. |
+| **Double gap** | A finding whose CWE is in neither the catalog nor the KB. It needs a research analysis, or it gets an `EVIDENCE_GAP` plan. |
+| **Strategy-only plan** | A plan with no concrete patch. Approving it authorizes producing a fix, which then needs its own approval. |
+| **`BLOCKED_BY_PLATFORM`** | A fix that cannot be applied until the migration is done (e.g. the fixed library needs Spring Boot 4). |
+| **Probe** | An HTTP request replayed against the running app before and after, to compare behaviour. |
+| **Evidence (`EVID-`)** | A hash-chained record backing every claim MARS makes. |
+| **Verdict** | The final outcome: `CLEARED`, `PARTIAL`, `NEEDS_HUMAN`, `INSUFFICIENT_EVIDENCE` or `BLOCKED`. |
+
+---
+
+## 25. Troubleshooting
+
+| Symptom | Cause and fix |
+|---|---|
+| `Cannot locate the harness installation` | Run from inside the MARS checkout, pass `--harness-root`, or set `HARNESS_HOME` to the folder that contains `policies/default/unified-policy.json`. |
+| `reserved machine identity` (exit 2) | `--actor` is a machine name such as `llm`, `agent`, `copilot`, `harness` or `ci`. Decisions must be made by a person; use your own name. |
+| A proposal is rejected with `STALE_PROPOSAL` | The file it edits changed after the proposal was computed (its base hash no longer matches), it was computed against another baseline, or the migration plan changed after it was frozen. MARS never applies it over newer content; review the current state and submit or approve a fresh proposal. |
+| The run ends in `NEEDS_HUMAN` with "decision(s) outstanding" | You continued with `--accept-pending` while some proposals were undecided. Run `harness proposals`, decide each one, then `harness resume`. |
+| Migration stops in `NEEDS_HUMAN` | A build error matched no rule in the reference pack, and MARS does not guess. Write the fix yourself (a local file with the full new content), register it with `harness submit-patch --run … --file repo/relative/path=local/file --reason "…"`, approve it with `harness approve remediation`, then `harness resume`. |
+| Migration refuses: "reference pack text changed after its rules were derived" | The pack Markdown was edited, so its SHA-256 no longer matches `pack_sha256` in the `*.rules.json`. Re-derive the rules (see [`docs/writing-a-reference-pack.md`](docs/writing-a-reference-pack.md)). |
+| Migration refuses: "Round 0 … did not run" | The run was analyzed with `--skip-build`. Migration needs a real baseline build; analyze again without `--skip-build`. |
+| Validation shows `NOT_RUN` or `TOOL_UNAVAILABLE` | A tool (Maven, Java runtime, Docker) was missing or a step was skipped (e.g. `--skip-build`). MARS never counts these as a pass. Install the tool and start a new run. |
+| Tests that use Testcontainers are skipped | Docker is not available. They are skipped on both sides of every comparison (baseline and final), so they cannot hide a regression, but they are not evidence either. |
+| `harness verify` exits 3 | A ledger, evidence chain or decision file was changed after it was written. The output names the altered item. |
+
+Exit codes are listed in [§17](#17-cli-reference).
+
+---
+
+## 26. Further documentation
 
 | Document | Contents |
 |---|---|
+| [`docs/README.md`](docs/README.md) | Index of all documentation |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md) · [`CHANGELOG.md`](CHANGELOG.md) | How to contribute, how to report a vulnerability, what changed |
+| [`docs/user-guide.md`](docs/user-guide.md) | Task-based guide: analyze, decide, review proposals, submit patches, apply, audit |
+| [`docs/writing-a-reference-pack.md`](docs/writing-a-reference-pack.md) | How to add a migration path: pack format, rule kinds, pinning, testing |
 | [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT.md) | Final architecture, preserved behaviour, changes, full test evidence, defects found and fixed, limitations |
 | [`docs/current-system-analysis.md`](docs/current-system-analysis.md) | Analysis of the three source systems and their baseline test state |
 | [`docs/protected-business-logic.md`](docs/protected-business-logic.md) | Every protected behaviour, how it is preserved, and the test that guards it |
@@ -870,13 +1059,13 @@ The full list is in [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT
 | [`docs/control-center-api.md`](docs/control-center-api.md) · [`openapi.json`](docs/control-center-openapi.json) | REST endpoints, decision semantics, errors |
 | [`docs/control-center-events.md`](docs/control-center-events.md) | The execution event model and the SSE protocol |
 | [`docs/control-center-security.md`](docs/control-center-security.md) | Authentication boundary, roles, controls, limitations |
-| [`docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md`](docs/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md) | The original specification |
+| [`docs/spec/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md`](docs/spec/UNIFIED_HARNESS_IMPLEMENTATION_MASTER_PROMPT.md) | The original specification MARS was built from (historical) |
 | [`legacy-sources/SOURCES.json`](legacy-sources/SOURCES.json) | Provenance of the three imported systems (repositories, branches, commits) |
 | [`schemas/v1/`](schemas/v1) | JSON Schemas for findings, proposals, decisions, assessments, evidence, lineage, validation, verdict |
 
 ---
 
-## 25. License
+## 27. License
 
 MIT — see [LICENSE](LICENSE). The systems under `legacy-sources/` retain their original licenses
 and provenance.
