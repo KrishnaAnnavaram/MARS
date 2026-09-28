@@ -1,0 +1,4824 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "MARS Control Center API",
+        "description": "Observation and human-decision interface over the MARS engine. Read endpoints return snapshots built from the run's persisted artifacts; the event stream replays and streams execution events; commands call the engine's own analyze / decide / resume. JSON is snake_case; absent fields have no value. Errors share one shape: {code, message, run_id, correlation_id, details}. Commands accept an Idempotency-Key header. See docs/control-center-api.md.",
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://127.0.0.1:18080",
+            "description": "Generated server url"
+        }
+    ],
+    "security": [
+        {
+            "devSession": []
+        },
+        {
+            "oidcBearer": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Runs (read)",
+            "description": "Snapshots of what is true now, built from persisted run artifacts"
+        },
+        {
+            "name": "Events",
+            "description": "Execution events: replayable, strictly sequenced, live"
+        },
+        {
+            "name": "Session",
+            "description": "The authentication boundary as the browser sees it"
+        },
+        {
+            "name": "Runs (commands)",
+            "description": "Start, resume and decide; all through the MARS engine"
+        }
+    ],
+    "paths": {
+        "/api/v1/session/logout": {
+            "post": {
+                "tags": [
+                    "Session"
+                ],
+                "summary": "Sign out",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/session/login": {
+            "post": {
+                "tags": [
+                    "Session"
+                ],
+                "summary": "Dev mode only: sign a development user in",
+                "operationId": "login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Run history",
+                "description": "status: active | waiting | complete | failed | needs_human; capability: migration | security; q searches run id, application and source",
+                "operationId": "runs",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "capability",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 50
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RunPage"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Runs (commands)"
+                ],
+                "summary": "Start a run (phases 0-4, stopping at Gate A). OPERATOR.",
+                "operationId": "start",
+                "parameters": [
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "description": "optional retry key",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StartRunRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/StartRunResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/resume": {
+            "post": {
+                "tags": [
+                    "Runs (commands)"
+                ],
+                "summary": "Advance the run to its next gate or its verdict (the CLI's resume). OPERATOR.",
+                "operationId": "resume",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResumeRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CommandAccepted"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/proposals/{proposalId}/decision": {
+            "post": {
+                "tags": [
+                    "Runs (commands)"
+                ],
+                "summary": "Human Gate B: approve, reject or defer one exact proposal (bound to its hash). APPROVER.",
+                "operationId": "proposal",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "proposalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProposalDecisionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DecisionRecorded"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/decisions/post-security": {
+            "post": {
+                "tags": [
+                    "Runs (commands)"
+                ],
+                "summary": "Human Gate A2: PROCEED, SKIP or STOP, then advance. APPROVER.",
+                "operationId": "postSecurity",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PostSecurityDecisionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DecisionRecorded"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/decisions/migration-plan": {
+            "post": {
+                "tags": [
+                    "Runs (commands)"
+                ],
+                "summary": "Approve, reject or defer the frozen migration plan, then advance. APPROVER.",
+                "operationId": "migrationPlan",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MigrationPlanDecisionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DecisionRecorded"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/decisions/execution": {
+            "post": {
+                "tags": [
+                    "Runs (commands)"
+                ],
+                "summary": "Human Gate A: record the execution strategy, then advance. APPROVER.",
+                "operationId": "execution",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExecutionDecisionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DecisionRecorded"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/session": {
+            "get": {
+                "tags": [
+                    "Session"
+                ],
+                "summary": "The current session",
+                "operationId": "session",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SessionView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/session/dev-users": {
+            "get": {
+                "tags": [
+                    "Session"
+                ],
+                "summary": "Dev mode only: the configured development users (never their passwords)",
+                "operationId": "devUsers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DevUserOption"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Run snapshot (overview)",
+                "operationId": "run",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RunSnapshot"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/verdict": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "The verdict exactly as the verdict calculator produced it",
+                "operationId": "verdict",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/VerdictView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/validation": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Validation dimensions, each reported separately; unknown is never shown as passing",
+                "operationId": "validation",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/timeline": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "State transitions and decisions, in order",
+                "operationId": "timeline",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Timeline"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/proposals": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Change explorer",
+                "operationId": "proposals",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ChangesView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/proposals/{proposalId}": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "One proposal with its bound diff, provenance, decisions and Mutation Gateway record",
+                "operationId": "proposal_1",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "proposalId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProposalDetail"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/pipeline": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Pipeline stages derived from the state-machine history",
+                "operationId": "pipeline",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PipelineStage"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/migration": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Migration cockpit",
+                "operationId": "migration",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MigrationView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/logs": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Tool logs of the run (build rounds, verification builds, runtime)",
+                "operationId": "logs",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LogFile"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/logs/content": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Lines of one log, with optional level and text filters; logs are not the event model",
+                "operationId": "log",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "path",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "max",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 2000
+                        }
+                    },
+                    {
+                        "name": "level",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LogChunk"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/human-actions": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Why the run is waiting and what a human can do",
+                "operationId": "humanActions",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HumanActionsView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/graph": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Canonical graph view, filtered server-side",
+                "description": "focus: node id; depth: 0-4; q: search; types / edge_types: comma lists; highlight: FINDING | CHANGED | BLAST_RADIUS | MIGRATION_ISSUE; limit: max nodes (\u00e2\u2030\u00a4 2000)",
+                "operationId": "graph",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "focus",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "depth",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "types",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "edge_types",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "highlight",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 300
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GraphView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/findings": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Security cockpit: summary and findings",
+                "operationId": "findings",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SecurityView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/findings/{findingId}": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "One finding with RCA, blast radius, plan, proposal, decisions, verification and journey",
+                "operationId": "finding",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "findingId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FindingDetail"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/evidence": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Evidence plane, in hash-chain order",
+                "operationId": "evidence",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "kind",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "producer",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "subject",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phase",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EvidencePage"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/evidence/{evidenceId}": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "One evidence record",
+                "operationId": "evidenceRecord",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "evidenceId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EvidenceView"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/events": {
+            "get": {
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Subscribe to a run's execution events",
+                "description": "Replays every event after Last-Event-ID (or ?after=), then streams new ones. Event names: hello, execution-event (id = sequence), worker, heartbeat.",
+                "operationId": "events",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Last-Event-ID",
+                        "in": "header",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "after",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/event-stream": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SseEmitter"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/events/history": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Persisted execution events after a sequence (for pagination; live updates use the SSE stream)",
+                "operationId": "eventHistory",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "after",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64",
+                            "default": 0
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32",
+                            "default": 1000
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExecutionEvent"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/decisions": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Every recorded decision with its integrity status",
+                "operationId": "decisions",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DecisionView"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/artifacts": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Evidence artifacts of the run (source areas are never listed)",
+                "operationId": "artifacts",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ArtifactEntry"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/runs/{runId}/artifacts/content": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "The text of one evidence artifact (credential-like literals masked)",
+                "operationId": "artifact",
+                "parameters": [
+                    {
+                        "name": "runId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "path",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/repositories": {
+            "get": {
+                "tags": [
+                    "Runs (read)"
+                ],
+                "summary": "Repositories under the configured roots, with candidate finding inputs",
+                "operationId": "repositories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/RepositoryOption"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "SessionView": {
+                "type": "object",
+                "properties": {
+                    "authenticated": {
+                        "type": "boolean"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "authMode": {
+                        "type": "string"
+                    },
+                    "authentication": {
+                        "type": "string"
+                    },
+                    "warning": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "LoginRequest": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                }
+            },
+            "StartRunRequest": {
+                "type": "object",
+                "properties": {
+                    "repository": {
+                        "type": "string"
+                    },
+                    "findingInputs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "researchInputs": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "probes": {
+                        "type": "string"
+                    },
+                    "skipBuild": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "Job": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string"
+                    },
+                    "triggeredBy": {
+                        "type": "string"
+                    },
+                    "startedAt": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    }
+                }
+            },
+            "StartRunResponse": {
+                "type": "object",
+                "properties": {
+                    "runId": {
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/Job"
+                    }
+                }
+            },
+            "ResumeRequest": {
+                "type": "object",
+                "properties": {
+                    "acceptPending": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "CommandAccepted": {
+                "type": "object",
+                "properties": {
+                    "runId": {
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/Job"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ProposalDecisionRequest": {
+                "type": "object",
+                "properties": {
+                    "verdict": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "maxLength": 4000,
+                        "minLength": 0
+                    },
+                    "expectedProposalHash": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "supersedesDecisionId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "expectedProposalHash",
+                    "rationale",
+                    "verdict"
+                ]
+            },
+            "DecisionRecorded": {
+                "type": "object",
+                "properties": {
+                    "decision": {
+                        "$ref": "#/components/schemas/DecisionView"
+                    },
+                    "advancing": {
+                        "type": "boolean"
+                    },
+                    "next": {
+                        "type": "string"
+                    }
+                }
+            },
+            "DecisionView": {
+                "type": "object",
+                "properties": {
+                    "decisionId": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "selected": {
+                        "type": "string"
+                    },
+                    "recommendation": {
+                        "type": "string"
+                    },
+                    "proposalId": {
+                        "type": "string"
+                    },
+                    "proposalHash": {
+                        "type": "string"
+                    },
+                    "planId": {
+                        "type": "string"
+                    },
+                    "planHash": {
+                        "type": "string"
+                    },
+                    "assessmentHash": {
+                        "type": "string"
+                    },
+                    "baselineSeal": {
+                        "type": "string"
+                    },
+                    "ledgerHead": {
+                        "type": "string"
+                    },
+                    "findingIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "actor": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "actorAuthentication": {
+                        "type": "string"
+                    },
+                    "authenticationNote": {
+                        "type": "string"
+                    },
+                    "rationale": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "string"
+                    },
+                    "policyVersion": {
+                        "type": "string"
+                    },
+                    "integrityHash": {
+                        "type": "string"
+                    },
+                    "integrity": {
+                        "type": "string"
+                    },
+                    "superseded": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "PostSecurityDecisionRequest": {
+                "type": "object",
+                "properties": {
+                    "choice": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "maxLength": 4000,
+                        "minLength": 0
+                    },
+                    "expectedAssessmentHash": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "choice",
+                    "expectedAssessmentHash",
+                    "rationale"
+                ]
+            },
+            "MigrationPlanDecisionRequest": {
+                "type": "object",
+                "properties": {
+                    "verdict": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "maxLength": 4000,
+                        "minLength": 0
+                    },
+                    "expectedPlanHash": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "expectedPlanHash",
+                    "rationale",
+                    "verdict"
+                ]
+            },
+            "ExecutionDecisionRequest": {
+                "type": "object",
+                "properties": {
+                    "strategy": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "rationale": {
+                        "type": "string",
+                        "maxLength": 4000,
+                        "minLength": 0
+                    },
+                    "expectedAssessmentHash": {
+                        "type": "string",
+                        "minLength": 1
+                    }
+                },
+                "required": [
+                    "expectedAssessmentHash",
+                    "rationale",
+                    "strategy"
+                ]
+            },
+            "DevUserOption": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "LastJob": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string"
+                    },
+                    "startedAt": {
+                        "type": "string"
+                    },
+                    "finishedAt": {
+                        "type": "string"
+                    },
+                    "failed": {
+                        "type": "boolean"
+                    },
+                    "error": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Liveness": {
+                "type": "object",
+                "properties": {
+                    "state": {
+                        "type": "string"
+                    },
+                    "explanation": {
+                        "type": "string"
+                    },
+                    "job": {
+                        "$ref": "#/components/schemas/Job"
+                    },
+                    "lastJob": {
+                        "$ref": "#/components/schemas/LastJob"
+                    }
+                }
+            },
+            "RunPage": {
+                "type": "object",
+                "properties": {
+                    "runs": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RunSummary"
+                        }
+                    },
+                    "total": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "RunSummary": {
+                "type": "object",
+                "properties": {
+                    "runId": {
+                        "type": "string"
+                    },
+                    "application": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "phase": {
+                        "type": "string"
+                    },
+                    "phaseLabel": {
+                        "type": "string"
+                    },
+                    "waitingForHuman": {
+                        "type": "boolean"
+                    },
+                    "terminal": {
+                        "type": "boolean"
+                    },
+                    "verdict": {
+                        "type": "string"
+                    },
+                    "strategy": {
+                        "type": "string"
+                    },
+                    "migration": {
+                        "type": "string"
+                    },
+                    "security": {
+                        "type": "string"
+                    },
+                    "findings": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "humanActions": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "gate": {
+                        "type": "string"
+                    },
+                    "liveness": {
+                        "$ref": "#/components/schemas/Liveness"
+                    },
+                    "harnessVersion": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ChangesSummary": {
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "byStatus": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "byCapability": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                }
+            },
+            "CurrentActivity": {
+                "type": "object",
+                "properties": {
+                    "activity": {
+                        "type": "string"
+                    },
+                    "component": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "startedAt": {
+                        "type": "string"
+                    },
+                    "lastUpdateAt": {
+                        "type": "string"
+                    },
+                    "progress": {
+                        "$ref": "#/components/schemas/Progress"
+                    },
+                    "subjects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SubjectRef"
+                        }
+                    },
+                    "sequence": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "stale": {
+                        "type": "boolean"
+                    },
+                    "capability": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Environment": {
+                "type": "object",
+                "properties": {
+                    "javaVersion": {
+                        "type": "string"
+                    },
+                    "os": {
+                        "type": "string"
+                    },
+                    "buildTool": {
+                        "type": "string"
+                    },
+                    "buildToolAvailable": {
+                        "type": "boolean"
+                    },
+                    "buildToolUnavailableReason": {
+                        "type": "string"
+                    },
+                    "networkEnabled": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "HumanActionsSummary": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "gate": {
+                        "type": "string"
+                    },
+                    "headline": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Integrity": {
+                "type": "object",
+                "properties": {
+                    "decisions": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "tamperedDecisions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "evidenceRecords": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "evidenceChainViolations": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "MigrationSummary": {
+                "type": "object",
+                "properties": {
+                    "trafficLight": {
+                        "type": "string"
+                    },
+                    "need": {
+                        "type": "string"
+                    },
+                    "currentVersion": {
+                        "type": "string"
+                    },
+                    "targetVersion": {
+                        "type": "string"
+                    },
+                    "framework": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "statusDetail": {
+                        "type": "string"
+                    },
+                    "rounds": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "maxRounds": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "referencePack": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PipelineStage": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "group": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "phases": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "enteredAt": {
+                        "type": "string"
+                    },
+                    "exitedAt": {
+                        "type": "string"
+                    },
+                    "durationMs": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    },
+                    "next": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "entries": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "Progress": {
+                "type": "object",
+                "properties": {
+                    "mode": {
+                        "type": "string",
+                        "enum": [
+                            "DETERMINATE",
+                            "INDETERMINATE"
+                        ]
+                    },
+                    "completed": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "total": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "unit": {
+                        "type": "string"
+                    }
+                }
+            },
+            "RunSnapshot": {
+                "type": "object",
+                "properties": {
+                    "runId": {
+                        "type": "string"
+                    },
+                    "application": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string"
+                    },
+                    "phase": {
+                        "type": "string"
+                    },
+                    "phaseLabel": {
+                        "type": "string"
+                    },
+                    "phaseDescription": {
+                        "type": "string"
+                    },
+                    "waitingForHuman": {
+                        "type": "boolean"
+                    },
+                    "terminal": {
+                        "type": "boolean"
+                    },
+                    "liveness": {
+                        "$ref": "#/components/schemas/Liveness"
+                    },
+                    "verdict": {
+                        "type": "string"
+                    },
+                    "strategy": {
+                        "type": "string"
+                    },
+                    "executionDecisionId": {
+                        "type": "string"
+                    },
+                    "baselineSeal": {
+                        "type": "string"
+                    },
+                    "harnessVersion": {
+                        "type": "string"
+                    },
+                    "policyVersion": {
+                        "type": "string"
+                    },
+                    "evaluationDate": {
+                        "type": "string"
+                    },
+                    "skipBuild": {
+                        "type": "boolean"
+                    },
+                    "lastEventSequence": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "pipeline": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PipelineStage"
+                        }
+                    },
+                    "pipelinePath": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "stageProgress": {
+                        "$ref": "#/components/schemas/StageProgress"
+                    },
+                    "currentActivity": {
+                        "$ref": "#/components/schemas/CurrentActivity"
+                    },
+                    "humanActions": {
+                        "$ref": "#/components/schemas/HumanActionsSummary"
+                    },
+                    "migration": {
+                        "$ref": "#/components/schemas/MigrationSummary"
+                    },
+                    "security": {
+                        "$ref": "#/components/schemas/SecuritySummary"
+                    },
+                    "changes": {
+                        "$ref": "#/components/schemas/ChangesSummary"
+                    },
+                    "validation": {
+                        "$ref": "#/components/schemas/ValidationSummary"
+                    },
+                    "notes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "integrity": {
+                        "$ref": "#/components/schemas/Integrity"
+                    },
+                    "environment": {
+                        "$ref": "#/components/schemas/Environment"
+                    }
+                }
+            },
+            "SecuritySummary": {
+                "type": "object",
+                "properties": {
+                    "total": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "bySeverity": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "analysed": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "planned": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "proposalsAwaiting": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "applied": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "cleared": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "blocked": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "deferred": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "rejected": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "blockedByPlatform": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "StageProgress": {
+                "type": "object",
+                "properties": {
+                    "completed": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "applicable": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "basis": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SubjectRef": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ValidationSummary": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    },
+                    "dimensions": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "passed": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "failed": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "unknown": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "mandatoryFailed": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "mandatoryUnknown": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "VerdictItemView": {
+                "type": "object",
+                "properties": {
+                    "itemId": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "legacyVerdict": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "VerdictView": {
+                "type": "object",
+                "properties": {
+                    "available": {
+                        "type": "boolean"
+                    },
+                    "outcome": {
+                        "type": "string"
+                    },
+                    "generatedAt": {
+                        "type": "string"
+                    },
+                    "reasons": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "hardFailures": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "unknownDimensions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "pendingDecisions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VerdictItemView"
+                        }
+                    },
+                    "itemsByStatus": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "proposalsByStatus": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "reports": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "policyVersion": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "BaselineView": {
+                "type": "object",
+                "properties": {
+                    "seal": {
+                        "type": "string"
+                    },
+                    "sealedAt": {
+                        "type": "string"
+                    },
+                    "buildOutcome": {
+                        "type": "string"
+                    },
+                    "tests": {},
+                    "preExistingFailures": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "runtimeStarted": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "DimensionView": {
+                "type": "object",
+                "properties": {
+                    "dimension": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "producer": {
+                        "type": "string"
+                    },
+                    "mandatory": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "ProposalValidation": {
+                "type": "object",
+                "properties": {
+                    "proposalId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "capability": {
+                        "type": "string"
+                    },
+                    "findingIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ValidationView": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    },
+                    "validationId": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "type": "string"
+                    },
+                    "generatedAt": {
+                        "type": "string"
+                    },
+                    "finalValidation": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DimensionView"
+                        }
+                    },
+                    "notRunDimensions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "migrationValidation": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DimensionView"
+                        }
+                    },
+                    "securityVerification": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VerificationView"
+                        }
+                    },
+                    "proposalValidation": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProposalValidation"
+                        }
+                    },
+                    "baseline": {
+                        "$ref": "#/components/schemas/BaselineView"
+                    }
+                }
+            },
+            "VerificationView": {
+                "type": "object",
+                "properties": {
+                    "planId": {
+                        "type": "string"
+                    },
+                    "fixStatus": {
+                        "type": "string"
+                    },
+                    "rescan": {
+                        "type": "string"
+                    },
+                    "rescanReason": {
+                        "type": "string"
+                    },
+                    "redteam": {
+                        "type": "string"
+                    },
+                    "attemptedVectors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "behavior": {
+                        "type": "string"
+                    },
+                    "outOfScopeChanges": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "qa": {
+                        "type": "string"
+                    },
+                    "build": {
+                        "type": "string"
+                    },
+                    "score": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "threshold": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "gatesTriggered": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "decision": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "Timeline": {
+                "type": "object",
+                "properties": {
+                    "runId": {
+                        "type": "string"
+                    },
+                    "transitions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Transition"
+                        }
+                    },
+                    "decisions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DecisionView"
+                        }
+                    }
+                }
+            },
+            "Transition": {
+                "type": "object",
+                "properties": {
+                    "index": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "from": {
+                        "type": "string"
+                    },
+                    "to": {
+                        "type": "string"
+                    },
+                    "at": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ChangesView": {
+                "type": "object",
+                "properties": {
+                    "proposals": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProposalRow"
+                        }
+                    },
+                    "summary": {
+                        "$ref": "#/components/schemas/ChangesSummary"
+                    }
+                }
+            },
+            "ProposalRow": {
+                "type": "object",
+                "properties": {
+                    "proposalId": {
+                        "type": "string"
+                    },
+                    "capability": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": "string"
+                    },
+                    "providerType": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "strategyOnly": {
+                        "type": "boolean"
+                    },
+                    "findingIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "findingLabels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "files": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "operations": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "ruleId": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "risk": {
+                        "type": "string"
+                    },
+                    "generatedAt": {
+                        "type": "string"
+                    },
+                    "proposalHash": {
+                        "type": "string"
+                    },
+                    "decision": {
+                        "type": "string"
+                    },
+                    "decisionId": {
+                        "type": "string"
+                    },
+                    "awaitingDecision": {
+                        "type": "boolean"
+                    },
+                    "mutation": {
+                        "type": "string"
+                    },
+                    "validation": {
+                        "type": "string"
+                    }
+                }
+            },
+            "FileEditView": {
+                "type": "object",
+                "properties": {
+                    "fileId": {
+                        "type": "string"
+                    },
+                    "path": {
+                        "type": "string"
+                    },
+                    "newPath": {
+                        "type": "string"
+                    },
+                    "operation": {
+                        "type": "string"
+                    },
+                    "unifiedDiff": {
+                        "type": "string"
+                    },
+                    "newContent": {
+                        "type": "string"
+                    },
+                    "newContentTruncated": {
+                        "type": "boolean"
+                    },
+                    "addedLines": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "removedLines": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "redacted": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "LineageView": {
+                "type": "object",
+                "properties": {
+                    "sequence": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "changeId": {
+                        "type": "string"
+                    },
+                    "decisionId": {
+                        "type": "string"
+                    },
+                    "actor": {
+                        "type": "string"
+                    },
+                    "fileId": {
+                        "type": "string"
+                    },
+                    "pathBefore": {
+                        "type": "string"
+                    },
+                    "pathAfter": {
+                        "type": "string"
+                    },
+                    "hashBefore": {
+                        "type": "string"
+                    },
+                    "hashAfter": {
+                        "type": "string"
+                    },
+                    "symbolIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "statementIdsChanged": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "statementIdsCreated": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "statementIdsDeleted": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "validationRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "at": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "MutationView": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    },
+                    "batch": {
+                        "type": "string"
+                    },
+                    "authorizedBy": {
+                        "type": "string"
+                    },
+                    "checks": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "preCheckpoint": {
+                        "type": "string"
+                    },
+                    "checkpointId": {
+                        "type": "string"
+                    },
+                    "changeIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "identitySync": {
+                        "type": "string"
+                    },
+                    "bypassFiles": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "reasonCode": {
+                        "type": "string"
+                    },
+                    "at": {
+                        "type": "string"
+                    },
+                    "lineage": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LineageView"
+                        }
+                    }
+                }
+            },
+            "ProposalDetail": {
+                "type": "object",
+                "properties": {
+                    "proposalId": {
+                        "type": "string"
+                    },
+                    "runId": {
+                        "type": "string"
+                    },
+                    "capability": {
+                        "type": "string"
+                    },
+                    "provider": {
+                        "type": "string"
+                    },
+                    "providerType": {
+                        "type": "string"
+                    },
+                    "providerVersion": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "strategyOnly": {
+                        "type": "boolean"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "expectedOutcome": {
+                        "type": "string"
+                    },
+                    "risk": {
+                        "type": "string"
+                    },
+                    "generatedAt": {
+                        "type": "string"
+                    },
+                    "proposalHash": {
+                        "type": "string"
+                    },
+                    "hashVerified": {
+                        "type": "boolean"
+                    },
+                    "baselineSeal": {
+                        "type": "string"
+                    },
+                    "baselineMatches": {
+                        "type": "boolean"
+                    },
+                    "supersedes": {
+                        "type": "string"
+                    },
+                    "findingIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "findingLabels": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "migrationRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "knowledgeRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "affectedFileIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "affectedSymbolIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "affectedStatementIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "baseHashes": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "edits": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FileEditView"
+                        }
+                    },
+                    "provenance": {
+                        "$ref": "#/components/schemas/ProvenanceView"
+                    },
+                    "decisions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DecisionView"
+                        }
+                    },
+                    "mutation": {
+                        "$ref": "#/components/schemas/MutationView"
+                    },
+                    "validation": {
+                        "type": "string"
+                    },
+                    "awaitingDecision": {
+                        "type": "boolean"
+                    },
+                    "decidable": {
+                        "type": "boolean"
+                    },
+                    "decidableReason": {
+                        "type": "string"
+                    },
+                    "verdictOptions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ProvenanceView": {
+                "type": "object",
+                "properties": {
+                    "producer": {
+                        "type": "string"
+                    },
+                    "ruleId": {
+                        "type": "string"
+                    },
+                    "referenceSection": {
+                        "type": "string"
+                    },
+                    "model": {
+                        "type": "string"
+                    },
+                    "modelVersion": {
+                        "type": "string"
+                    },
+                    "promptHash": {
+                        "type": "string"
+                    },
+                    "contextHash": {
+                        "type": "string"
+                    },
+                    "responseHash": {
+                        "type": "string"
+                    },
+                    "verification": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "AssessmentView": {
+                "type": "object",
+                "properties": {
+                    "assessmentId": {
+                        "type": "string"
+                    },
+                    "generatedAt": {
+                        "type": "string"
+                    },
+                    "trafficLight": {
+                        "type": "string"
+                    },
+                    "trafficLightRationale": {
+                        "type": "string"
+                    },
+                    "need": {
+                        "type": "string"
+                    },
+                    "priority": {
+                        "type": "string"
+                    },
+                    "complexity": {
+                        "type": "string"
+                    },
+                    "effortScore": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "effortWeightsVersion": {
+                        "type": "string"
+                    },
+                    "effortFactors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EffortFactorView"
+                        }
+                    },
+                    "evidenceConfidence": {
+                        "type": "string"
+                    },
+                    "confidenceBasis": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "current": {
+                        "$ref": "#/components/schemas/PlatformView"
+                    },
+                    "recommendedTarget": {
+                        "$ref": "#/components/schemas/TargetView"
+                    },
+                    "recommendedSequence": {
+                        "type": "string"
+                    },
+                    "objectives": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ObjectiveView"
+                        }
+                    },
+                    "issues": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/IssueView"
+                        }
+                    },
+                    "blockers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NamedItem"
+                        }
+                    },
+                    "unknowns": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/NamedItem"
+                        }
+                    },
+                    "referencePackId": {
+                        "type": "string"
+                    },
+                    "referencePackSha256": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "BehaviourView": {
+                "type": "object",
+                "properties": {
+                    "overall": {
+                        "type": "string"
+                    },
+                    "verdict": {
+                        "type": "string"
+                    },
+                    "probes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProbeDiffView"
+                        }
+                    },
+                    "baselineStarted": {
+                        "type": "boolean"
+                    },
+                    "finalStarted": {
+                        "type": "boolean"
+                    },
+                    "explanations": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "BuildErrorView": {
+                "type": "object",
+                "properties": {
+                    "file": {
+                        "type": "string"
+                    },
+                    "line": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    }
+                }
+            },
+            "EffortFactorView": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "rawValue": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "saturation": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "weight": {
+                        "type": "number",
+                        "format": "double"
+                    },
+                    "contribution": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "known": {
+                        "type": "boolean"
+                    },
+                    "note": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ExecutionView": {
+                "type": "object",
+                "properties": {
+                    "planId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "rounds": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RoundView"
+                        }
+                    },
+                    "proposalIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "changeIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "unmatchedErrors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "needsHumanReason": {
+                        "type": "string"
+                    },
+                    "behaviour": {
+                        "$ref": "#/components/schemas/BehaviourView"
+                    },
+                    "tests": {
+                        "$ref": "#/components/schemas/TestComparisonView"
+                    },
+                    "reportRef": {
+                        "type": "string"
+                    }
+                }
+            },
+            "IssueView": {
+                "type": "object",
+                "properties": {
+                    "issueId": {
+                        "type": "string"
+                    },
+                    "ruleId": {
+                        "type": "string"
+                    },
+                    "referenceSection": {
+                        "type": "string"
+                    },
+                    "mandatory": {
+                        "type": "boolean"
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "subject": {
+                        "type": "string"
+                    },
+                    "fileId": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    }
+                }
+            },
+            "MigrationView": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string"
+                    },
+                    "statusDetail": {
+                        "type": "string"
+                    },
+                    "selected": {
+                        "type": "boolean"
+                    },
+                    "assessment": {
+                        "$ref": "#/components/schemas/AssessmentView"
+                    },
+                    "refreshedAssessment": {
+                        "$ref": "#/components/schemas/AssessmentView"
+                    },
+                    "plan": {
+                        "$ref": "#/components/schemas/PlanView"
+                    },
+                    "execution": {
+                        "$ref": "#/components/schemas/ExecutionView"
+                    },
+                    "validation": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DimensionView"
+                        }
+                    },
+                    "postSecurity": {
+                        "$ref": "#/components/schemas/PostSecurityView"
+                    },
+                    "itemStatus": {
+                        "type": "string"
+                    },
+                    "itemReason": {
+                        "type": "string"
+                    },
+                    "blocker": {
+                        "type": "string"
+                    },
+                    "proposals": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProposalRow"
+                        }
+                    }
+                }
+            },
+            "NamedItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ObjectiveView": {
+                "type": "object",
+                "properties": {
+                    "objectiveId": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "requiresMigration": {
+                        "type": "boolean"
+                    },
+                    "requiredPlatform": {
+                        "type": "string"
+                    },
+                    "why": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PlanView": {
+                "type": "object",
+                "properties": {
+                    "planId": {
+                        "type": "string"
+                    },
+                    "planHash": {
+                        "type": "string"
+                    },
+                    "engine": {
+                        "type": "string"
+                    },
+                    "referencePackId": {
+                        "type": "string"
+                    },
+                    "referencePackSha256": {
+                        "type": "string"
+                    },
+                    "framework": {
+                        "type": "string"
+                    },
+                    "fromVersion": {
+                        "type": "string"
+                    },
+                    "toVersion": {
+                        "type": "string"
+                    },
+                    "fromJava": {
+                        "type": "string"
+                    },
+                    "toJava": {
+                        "type": "string"
+                    },
+                    "buildFileRules": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RuleView"
+                        }
+                    },
+                    "symptomRules": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RuleView"
+                        }
+                    },
+                    "allowedRuleIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "maxRounds": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "stopConditions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "generatedAt": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "PlatformView": {
+                "type": "object",
+                "properties": {
+                    "framework": {
+                        "type": "string"
+                    },
+                    "frameworkVersion": {
+                        "type": "string"
+                    },
+                    "frameworkLine": {
+                        "type": "string"
+                    },
+                    "javaVersion": {
+                        "type": "string"
+                    },
+                    "buildSystem": {
+                        "type": "string"
+                    },
+                    "buildModelAuthoritative": {
+                        "type": "boolean"
+                    },
+                    "lifecycleQuality": {
+                        "type": "string"
+                    },
+                    "supportEnds": {
+                        "type": "string"
+                    },
+                    "endOfLife": {
+                        "type": "boolean"
+                    },
+                    "supportHorizonMonths": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "PostSecurityView": {
+                "type": "object",
+                "properties": {
+                    "previousTrafficLight": {
+                        "type": "string"
+                    },
+                    "currentTrafficLight": {
+                        "type": "string"
+                    },
+                    "previousEffortScore": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "currentEffortScore": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "whatChanged": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "why": {
+                        "type": "string"
+                    },
+                    "currentAssessmentHash": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ProbeDiffView": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "verdict": {
+                        "type": "string"
+                    },
+                    "beforeStatus": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "afterStatus": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "note": {
+                        "type": "string"
+                    }
+                }
+            },
+            "RoundView": {
+                "type": "object",
+                "properties": {
+                    "round": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "intent": {
+                        "type": "string"
+                    },
+                    "outcome": {
+                        "type": "string"
+                    },
+                    "exitCode": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "durationMs": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "jdk": {
+                        "type": "string"
+                    },
+                    "errorsByCategory": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "errorCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "errors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/BuildErrorView"
+                        }
+                    },
+                    "errorsTruncated": {
+                        "type": "boolean"
+                    },
+                    "tests": {
+                        "$ref": "#/components/schemas/TestsView"
+                    },
+                    "appliedRules": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "proposalIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "changeIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "diagnosis": {
+                        "type": "string"
+                    },
+                    "logRef": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "RuleView": {
+                "type": "object",
+                "properties": {
+                    "ruleId": {
+                        "type": "string"
+                    },
+                    "section": {
+                        "type": "string"
+                    },
+                    "phase": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "symptoms": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "TargetView": {
+                "type": "object",
+                "properties": {
+                    "framework": {
+                        "type": "string"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "line": {
+                        "type": "string"
+                    },
+                    "javaVersion": {
+                        "type": "string"
+                    },
+                    "basis": {
+                        "type": "string"
+                    }
+                }
+            },
+            "TestComparisonView": {
+                "type": "object",
+                "properties": {
+                    "verdict": {
+                        "type": "string"
+                    },
+                    "before": {
+                        "$ref": "#/components/schemas/TestsView"
+                    },
+                    "after": {
+                        "$ref": "#/components/schemas/TestsView"
+                    },
+                    "newFailures": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "preExistingFailures": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "TestsView": {
+                "type": "object",
+                "properties": {
+                    "run": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "failures": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "errors": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "skipped": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "LogFile": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "modified": {
+                        "type": "string"
+                    },
+                    "origin": {
+                        "type": "string"
+                    }
+                }
+            },
+            "LogChunk": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "fromLine": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalLines": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LogLine"
+                        }
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "LogLine": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "level": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    }
+                }
+            },
+            "HumanAction": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "gate": {
+                        "type": "string"
+                    },
+                    "decisionType": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "whyStopped": {
+                        "type": "string"
+                    },
+                    "whatToDecide": {
+                        "type": "string"
+                    },
+                    "options": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Option"
+                        }
+                    },
+                    "recommendation": {
+                        "$ref": "#/components/schemas/Option"
+                    },
+                    "recommendationRationale": {
+                        "type": "string"
+                    },
+                    "inspect": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Link"
+                        }
+                    },
+                    "boundTo": {
+                        "type": "string"
+                    },
+                    "boundHash": {
+                        "type": "string"
+                    },
+                    "requiresRationale": {
+                        "type": "boolean"
+                    },
+                    "canDecide": {
+                        "type": "boolean"
+                    },
+                    "cannotDecideReason": {
+                        "type": "string"
+                    },
+                    "resumable": {
+                        "type": "boolean"
+                    },
+                    "resumeNote": {
+                        "type": "string"
+                    },
+                    "proposals": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProposalRow"
+                        }
+                    },
+                    "context": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "manualSteps": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "HumanActionsView": {
+                "type": "object",
+                "properties": {
+                    "runId": {
+                        "type": "string"
+                    },
+                    "phase": {
+                        "type": "string"
+                    },
+                    "waiting": {
+                        "type": "boolean"
+                    },
+                    "actions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/HumanAction"
+                        }
+                    }
+                }
+            },
+            "Link": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Option": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "consequence": {
+                        "type": "string"
+                    },
+                    "recommended": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "Edge": {
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": "string"
+                    },
+                    "to": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "origin": {
+                        "type": "string"
+                    }
+                }
+            },
+            "GraphView": {
+                "type": "object",
+                "properties": {
+                    "graphSource": {
+                        "type": "string"
+                    },
+                    "totalNodes": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalEdges": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nodeTypes": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "edgeTypes": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "nodes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Node"
+                        }
+                    },
+                    "edges": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Edge"
+                        }
+                    },
+                    "truncated": {
+                        "type": "boolean"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "focus": {
+                        "type": "string"
+                    },
+                    "depth": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "coverageNotes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "available": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "Node": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "origin": {
+                        "type": "string"
+                    },
+                    "identityId": {
+                        "type": "string"
+                    },
+                    "fileId": {
+                        "type": "string"
+                    },
+                    "fqn": {
+                        "type": "string"
+                    },
+                    "properties": {
+                        "type": "object",
+                        "additionalProperties": {}
+                    },
+                    "highlights": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "degree": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "FindingRow": {
+                "type": "object",
+                "properties": {
+                    "findingId": {
+                        "type": "string"
+                    },
+                    "sourceFindingId": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "string"
+                    },
+                    "cwe": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "$ref": "#/components/schemas/LocationView"
+                    },
+                    "anchorQuality": {
+                        "type": "string"
+                    },
+                    "route": {
+                        "type": "string"
+                    },
+                    "planId": {
+                        "type": "string"
+                    },
+                    "proposalId": {
+                        "type": "string"
+                    },
+                    "proposalStatus": {
+                        "type": "string"
+                    },
+                    "decision": {
+                        "type": "string"
+                    },
+                    "verification": {
+                        "type": "string"
+                    },
+                    "itemStatus": {
+                        "type": "string"
+                    },
+                    "blockedByPlatform": {
+                        "type": "boolean"
+                    },
+                    "blastRadiusScope": {
+                        "type": "string"
+                    }
+                }
+            },
+            "LocationView": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "lineStart": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lineEnd": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "SecurityView": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "$ref": "#/components/schemas/SecuritySummary"
+                    },
+                    "findings": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FindingRow"
+                        }
+                    },
+                    "gaps": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "sources": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "discovered": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "BlastRadiusView": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string"
+                    },
+                    "priority": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "type": "string"
+                    },
+                    "affectedEndpoints": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "affectedServices": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "affectedSymbolIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "confidence": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "FindingDetail": {
+                "type": "object",
+                "properties": {
+                    "findingId": {
+                        "type": "string"
+                    },
+                    "sourceFindingId": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string"
+                    },
+                    "ruleId": {
+                        "type": "string"
+                    },
+                    "cwe": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "cve": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "severity": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "$ref": "#/components/schemas/LocationView"
+                    },
+                    "codeFlow": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LocationView"
+                        }
+                    },
+                    "fileId": {
+                        "type": "string"
+                    },
+                    "filePath": {
+                        "type": "string"
+                    },
+                    "programUnitId": {
+                        "type": "string"
+                    },
+                    "symbolId": {
+                        "type": "string"
+                    },
+                    "statementId": {
+                        "type": "string"
+                    },
+                    "anchorQuality": {
+                        "type": "string"
+                    },
+                    "fingerprint": {
+                        "type": "string"
+                    },
+                    "platformRequirement": {
+                        "$ref": "#/components/schemas/PlatformRequirementView"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "rootCause": {
+                        "$ref": "#/components/schemas/RootCauseView"
+                    },
+                    "blastRadius": {
+                        "$ref": "#/components/schemas/BlastRadiusView"
+                    },
+                    "plan": {
+                        "$ref": "#/components/schemas/PlanView"
+                    },
+                    "proposal": {
+                        "$ref": "#/components/schemas/ProposalRow"
+                    },
+                    "decisions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/DecisionView"
+                        }
+                    },
+                    "verification": {
+                        "$ref": "#/components/schemas/VerificationView"
+                    },
+                    "itemStatus": {
+                        "type": "string"
+                    },
+                    "itemReason": {
+                        "type": "string"
+                    },
+                    "journey": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/JourneyStep"
+                        }
+                    },
+                    "sourceContext": {
+                        "$ref": "#/components/schemas/SourceContext"
+                    },
+                    "resolution": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "JourneyStep": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "detail": {
+                        "type": "string"
+                    }
+                }
+            },
+            "PlatformRequirementView": {
+                "type": "object",
+                "properties": {
+                    "component": {
+                        "type": "string"
+                    },
+                    "currentVersion": {
+                        "type": "string"
+                    },
+                    "minimumFixedVersion": {
+                        "type": "string"
+                    },
+                    "requiresPlatform": {
+                        "type": "string"
+                    },
+                    "requiresPlatformMinimum": {
+                        "type": "string"
+                    },
+                    "requiresJavaMinimum": {
+                        "type": "string"
+                    },
+                    "basis": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "RootCauseView": {
+                "type": "object",
+                "properties": {
+                    "ref": {
+                        "type": "string"
+                    },
+                    "statement": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "fileId": {
+                        "type": "string"
+                    },
+                    "symbolId": {
+                        "type": "string"
+                    },
+                    "statementId": {
+                        "type": "string"
+                    },
+                    "severity": {
+                        "type": "string"
+                    },
+                    "confidence": {
+                        "type": "string"
+                    },
+                    "entryPoints": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "dataFlow": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "howToFix": {
+                        "type": "string"
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "SourceContext": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "firstLine": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "highlightStart": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "highlightEnd": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "origin": {
+                        "type": "string"
+                    }
+                }
+            },
+            "EvidencePage": {
+                "type": "object",
+                "properties": {
+                    "evidence": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EvidenceView"
+                        }
+                    },
+                    "total": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "offset": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "chainIntact": {
+                        "type": "boolean"
+                    },
+                    "chainViolations": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "byKind": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "byProducer": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                }
+            },
+            "EvidenceView": {
+                "type": "object",
+                "properties": {
+                    "evidenceId": {
+                        "type": "string"
+                    },
+                    "chainIndex": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "summary": {
+                        "type": "string"
+                    },
+                    "observed": {
+                        "type": "string"
+                    },
+                    "where": {
+                        "type": "string"
+                    },
+                    "subjects": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "basis": {
+                        "type": "string"
+                    },
+                    "reliability": {
+                        "type": "string"
+                    },
+                    "observedAt": {
+                        "type": "string"
+                    },
+                    "asOf": {
+                        "type": "string"
+                    },
+                    "artifactRef": {
+                        "type": "string"
+                    },
+                    "artifactSha256": {
+                        "type": "string"
+                    },
+                    "producer": {
+                        "type": "string"
+                    },
+                    "phaseGroup": {
+                        "type": "string"
+                    }
+                }
+            },
+            "SseEmitter": {
+                "type": "object",
+                "properties": {
+                    "timeout": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ExecutionEvent": {
+                "type": "object",
+                "properties": {
+                    "eventId": {
+                        "type": "string"
+                    },
+                    "runId": {
+                        "type": "string"
+                    },
+                    "sequence": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "timestamp": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "RUN_CREATED",
+                            "STATE_TRANSITION",
+                            "ADVANCE_STARTED",
+                            "ADVANCE_STOPPED",
+                            "RUN_COMPLETED",
+                            "RUN_FAILED",
+                            "INGEST_STARTED",
+                            "INGEST_STAGE_COMPLETED",
+                            "INGEST_COMPLETED",
+                            "INVENTORY_COMPLETED",
+                            "IDENTITY_STARTED",
+                            "IDENTITY_COMPLETED",
+                            "GRAPH_BUILD_STARTED",
+                            "GRAPH_BUILD_COMPLETED",
+                            "GRAPH_REBUILT",
+                            "BASELINE_BUILD_STARTED",
+                            "BASELINE_BUILD_COMPLETED",
+                            "BASELINE_PROBE_STARTED",
+                            "BASELINE_PROBE_COMPLETED",
+                            "BASELINE_SEALED",
+                            "DISCOVERY_STARTED",
+                            "DISCOVERY_COMPLETED",
+                            "SECURITY_DISCOVERY_STARTED",
+                            "SECURITY_SCAN_COMPLETED",
+                            "RCA_STARTED",
+                            "RCA_COMPLETED",
+                            "BLAST_RADIUS_STARTED",
+                            "BLAST_RADIUS_COMPLETED",
+                            "SECURITY_DISCOVERY_COMPLETED",
+                            "MIGRATION_ASSESSMENT_STARTED",
+                            "MIGRATION_ASSESSMENT_COMPLETED",
+                            "SEQUENCE_ASSESSMENT_COMPLETED",
+                            "HUMAN_ACTION_REQUIRED",
+                            "DECISION_RECORDED",
+                            "MIGRATION_PLAN_CREATED",
+                            "MIGRATION_EXECUTION_STARTED",
+                            "MIGRATION_ROUND_STARTED",
+                            "MIGRATION_ROUND_COMPLETED",
+                            "MIGRATION_RULE_APPLIED",
+                            "MIGRATION_EXECUTION_COMPLETED",
+                            "MIGRATION_VALIDATION_STARTED",
+                            "MIGRATION_VALIDATION_COMPLETED",
+                            "POST_SECURITY_REASSESSMENT_STARTED",
+                            "POST_SECURITY_REASSESSMENT_COMPLETED",
+                            "REMEDIATION_PLANNING_STARTED",
+                            "REMEDIATION_ROUTED",
+                            "REMEDIATION_PLANNING_COMPLETED",
+                            "FIX_VERIFICATION_STARTED",
+                            "FIX_VERIFICATION_COMPLETED",
+                            "PROPOSAL_REGISTERED",
+                            "MUTATION_STARTED",
+                            "MUTATION_APPLIED",
+                            "MUTATION_REFUSED",
+                            "MUTATION_ROLLED_BACK",
+                            "MUTATION_BYPASS_DETECTED",
+                            "PROPOSAL_VALIDATION_RECORDED",
+                            "FINAL_VALIDATION_STARTED",
+                            "FINAL_VALIDATION_COMPLETED",
+                            "VERDICT_COMPUTED"
+                        ]
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": [
+                            "KERNEL",
+                            "MIGRATION",
+                            "SECURITY",
+                            "HUMAN",
+                            "MUTATION",
+                            "VALIDATION",
+                            "ERROR"
+                        ]
+                    },
+                    "phase": {
+                        "type": "string",
+                        "enum": [
+                            "CREATED",
+                            "SOURCE_SNAPSHOTTED",
+                            "INVENTORY_READY",
+                            "IDENTITY_SEALED",
+                            "GRAPH_READY",
+                            "BASELINE_SEALED",
+                            "DISCOVERY_RUNNING",
+                            "DISCOVERY_READY",
+                            "WAITING_FOR_EXECUTION_DECISION",
+                            "EXECUTION_PLANNED",
+                            "MIGRATION_PLANNED",
+                            "WAITING_FOR_MIGRATION_APPROVAL",
+                            "MIGRATION_RUNNING",
+                            "MIGRATION_VALIDATING",
+                            "MIGRATION_COMPLETE",
+                            "SECURITY_FINDINGS_READY",
+                            "SECURITY_ANALYSIS_RUNNING",
+                            "REMEDIATION_PROPOSED",
+                            "WAITING_FOR_REMEDIATION_APPROVAL",
+                            "REMEDIATION_RUNNING",
+                            "SECURITY_VALIDATING",
+                            "SECURITY_COMPLETE",
+                            "WAITING_FOR_POST_SECURITY_MIGRATION_DECISION",
+                            "FINAL_VALIDATION",
+                            "NEEDS_HUMAN",
+                            "BLOCKED",
+                            "PARTIAL",
+                            "CLEARED",
+                            "COMPLETE",
+                            "FAILED"
+                        ]
+                    },
+                    "component": {
+                        "type": "string"
+                    },
+                    "activity": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "STARTED",
+                            "PROGRESS",
+                            "COMPLETED",
+                            "WAITING",
+                            "FAILED",
+                            "SKIPPED",
+                            "INFO"
+                        ]
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "progress": {
+                        "$ref": "#/components/schemas/Progress"
+                    },
+                    "subjects": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SubjectRef"
+                        }
+                    },
+                    "evidenceRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "artifactRefs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "humanAction": {
+                        "$ref": "#/components/schemas/HumanAction"
+                    },
+                    "attributes": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ArtifactEntry": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "modified": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "type": "string"
+                    }
+                }
+            },
+            "RepositoryOption": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "root": {
+                        "type": "string"
+                    },
+                    "findingInputs": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "probes": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "devSession": {
+                "type": "apiKey",
+                "description": "Development mode only: session cookie from POST /api/v1/session/login; commands also need the X-XSRF-TOKEN header echoing the XSRF-TOKEN cookie. Development identities are not authentication.",
+                "name": "MARS_SESSION",
+                "in": "cookie"
+            },
+            "oidcBearer": {
+                "type": "http",
+                "description": "OIDC mode: a JWT from the configured issuer; roles from the configured claim",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}

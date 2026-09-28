@@ -71,12 +71,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,prometheus
+        include: health,info,metrics
   endpoint:
     health:
       probes:
         enabled: true
       show-details: when-authorized
+      group:
+        readiness:
+          include: readinessState,marsRuns
   tracing:
     # traces are exported only when an OTLP endpoint is configured (management.otlp.tracing.endpoint)
     sampling:
