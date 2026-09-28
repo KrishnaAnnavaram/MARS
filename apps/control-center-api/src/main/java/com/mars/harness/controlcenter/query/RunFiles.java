@@ -3,6 +3,7 @@ package com.mars.harness.controlcenter.query;
 import com.mars.harness.controlcenter.api.ApiErrorCode;
 import com.mars.harness.controlcenter.api.ApiException;
 import com.mars.harness.controlcenter.api.dto.EvidenceDtos;
+import com.mars.harness.controlcenter.config.ControlCenterPaths;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -24,6 +25,9 @@ import java.util.stream.Stream;
  * <p>Only evidence areas are served. The areas that hold customer source ({@code original},
  * {@code migration}), the disposable build copies' contents and Bootshift's checkpoint repository
  * are never listed or served, and the decision integrity key is never served.
+ *
+ * <p>Served text is for display: credential-like literals are masked and absolute server paths
+ * are replaced by placeholders. The files themselves are never changed.
  */
 public final class RunFiles {
 
@@ -62,7 +66,7 @@ public final class RunFiles {
     }
 
     /** The text of one artifact, if it is in an evidence area and small enough to serve. */
-    public static String artifact(RunReader run, String relative) {
+    public static String artifact(RunReader run, ControlCenterPaths paths, String relative) {
         Path root = run.layout().runDir().toAbsolutePath().normalize();
         Path file = root.resolve(relative).normalize();
         if (!file.startsWith(root) || !Files.isRegularFile(file) || !servable(root, file)) {
@@ -73,7 +77,7 @@ public final class RunFiles {
                 throw new ApiException(ApiErrorCode.ARTIFACT_NOT_FOUND, run.runId(), "Artifact " + relative
                         + " is larger than " + MAX_SERVED_BYTES + " bytes; read it from the run directory");
             }
-            return SecretRedactor.redact(Files.readString(file, StandardCharsets.UTF_8));
+            return paths.redact(SecretRedactor.redact(Files.readString(file, StandardCharsets.UTF_8)));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -105,8 +109,8 @@ public final class RunFiles {
         return logs;
     }
 
-    public static EvidenceDtos.LogChunk log(RunReader run, String relative, int fromLine, int maxLines, String level,
-                                            String search) {
+    public static EvidenceDtos.LogChunk log(RunReader run, ControlCenterPaths paths, String relative, int fromLine,
+                                            int maxLines, String level, String search) {
         Path root = run.layout().runDir().toAbsolutePath().normalize();
         Path file = root.resolve(relative).normalize();
         String rel = root.relativize(file).toString().replace('\\', '/');
@@ -137,7 +141,7 @@ public final class RunFiles {
                     truncated = true;
                     continue;
                 }
-                lines.add(new EvidenceDtos.LogLine(total, lvl, SecretRedactor.redact(line)));
+                lines.add(new EvidenceDtos.LogLine(total, lvl, paths.redact(SecretRedactor.redact(line))));
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);

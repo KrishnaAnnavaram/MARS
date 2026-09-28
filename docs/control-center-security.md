@@ -88,7 +88,14 @@ approving does not require the right to start runs.
 ## Other controls
 
 - **Filesystem boundary.** Repositories and finding inputs must resolve, after following links,
-  under `mars.control-center.repository-roots`. Absolute server paths are redacted from responses.
+  under `mars.control-center.repository-roots`. Absolute server paths under the harness, runs and
+  repository roots are replaced by placeholders (`<harness>`, `<runs>`, `<repositories>`) in
+  responses: error messages, evidence records (a location inside the run is shown run-relative),
+  execution events, served artifacts and log lines. The files on disk keep the original text. Paths
+  outside those roots, such as a build tool's installation directory, are shown as recorded.
+- **Rendered documents.** Markdown is rendered without raw HTML, links open only for `http(s)` URLs
+  (in a new tab), images are not fetched, and Mermaid runs in its `strict` security level (no
+  scripts or click handlers; labels sanitized).
 - **Served artifacts.** Only evidence areas are served. `original/`, `migration/`, `exec/` contents,
   Bootshift's checkpoint repository and the decision integrity key are never listed or served. Source
   context for findings is read from the run's own copy and limited to a few lines.

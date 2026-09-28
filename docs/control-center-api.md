@@ -64,9 +64,9 @@ must also send `X-XSRF-TOKEN` with the value of the `XSRF-TOKEN` cookie. In OIDC
 | GET | `/runs/{id}/evidence/{evidenceId}` | one record |
 | GET | `/runs/{id}/graph?focus=&depth=&q=&types=&edge_types=&highlight=&limit=` | a bounded view of the canonical graph. `highlight`: FINDING, CHANGED, BLAST_RADIUS or MIGRATION_ISSUE. `limit` is at most 2000, and the response is flagged `truncated` when capped. |
 | GET | `/runs/{id}/artifacts` | evidence artifacts (source areas and the integrity key are never listed) |
-| GET | `/runs/{id}/artifacts/content?path=` | one artifact's text (masked) |
+| GET | `/runs/{id}/artifacts/content?path=` | one artifact's text (credentials masked, server paths replaced by placeholders) |
 | GET | `/runs/{id}/logs` | tool logs (`logs/`, and round and verify logs next to `exec/`) |
-| GET | `/runs/{id}/logs/content?path=&from=&max=&level=&q=` | log lines; `level` is parsed from the tool's prefix, for filtering only |
+| GET | `/runs/{id}/logs/content?path=&from=&max=&level=&q=` | log lines (masked like artifacts); `level` is parsed from the tool's prefix, for filtering only |
 | GET | `/runs/{id}/events` | the SSE stream; see [control-center-events.md](control-center-events.md) |
 | GET | `/runs/{id}/events/history?after=&limit=` | persisted events as JSON |
 

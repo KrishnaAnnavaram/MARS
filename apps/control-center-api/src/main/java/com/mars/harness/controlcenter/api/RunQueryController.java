@@ -181,7 +181,7 @@ public class RunQueryController {
                                               @RequestParam(name = "q", required = false) String search,
                                               @RequestParam(defaultValue = "0") int offset,
                                               @RequestParam(defaultValue = "100") int limit) {
-        return EvidenceProjector.page(queries.reader(runId), new EvidenceProjector.Filter(kind, producer, subject, phaseGroup,
+        return EvidenceProjector.page(queries.reader(runId), paths, new EvidenceProjector.Filter(kind, producer, subject, phaseGroup,
                 search), offset, limit);
     }
 
@@ -192,7 +192,7 @@ public class RunQueryController {
         List<EvidenceRecord> all = run.evidence();
         for (int i = 0; i < all.size(); i++) {
             if (all.get(i).evidenceId().equals(evidenceId)) {
-                return EvidenceProjector.view(all.get(i), i + 1);
+                return EvidenceProjector.view(all.get(i), i + 1, run, paths);
             }
         }
         throw new ApiException(ApiErrorCode.EVIDENCE_NOT_FOUND, runId, "No evidence " + evidenceId);
@@ -223,7 +223,7 @@ public class RunQueryController {
     @Operation(summary = "The text of one evidence artifact (credential-like literals masked)")
     public ResponseEntity<String> artifact(@PathVariable String runId, @RequestParam String path) {
         return ResponseEntity.ok().contentType(new MediaType("text", "plain", java.nio.charset.StandardCharsets.UTF_8))
-                .body(RunFiles.artifact(queries.reader(runId), path));
+                .body(RunFiles.artifact(queries.reader(runId), paths, path));
     }
 
     @GetMapping("/runs/{runId}/logs")
@@ -238,7 +238,7 @@ public class RunQueryController {
                                      @RequestParam(defaultValue = "1") int from, @RequestParam(defaultValue = "2000") int max,
                                      @RequestParam(required = false) String level, @RequestParam(name = "q", required = false)
                                      String search) {
-        return RunFiles.log(queries.reader(runId), path, Math.max(1, from), Math.max(1, Math.min(max, 20_000)), level, search);
+        return RunFiles.log(queries.reader(runId), paths, path, Math.max(1, from), Math.max(1, Math.min(max, 20_000)), level, search);
     }
 
     private static Set<String> csv(String value) {
