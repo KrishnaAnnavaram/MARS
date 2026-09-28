@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * The adapter through which the unified kernel calls Bootshift, unchanged (ADR-U001).
@@ -80,17 +81,23 @@ public final class BootshiftBridge {
 
     /** Bootstrap, inventory, build resolution and graph: Bootshift stages 00 to 03, unchanged. */
     public AnalysisOutcome analyze() {
+        return analyze(stage -> { });
+    }
+
+    /** As {@link #analyze()}, telling {@code onStage} about each stage as soon as it has run. */
+    public AnalysisOutcome analyze(Consumer<StageSummary> onStage) {
         StageContext ctx = context();
         List<StageSummary> stages = new ArrayList<>();
         boolean bootstrapped = ctx.run().output().resolveLatestDir(RunBootstrap.OUTPUT_DIR) != null;
         if (!bootstrapped) {
             StageResult result = new RunBootstrap(ctx).execute();
             stages.add(summary(result));
+            onStage.accept(stages.get(stages.size() - 1));
             bootstrapped = result.succeeded();
         }
-        boolean inventoried = bootstrapped && run(new InventoryStage(), stages);
-        boolean resolved = inventoried && run(new BuildResolverStage(), stages);
-        boolean graphOk = resolved && run(new ApplicationGraphStage(), stages);
+        boolean inventoried = bootstrapped && run(new InventoryStage(), stages, onStage);
+        boolean resolved = inventoried && run(new BuildResolverStage(), stages, onStage);
+        boolean graphOk = resolved && run(new ApplicationGraphStage(), stages, onStage);
 
         JsonNode graphNode = ctx.run().output().readLatest("03-graph", "application-graph.json");
         JsonNode registryNode = ctx.run().output().readLatest("03-graph", "file-registry.json");
@@ -107,9 +114,10 @@ public final class BootshiftBridge {
                 ctx.run().output().readLatest("00-bootstrap", "source-provenance.json"));
     }
 
-    private boolean run(com.bootshift.stages.Stage stage, List<StageSummary> stages) {
+    private boolean run(com.bootshift.stages.Stage stage, List<StageSummary> stages, Consumer<StageSummary> onStage) {
         StageResult result = StageExecutor.run(stage, context());
         stages.add(summary(result));
+        onStage.accept(stages.get(stages.size() - 1));
         return result.succeeded();
     }
 

@@ -2,6 +2,7 @@ package com.mars.harness.kernel.engine.capability;
 
 import com.bootshift.core.identity.FileRecord;
 import com.mars.harness.kernel.core.KernelJson;
+import com.mars.harness.kernel.core.event.ExecutionEventType;
 import com.mars.harness.kernel.core.findings.Finding;
 import com.mars.harness.kernel.core.graph.CanonicalGraph;
 import com.mars.harness.kernel.core.identity.IdentityRegistry;
@@ -13,6 +14,7 @@ import com.mars.harness.kernel.ports.analysis.CodeModelPort;
 import com.mars.harness.kernel.ports.build.BuildModelView;
 import com.mars.harness.kernel.ports.build.BuildPort;
 import com.mars.harness.kernel.ports.capability.CapabilityContext;
+import com.mars.harness.kernel.ports.event.ActivityReporter;
 import com.mars.harness.kernel.ports.evidence.ArtifactStore;
 import com.mars.harness.kernel.ports.evidence.EvidenceStore;
 import com.mars.harness.kernel.ports.execution.ExecutionSandbox;
@@ -154,6 +156,18 @@ public final class KernelCapabilityContext implements CapabilityContext {
     @Override
     public LocalDate today() {
         return LocalDate.parse(session.record.today);
+    }
+
+    /**
+     * Capability activity goes to the run's event plane, attributed to the pack that owns the
+     * reported type. Only capability-reportable types are accepted (see ExecutionEventRecorder).
+     */
+    @Override
+    public ActivityReporter activity() {
+        ActivityReporter migration = session.events.reporterFor(config.migration().id());
+        ActivityReporter security = session.events.reporterFor(config.remediation().id());
+        return report -> (report.type() != null && report.type().category() == ExecutionEventType.Category.MIGRATION
+                ? migration : security).report(report);
     }
 
     /** Identity view over a defensive copy of the kernel registries. */

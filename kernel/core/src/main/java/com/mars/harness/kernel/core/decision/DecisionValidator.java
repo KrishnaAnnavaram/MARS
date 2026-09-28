@@ -49,6 +49,10 @@ public final class DecisionValidator {
         } else if (isMachineActor(d.role())) {
             errors.add("role '" + d.role() + "' is a machine role and cannot decide");
         }
+        if (d.actorAuthentication() != null && !DecisionActor.validAuthentication(d.actorAuthentication())) {
+            errors.add("actor_authentication '" + d.actorAuthentication() + "' is not one of LOCALLY_ASSERTED, "
+                    + "DEVELOPMENT_ASSERTED or OIDC_AUTHENTICATED:<issuer>");
+        }
         if (blank(d.rationale())) {
             errors.add("rationale is required: an empty rationale is not a decision");
         }

@@ -7,6 +7,10 @@ import com.mars.harness.kernel.adapters.build.PomModelReader;
 import com.mars.harness.kernel.core.KernelJson;
 import com.mars.harness.kernel.core.change.ChangeProposal;
 import com.mars.harness.kernel.core.decision.Decision;
+import com.mars.harness.kernel.core.decision.DecisionActor;
+import com.mars.harness.kernel.core.event.ActivityStatus;
+import com.mars.harness.kernel.core.event.ExecutionEvent;
+import com.mars.harness.kernel.core.event.ExecutionEventType;
 import com.mars.harness.kernel.core.evidence.EvidenceRecord;
 import com.mars.harness.kernel.core.findings.Finding;
 import com.mars.harness.kernel.core.ids.HarnessIds;
@@ -20,6 +24,8 @@ import com.mars.harness.kernel.core.run.RunLayout;
 import com.mars.harness.kernel.core.run.RunPhase;
 import com.mars.harness.kernel.engine.capability.KernelCapabilityContext;
 import com.mars.harness.kernel.engine.discovery.SequenceAdvisor;
+import com.mars.harness.kernel.engine.event.Components;
+import com.mars.harness.kernel.engine.event.HumanGates;
 import com.mars.harness.kernel.engine.exec.WorkspaceSandbox;
 import com.mars.harness.kernel.engine.graph.CanonicalGraphBuilder;
 import com.mars.harness.kernel.engine.identity.IdentitySynchronizer;
@@ -87,12 +93,26 @@ public final class HarnessEngine {
     // ================================================================== Phase 0-4
 
     public RunSummary analyze(AnalyzeRequest request) {
+        return analyze(request, HarnessIds.allocate(HarnessIds.Kind.RUN));
+    }
+
+    /**
+     * As {@link #analyze(AnalyzeRequest)}, under a RUN_ID the caller allocated with
+     * {@link HarnessIds#allocate}. An entry point that runs the analysis in the background uses
+     * this to name the run before it exists. The ID must be fresh: an existing run is refused.
+     */
+    public RunSummary analyze(AnalyzeRequest request, String runId) {
         Path repository = request.repository().toAbsolutePath().normalize();
         if (!Files.isDirectory(repository)) {
             throw new HarnessOutcomeException(OutcomeCategory.REFUSAL, "Repository path does not exist: " + repository);
         }
-        String runId = HarnessIds.allocate(HarnessIds.Kind.RUN);
+        if (!HarnessIds.isKind(runId, HarnessIds.Kind.RUN)) {
+            throw new HarnessOutcomeException(OutcomeCategory.REFUSAL, "Not a RUN_ID: " + runId);
+        }
         RunLayout layout = new RunLayout(config.runsRoot().toAbsolutePath().normalize(), runId);
+        if (Files.exists(layout.runDir())) {
+            throw new HarnessOutcomeException(OutcomeCategory.REFUSAL, "Run " + runId + " already exists; a RUN_ID is never reused");
+        }
         RunRecord record = new RunRecord();
         record.runId = runId;
         record.repository = repository.toString();
@@ -113,11 +133,42 @@ public final class HarnessEngine {
             record.probesFile = copyInput(session, request.probesFile(), "baseline").toString();
         }
         writeManifest(session, repository);
+        session.events.event(ExecutionEventType.RUN_CREATED).status(ActivityStatus.COMPLETED).component(Components.ENGINE)
+                .activity("run.create").title("Run created for " + repository.getFileName())
+                .message(record.findingInputs.size() + " finding input(s), " + record.researchInputs.size()
+                        + " research input(s)" + (record.probesFile == null ? "" : ", behaviour probes")
+                        + (record.skipBuild ? "; baseline build skipped (--skip-build)" : ""))
+                .artifact("manifest/run.json").attribute("repository_name", repository.getFileName())
+                .attribute("skip_build", record.skipBuild).attribute("policy_version", record.policyVersion)
+                .attribute("harness_version", HARNESS_VERSION).emit();
+        try {
+            analyzePhases(session, request, repository);
+        } catch (RuntimeException e) {
+            aborted(session, "analysis", e);
+            throw e;
+        }
+        return summary(session);
+    }
+
+    private void analyzePhases(RunSession session, AnalyzeRequest request, Path repository) {
+        RunLayout layout = session.layout;
+        String runId = layout.runId();
 
         // ---- Phase 0: ingest (Bootshift bootstrap: snapshot, workspace, checkpoint repository, provenance)
         BootshiftBridge bridge = new BootshiftBridge(layout, repository, config.bootshiftHome(), config.bootshiftPolicy(),
                 config.networkEnabled());
-        BootshiftBridge.AnalysisOutcome bootshift = bridge.analyze();
+        session.events.event(ExecutionEventType.INGEST_STARTED).status(ActivityStatus.STARTED).component(Components.BOOTSHIFT)
+                .activity("kernel.ingest").title("Ingest started: snapshot, inventory, build model, application graph")
+                .message("Bootshift stages 00-03 run unchanged through StageExecutor").emit();
+        int[] stageCount = {0};
+        BootshiftBridge.AnalysisOutcome bootshift = bridge.analyze(stage -> session.events
+                .event(ExecutionEventType.INGEST_STAGE_COMPLETED)
+                .status("SUCCESS".equals(stage.exitCode()) ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                .component(Components.BOOTSHIFT).activity("kernel.ingest." + stage.stageId())
+                .title("Bootshift stage " + stage.stageId() + ": " + stage.exitCode()).message(stage.summary())
+                .progress(ExecutionEvent.Progress.indeterminate(++stageCount[0], "stages"))
+                .subject("STAGE", stage.stageId(), stage.stageId()).artifact("bootshift-output/" + stage.stageId())
+                .attribute("stage_id", stage.stageId()).attribute("exit_code", stage.exitCode()).emit());
         session.artifacts.writeJson("inventory", "bootshift-stages.json", bootshift.stages());
         for (BootshiftBridge.StageSummary stage : bootshift.stages()) {
             session.evidence.record(EvidenceRecord.EvidenceKind.TOOL_RESULT, "Bootshift " + stage.stageId() + ": "
@@ -140,10 +191,17 @@ public final class HarnessEngine {
         }
         session.fileRegistry = bootshift.fileRegistry();
         session.record.machine.transition(RunPhase.INVENTORY_READY, session.fileRegistry.size() + " files with FILE_ID");
+        session.events.event(ExecutionEventType.INVENTORY_COMPLETED).status(ActivityStatus.COMPLETED)
+                .component(Components.INVENTORY).activity("kernel.inventory")
+                .title("Inventory: " + session.fileRegistry.size() + " files registered with FILE_ID")
+                .progress(session.fileRegistry.size(), session.fileRegistry.size(), "files")
+                .artifact("identity/file-registry.json").attribute("files", session.fileRegistry.size()).emit();
         session.buildModel = new PomModelReader().read(layout.sourceSnapshot(), bootshift.buildModel());
         session.saveBuildModel();
         session.identity = IdentityRegistry.create(runId);
         session.record.repositoryId = session.identity.repositoryId;
+        session.events.event(ExecutionEventType.IDENTITY_STARTED).status(ActivityStatus.STARTED).component(Components.IDENTITY)
+                .activity("kernel.identity").title("Allocating module, program-unit, symbol and statement identity").emit();
         IdentitySynchronizer sync = new IdentitySynchronizer(session, config.codeModel());
         List<String> gaps = sync.baseline(session.buildModel);
         session.saveIdentity();
@@ -154,8 +212,17 @@ public final class HarnessEngine {
                 "identity/identity-registry.json", null, "kernel.identity");
         session.record.machine.transition(RunPhase.IDENTITY_SEALED, "identity registry " + session.identity.contentHash());
         session.saveRecord();
+        session.events.event(ExecutionEventType.IDENTITY_COMPLETED).status(ActivityStatus.COMPLETED)
+                .component(Components.IDENTITY).activity("kernel.identity")
+                .title("Identity sealed: " + session.identity.coverage())
+                .message(gaps.isEmpty() ? "all parseable files observed" : gaps.size() + " file(s) could not be observed")
+                .artifact("identity/identity-registry.json").attribute("identity_hash", session.identity.contentHash())
+                .attribute("gaps", gaps.size()).emit();
 
         // ---- Phase 2: canonical application graph
+        session.events.event(ExecutionEventType.GRAPH_BUILD_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.GRAPH).activity("kernel.graph")
+                .title("Building the canonical graph over Bootshift's application graph").emit();
         session.graph = CanonicalGraphBuilder.build(runId, session.identity.repositoryId, bootshift.graph(), session.identity,
                 session.fileRegistry, List.of());
         if (!bootshift.graphVerified() && bootshift.graphVerification() != null) {
@@ -166,6 +233,13 @@ public final class HarnessEngine {
         session.record.machine.transition(RunPhase.GRAPH_READY, session.graph.nodeCount() + " nodes, "
                 + session.graph.edgeCount() + " edges (" + session.graph.graphSource + ")");
         session.saveRecord();
+        session.events.event(ExecutionEventType.GRAPH_BUILD_COMPLETED).status(ActivityStatus.COMPLETED)
+                .component(Components.GRAPH).activity("kernel.graph")
+                .title("Canonical graph: " + session.graph.nodeCount() + " nodes, " + session.graph.edgeCount() + " edges")
+                .message("source " + session.graph.graphSource + (session.graph.coverageNotes.isEmpty() ? ""
+                        : "; " + String.join("; ", session.graph.coverageNotes)))
+                .artifact("graph/canonical-graph.json").attribute("nodes", session.graph.nodeCount())
+                .attribute("edges", session.graph.edgeCount()).attribute("graph_source", session.graph.graphSource).emit();
 
         // ---- Phase 3: baseline seal
         List<Finding> intake = intake(session, request);
@@ -175,7 +249,7 @@ public final class HarnessEngine {
 
         // ---- Phase 4: read-only discovery
         discover(session);
-        return summary(session);
+        announceStop(session);
     }
 
     private List<Finding> intake(RunSession session, AnalyzeRequest request) {
@@ -214,16 +288,33 @@ public final class HarnessEngine {
 
         // round 0: the reference workflow's pre-migration build and behaviour, before any change
         BuildPort.BuildResult build = null;
+        String buildComponent = Components.tool("Build", config.build());
         if (!session.record.skipBuild) {
             Path exec = new WorkspaceSandbox(session.layout).prepare("baseline");
+            session.events.event(ExecutionEventType.BASELINE_BUILD_STARTED).status(ActivityStatus.STARTED)
+                    .component(buildComponent).activity("kernel.baseline.build")
+                    .title("Baseline build (round 0, package) started").message("in the disposable copy exec/baseline")
+                    .artifact("logs/baseline-build.log").emit();
             build = config.build().build(exec, BuildPort.Intent.PACKAGE, session.layout.logs().resolve("baseline-build.log"));
             session.artifacts.writeJson("baseline", "baseline-build.json", build);
-            session.evidence.record(EvidenceRecord.EvidenceKind.TOOL_RESULT, "Baseline build (round 0, package): "
+            String buildEvidence = session.evidence.record(EvidenceRecord.EvidenceKind.TOOL_RESULT, "Baseline build (round 0, package): "
                             + build.outcome().legacyId() + (build.tests() == null ? "" : ", tests " + build.tests()),
                     build.failingTests().isEmpty() ? null : "pre-existing failing tests: " + build.failingTests(), "exec/baseline",
                     List.of(), "recorded, never fixed: pre-existing failures are compared against later, not hidden",
                     build.outcome() == BuildPort.Outcome.TOOL_UNAVAILABLE ? EvidenceRecord.Reliability.UNKNOWN
-                            : EvidenceRecord.Reliability.VERIFIED, null, "baseline/baseline-build.json", null, "kernel.baseline");
+                            : EvidenceRecord.Reliability.VERIFIED, null, "baseline/baseline-build.json", null, "kernel.baseline")
+                    .evidenceId();
+            session.events.event(ExecutionEventType.BASELINE_BUILD_COMPLETED)
+                    .status(build.outcome() == BuildPort.Outcome.TOOL_UNAVAILABLE ? ActivityStatus.SKIPPED
+                            : build.passed() ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                    .component(buildComponent).activity("kernel.baseline.build")
+                    .title("Baseline build: " + build.outcome().legacyId())
+                    .message(build.outcome() == BuildPort.Outcome.TOOL_UNAVAILABLE ? build.unavailableReason()
+                            : build.failingTests().isEmpty() ? null : "pre-existing failing tests (recorded, never fixed): "
+                            + build.failingTests())
+                    .evidence(buildEvidence).artifact("baseline/baseline-build.json").artifact("logs/baseline-build.log")
+                    .attribute("outcome", build.outcome().legacyId()).attribute("exit_code", build.exitCode())
+                    .attribute("duration_ms", build.durationMs()).emit();
             manifest.put("baseline_build_outcome", build.outcome().legacyId());
             manifest.put("baseline_tests", build.tests());
             manifest.put("baseline_failing_tests", build.failingTests());
@@ -231,23 +322,44 @@ public final class HarnessEngine {
                     || build.outcome() == BuildPort.Outcome.TESTS_FAILED)) {
                 RuntimePort.ProbeSpec spec = com.mars.harness.kernel.adapters.runtime.ProbeFiles.read(Path.of(session.record.probesFile));
                 session.artifacts.writeJson("baseline", "probes.json", spec);
+                String probeComponent = Components.tool("Runtime Probes", config.runtime());
+                session.events.event(ExecutionEventType.BASELINE_PROBE_STARTED).status(ActivityStatus.STARTED)
+                        .component(probeComponent).activity("kernel.baseline.probes")
+                        .title("Baseline behaviour probes started").artifact("baseline/probes.json").emit();
                 RuntimePort.RuntimeRun runtime = config.runtime().run(exec, spec, "baseline",
                         session.layout.logs().resolve("runtime-baseline.log"));
                 session.artifacts.writeJson("baseline", "runtime-baseline.json", runtime);
                 manifest.put("baseline_runtime_started", runtime.started());
                 manifest.put("baseline_runtime_hash", KernelJson.hash(runtime.probes()));
-                session.evidence.record(EvidenceRecord.EvidenceKind.TOOL_RESULT, "Baseline runtime probes: started="
-                                + runtime.started() + ", " + runtime.probes().size() + " probe(s)", runtime.failure(),
-                        "exec/baseline", List.of(), "probe-runtime semantics (migration reference)",
-                        EvidenceRecord.Reliability.VERIFIED, null, "baseline/runtime-baseline.json", null, "kernel.baseline");
+                String probeEvidence = session.evidence.record(EvidenceRecord.EvidenceKind.TOOL_RESULT,
+                        "Baseline runtime probes: started=" + runtime.started() + ", " + runtime.probes().size() + " probe(s)",
+                        runtime.failure(), "exec/baseline", List.of(), "probe-runtime semantics (migration reference)",
+                        EvidenceRecord.Reliability.VERIFIED, null, "baseline/runtime-baseline.json", null, "kernel.baseline")
+                        .evidenceId();
+                session.events.event(ExecutionEventType.BASELINE_PROBE_COMPLETED)
+                        .status(runtime.started() ? ActivityStatus.COMPLETED : ActivityStatus.FAILED)
+                        .component(probeComponent).activity("kernel.baseline.probes")
+                        .title("Baseline probes: " + runtime.probes().size() + " probe(s), application "
+                                + (runtime.started() ? "started" : "did not start"))
+                        .message(runtime.failure()).evidence(probeEvidence).artifact("baseline/runtime-baseline.json")
+                        .attribute("started", runtime.started()).attribute("probes", runtime.probes().size()).emit();
             } else {
                 manifest.put("baseline_runtime_started", null);
+                session.events.event(ExecutionEventType.BASELINE_PROBE_COMPLETED).status(ActivityStatus.SKIPPED)
+                        .component(Components.BASELINE).activity("kernel.baseline.probes")
+                        .title("Baseline probes not run")
+                        .message(session.record.probesFile == null ? "no probe file was supplied"
+                                : "the baseline build did not produce a runnable application").emit();
             }
         } else {
             manifest.put("baseline_build_outcome", "NOT_RUN (--skip-build)");
-            session.evidence.record(EvidenceRecord.EvidenceKind.UNKNOWN, "Baseline build not run (--skip-build)", null, null,
-                    List.of(), "unknown evidence stays unknown", EvidenceRecord.Reliability.UNKNOWN, null, null, null,
-                    "kernel.baseline");
+            String skipped = session.evidence.record(EvidenceRecord.EvidenceKind.UNKNOWN, "Baseline build not run (--skip-build)",
+                    null, null, List.of(), "unknown evidence stays unknown", EvidenceRecord.Reliability.UNKNOWN, null, null,
+                    null, "kernel.baseline").evidenceId();
+            session.events.event(ExecutionEventType.BASELINE_BUILD_COMPLETED).status(ActivityStatus.SKIPPED)
+                    .component(buildComponent).activity("kernel.baseline.build")
+                    .title("Baseline build not run (--skip-build)")
+                    .message("recorded as NOT_RUN, never as passed").evidence(skipped).attribute("outcome", "NOT_RUN").emit();
         }
         String seal = Hashing.sha256(KernelJson.canonical(manifest));
         manifest.put("baseline_manifest_hash", seal);
@@ -256,23 +368,62 @@ public final class HarnessEngine {
         session.record.machine.recordBaselineSeal(seal);
         session.record.machine.transition(RunPhase.BASELINE_SEALED, "baseline " + seal);
         session.saveRecord();
+        session.events.event(ExecutionEventType.BASELINE_SEALED).status(ActivityStatus.COMPLETED)
+                .component(Components.BASELINE).activity("kernel.baseline.seal").title("Baseline sealed")
+                .message("snapshot, identity, graph, build model, findings, policy and environment hashed into one seal")
+                .artifact("baseline/baseline-manifest.json").attribute("baseline_seal", seal).emit();
     }
 
     private void discover(RunSession session) {
         session.record.machine.transition(RunPhase.DISCOVERY_RUNNING, "read-only discovery");
         session.saveRecord();
+        session.events.event(ExecutionEventType.DISCOVERY_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.DISCOVERY).activity("kernel.discovery")
+                .title("Read-only discovery started: security findings, root cause, blast radius, migration assessment")
+                .message(session.findings.size() + " imported finding(s) enter discovery").emit();
         String before = workspaceHash(session);
         KernelCapabilityContext context = new KernelCapabilityContext(session, config);
 
+        session.events.event(ExecutionEventType.SECURITY_DISCOVERY_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.SECURITY_DISCOVERY).activity("security.discovery")
+                .title("Security discovery started (" + config.remediation().id() + ")")
+                .attribute("capability", config.remediation().id()).emit();
         RemediationCapability.SecurityDiscovery security = config.remediation().discover(context, session.findings);
         session.findings = new ArrayList<>(security.findings());
         session.saveFindings();
         session.artifacts.writeJson("discovery/security", "security-discovery.json", security);
+        Map<Finding.Severity, Long> severities = new TreeMap<>();
+        session.findings.forEach(f -> severities.merge(f.severity(), 1L, Long::sum));
+        var securityDone = session.events.event(ExecutionEventType.SECURITY_DISCOVERY_COMPLETED)
+                .status(ActivityStatus.COMPLETED).component(Components.SECURITY_DISCOVERY).activity("security.discovery")
+                .title("Security discovery: " + session.findings.size() + " finding(s), " + security.rootCauses().size()
+                        + " root cause(s), " + security.blastRadii().size() + " blast radius analyses")
+                .message(security.gaps().isEmpty() ? null : security.gaps().size() + " gap(s): " + security.gaps())
+                .artifact("findings/findings.json").artifact("discovery/security/security-discovery.json")
+                .attribute("capability", config.remediation().id()).attribute("findings", session.findings.size())
+                .attribute("gaps", security.gaps().size());
+        severities.forEach((severity, n) -> securityDone.attribute("severity_" + severity.name().toLowerCase(java.util.Locale.ROOT), n));
+        securityDone.emit();
 
         List<MigrationCapability.Objective> objectives = objectives(session.findings);
+        session.events.event(ExecutionEventType.MIGRATION_ASSESSMENT_STARTED).status(ActivityStatus.STARTED)
+                .component(Components.MIGRATION_ADVISOR).activity("migration.assessment")
+                .title("Migration assessment started (" + config.migration().id() + ")")
+                .message(objectives.size() + " objective(s) weighed").attribute("capability", config.migration().id()).emit();
         MigrationAssessment assessment = config.migration().assess(new KernelCapabilityContext(session, config), objectives);
         session.artifacts.writeJson("discovery/migration", "migration-assessment.json", assessment);
         session.record.migrationAssessmentId = assessment.assessmentId();
+        session.events.event(ExecutionEventType.MIGRATION_ASSESSMENT_COMPLETED).status(ActivityStatus.COMPLETED)
+                .component(Components.MIGRATION_ADVISOR).activity("migration.assessment")
+                .title("Migration assessment: " + assessment.trafficLight() + " (" + assessment.need() + ")")
+                .message(assessment.trafficLightRationale()).evidence(assessment.evidence())
+                .subject("ASSESSMENT", assessment.assessmentId(), assessment.trafficLight().name())
+                .artifact("discovery/migration/migration-assessment.json")
+                .attribute("capability", config.migration().id()).attribute("traffic_light", assessment.trafficLight())
+                .attribute("need", assessment.need()).attribute("complexity", assessment.complexity())
+                .attribute("effort_score", assessment.effort() == null ? null : assessment.effort().migrationEffortScore())
+                .attribute("evidence_confidence", assessment.evidenceConfidence())
+                .attribute("reference_pack", assessment.referencePackId()).emit();
 
         CanonicalGraphBuilder.attachFindings(session.graph, session.findings);
         session.saveGraph();
@@ -290,9 +441,19 @@ public final class HarnessEngine {
         CombinedAssessment combined = SequenceAdvisor.combine(session.layout.runId(), assessment, session.findings, sequence);
         session.artifacts.writeJson("discovery", "combined-assessment.json", combined);
         session.record.combinedAssessmentHash = KernelJson.hash(combined);
+        session.events.event(ExecutionEventType.SEQUENCE_ASSESSMENT_COMPLETED).status(ActivityStatus.COMPLETED)
+                .component(Components.SEQUENCE_ADVISOR).activity("kernel.sequence")
+                .title("Sequence advice: " + sequence.sequence() + "; recommended strategy " + combined.recommendedStrategy())
+                .message(sequence.rationale()).evidence(sequence.evidenceRefs()).artifact("discovery/combined-assessment.json")
+                .attribute("sequence", sequence.sequence()).attribute("recommended_strategy", combined.recommendedStrategy())
+                .attribute("assessment_hash", session.record.combinedAssessmentHash).emit();
         session.record.machine.transition(RunPhase.DISCOVERY_READY, "assessment " + assessment.trafficLight());
         session.record.machine.transition(RunPhase.WAITING_FOR_EXECUTION_DECISION, "Human Gate A");
         session.saveRecord();
+        session.events.event(ExecutionEventType.DISCOVERY_COMPLETED).status(ActivityStatus.COMPLETED)
+                .component(Components.DISCOVERY).activity("kernel.discovery")
+                .title("Discovery complete; the workspace was not modified").message("workspace hash " + after)
+                .attribute("workspace_hash", after).emit();
         new ReportRenderer(session, config).renderAnalysis();
     }
 
@@ -312,14 +473,20 @@ public final class HarnessEngine {
     // ================================================================== decisions (Human Gates)
 
     public Decision decideExecution(String runId, String strategy, String actor, String role, String rationale) {
+        return decideExecution(runId, strategy, DecisionActor.asserted(actor, role), rationale);
+    }
+
+    public Decision decideExecution(String runId, String strategy, DecisionActor who, String rationale) {
+        String actor = who.name();
+        String role = who.role();
         RunSession session = load(runId);
         requirePhase(session, RunPhase.WAITING_FOR_EXECUTION_DECISION);
         CombinedAssessment combined = KernelJson.read(session.layout.area("discovery").resolve("combined-assessment.json"),
                 CombinedAssessment.class);
         Decision decision = session.approvals.record(new Decision(null, runId, Decision.DecisionType.EXECUTION_STRATEGY,
                 strategy, combined.recommendedStrategy(), null, null, List.of(), List.of(), List.of(), List.of(), null,
-                null, session.record.combinedAssessmentHash, session.baselineSeal(), null, actor, role, null, rationale,
-                null, null, null));
+                null, session.record.combinedAssessmentHash, session.baselineSeal(), null, actor, role, who.authentication(),
+                rationale, null, null, null));
         Decision.ExecutionStrategy chosen = Decision.ExecutionStrategy.valueOf(decision.selected());
         session.record.strategy = chosen.name();
         session.record.executionDecisionId = decision.decisionId();
@@ -332,37 +499,58 @@ public final class HarnessEngine {
                 "decisions/" + decision.decisionId() + ".json", List.of(decision.decisionId()),
                 "Human Gate A; bound to assessment " + session.record.combinedAssessmentHash, EvidenceRecord.Reliability.ASSERTED,
                 null, "decisions/" + decision.decisionId() + ".json", null, "human");
+        decisionRecorded(session, decision, "Gate A: " + chosen + " chosen (MARS recommended " + combined.recommendedStrategy()
+                + ")");
         return decision;
     }
 
     public Decision decideProposal(String runId, String proposalId, String verdict, String actor, String role,
                                    String rationale) {
+        return decideProposal(runId, proposalId, verdict, DecisionActor.asserted(actor, role), rationale);
+    }
+
+    public Decision decideProposal(String runId, String proposalId, String verdict, DecisionActor who, String rationale) {
+        String actor = who.name();
+        String role = who.role();
         RunSession session = load(runId);
         ChangeProposal proposal = session.proposals.find(proposalId).orElseThrow(() ->
                 new HarnessOutcomeException(OutcomeCategory.REFUSAL, "No proposal " + proposalId + " in " + runId));
         Decision decision = session.approvals.record(new Decision(null, runId, Decision.DecisionType.PROPOSAL_APPROVAL,
                 verdict, null, proposalId, proposal.proposalHash(), proposal.findingRefs(), proposal.affectedFileIds(),
                 proposal.affectedSymbolIds(), proposal.affectedStatementIds(), null, null, null, session.baselineSeal(), null,
-                actor, role, null, rationale, null, null, null));
+                actor, role, who.authentication(), rationale, null, null, null));
         session.evidence.record(EvidenceRecord.EvidenceKind.DECISION, "Proposal " + proposalId + " " + decision.selected()
                         + " by " + decision.actor(), decision.rationale(), "decisions/" + decision.decisionId() + ".json",
                 List.of(decision.decisionId(), proposalId), "Human Gate B; bound to proposal hash " + proposal.proposalHash()
                         + " and baseline " + session.baselineSeal(), EvidenceRecord.Reliability.ASSERTED, null,
                 "decisions/" + decision.decisionId() + ".json", null, "human");
+        decisionRecorded(session, decision, "Gate B: proposal " + proposalId + " " + decision.selected());
         new ReportRenderer(session, config).renderLegacyPlans();
         return decision;
     }
 
     public Decision decideMigrationPlan(String runId, String verdict, String actor, String role, String rationale) {
+        return decideMigrationPlan(runId, verdict, DecisionActor.asserted(actor, role), rationale);
+    }
+
+    public Decision decideMigrationPlan(String runId, String verdict, DecisionActor who, String rationale) {
         RunSession session = load(runId);
         requirePhase(session, RunPhase.WAITING_FOR_MIGRATION_APPROVAL);
-        return session.approvals.record(new Decision(null, runId, Decision.DecisionType.MIGRATION_PLAN_APPROVAL, verdict,
-                null, null, null, List.of(), List.of(), List.of(), List.of(), session.record.migrationPlanId,
-                session.record.migrationPlanHash, null, session.baselineSeal(), null, actor, role, null, rationale, null,
-                null, null));
+        Decision decision = session.approvals.record(new Decision(null, runId, Decision.DecisionType.MIGRATION_PLAN_APPROVAL,
+                verdict, null, null, null, List.of(), List.of(), List.of(), List.of(), session.record.migrationPlanId,
+                session.record.migrationPlanHash, null, session.baselineSeal(), null, who.name(), who.role(),
+                who.authentication(), rationale, null, null, null));
+        decisionRecorded(session, decision, "Migration plan " + session.record.migrationPlanId + " " + decision.selected());
+        return decision;
     }
 
     public Decision decidePostSecurityMigration(String runId, String choice, String actor, String role, String rationale) {
+        return decidePostSecurityMigration(runId, choice, DecisionActor.asserted(actor, role), rationale);
+    }
+
+    public Decision decidePostSecurityMigration(String runId, String choice, DecisionActor who, String rationale) {
+        String actor = who.name();
+        String role = who.role();
         RunSession session = load(runId);
         requirePhase(session, RunPhase.WAITING_FOR_POST_SECURITY_MIGRATION_DECISION);
         Path reassessment = session.layout.area("discovery").resolve("migration").resolve("post-security-reassessment.json");
@@ -370,17 +558,20 @@ public final class HarnessEngine {
         Decision decision = session.approvals.record(new Decision(null, runId, Decision.DecisionType.POST_SECURITY_MIGRATION,
                 choice, node.path("current_traffic_light").asText(null), null, null, List.of(), List.of(), List.of(),
                 List.of(), null, null, node.path("current_assessment_hash").asText(null), session.baselineSeal(), null, actor,
-                role, null, rationale, null, null, null));
+                role, who.authentication(), rationale, null, null, null));
         session.record.postSecurityDecisionId = decision.decisionId();
         session.saveRecord();
+        decisionRecorded(session, decision, "Gate A2: " + decision.selected());
         return decision;
     }
 
     public Decision decideApply(String runId, String verdict, String actor, String role, String rationale) {
         RunSession session = load(runId);
-        return session.approvals.record(new Decision(null, runId, Decision.DecisionType.APPLY_TO_PROJECT, verdict, null, null,
-                null, List.of(), List.of(), List.of(), List.of(), null, null, null, session.baselineSeal(), session.ledger.head(),
-                actor, role, null, rationale, null, null, null));
+        Decision decision = session.approvals.record(new Decision(null, runId, Decision.DecisionType.APPLY_TO_PROJECT, verdict,
+                null, null, null, List.of(), List.of(), List.of(), List.of(), null, null, null, session.baselineSeal(),
+                session.ledger.head(), actor, role, null, rationale, null, null, null));
+        decisionRecorded(session, decision, "Apply to project " + decision.selected());
+        return decision;
     }
 
     public ProjectApplier.ApplyResult applyToProject(String runId, String decisionId) {
@@ -480,7 +671,17 @@ public final class HarnessEngine {
         RunSession session = load(runId);
         session.record.acceptPending = acceptPending;
         session.saveRecord();
-        new RunAdvancer(session, config).advance();
+        session.events.event(ExecutionEventType.ADVANCE_STARTED).status(ActivityStatus.STARTED).component(Components.ADVANCER)
+                .activity("run.advance").title("Advancing from " + session.record.machine.current)
+                .message(acceptPending ? "--accept-pending: undecided proposals stay unapproved" : null)
+                .attribute("accept_pending", acceptPending).emit();
+        try {
+            new RunAdvancer(session, config).advance();
+        } catch (RuntimeException e) {
+            aborted(session, "advance", e);
+            throw e;
+        }
+        announceStop(session);
         return summary(load(runId));
     }
 
@@ -563,6 +764,55 @@ public final class HarnessEngine {
         return new RunSummary(run, phase.name(), session.record.verdict, waiting, next, highlights);
     }
 
+    private static void decisionRecorded(RunSession session, Decision d, String title) {
+        session.events.event(ExecutionEventType.DECISION_RECORDED).status(ActivityStatus.COMPLETED)
+                .component(Components.APPROVALS).activity("human.decision").title(title).message(d.rationale())
+                .subject("DECISION", d.decisionId(), d.type().name()).subject("PROPOSAL", d.proposalId(), null)
+                .subject("PLAN", d.planId(), null).artifact("decisions/" + d.decisionId() + ".json")
+                .attribute("decision_id", d.decisionId()).attribute("decision_type", d.type())
+                .attribute("selected", d.selected()).attribute("recommendation", d.recommendation())
+                .attribute("actor", d.actor()).attribute("role", d.role())
+                .attribute("actor_authentication", d.actorAuthentication()).attribute("proposal_hash", d.proposalHash())
+                .attribute("plan_hash", d.planHash()).attribute("assessment_hash", d.assessmentHash()).emit();
+    }
+
+    /** What the run is doing now that advancement stopped: waiting for a human, finished, failed or idle. */
+    private static void announceStop(RunSession session) {
+        RunPhase phase = session.record.machine.current;
+        Optional<ExecutionEvent.HumanAction> gate = HumanGates.describe(session);
+        if (gate.isPresent()) {
+            session.events.event(ExecutionEventType.HUMAN_ACTION_REQUIRED).status(ActivityStatus.WAITING)
+                    .component(Components.ADVANCER).activity("human.gate." + gate.get().gate())
+                    .title("Waiting for a human: " + gate.get().gate()).message(gate.get().reason())
+                    .humanAction(gate.get()).attribute("gate", gate.get().gate()).attribute("verdict", session.record.verdict)
+                    .emit();
+        } else if (phase == RunPhase.COMPLETE) {
+            session.events.event(ExecutionEventType.RUN_COMPLETED).status(ActivityStatus.COMPLETED)
+                    .component(Components.ADVANCER).activity("run.complete")
+                    .title("Run complete" + (session.record.verdict == null ? "" : ": verdict " + session.record.verdict))
+                    .artifact("reports/final-report.md").artifact("reports/verdict.json")
+                    .attribute("verdict", session.record.verdict).emit();
+        } else if (phase == RunPhase.FAILED) {
+            session.events.event(ExecutionEventType.RUN_FAILED).status(ActivityStatus.FAILED).component(Components.ADVANCER)
+                    .activity("run.failed").title("Run failed").message(lastNote(session)).emit();
+        } else {
+            session.events.event(ExecutionEventType.ADVANCE_STOPPED).status(ActivityStatus.INFO).component(Components.ADVANCER)
+                    .activity("run.advance").title("Advancement stopped at " + phase)
+                    .message("MARS is not advancing this run; resume continues it from the persisted state").emit();
+        }
+    }
+
+    /** An operation ended in an exception: say so. The run stays in its last persisted state. */
+    private static void aborted(RunSession session, String operation, RuntimeException e) {
+        if (session.record.machine.current == RunPhase.FAILED) {
+            return; // the transition to FAILED and its RUN_FAILED event already say so
+        }
+        session.events.event(ExecutionEventType.ADVANCE_STOPPED).status(ActivityStatus.FAILED).component(Components.ENGINE)
+                .activity("run.advance").title("The " + operation + " stopped with an error at " + session.record.machine.current)
+                .message(e.getMessage()).attribute("error", e.getClass().getSimpleName())
+                .attribute("outcome_category", e instanceof HarnessOutcomeException h ? h.category() : null).emit();
+    }
+
     private static String lastNote(RunSession session) {
         return session.record.notes.isEmpty() ? "" : session.record.notes.get(session.record.notes.size() - 1);
     }
@@ -580,6 +830,8 @@ public final class HarnessEngine {
         session.record.notes.add("FAILED: " + reason);
         session.record.machine.transition(RunPhase.FAILED, reason);
         session.saveRecord();
+        session.events.event(ExecutionEventType.RUN_FAILED).status(ActivityStatus.FAILED).component(Components.ENGINE)
+                .activity("run.failed").title("Run failed").message(reason).emit();
         throw new HarnessOutcomeException(OutcomeCategory.FAILURE, reason);
     }
 

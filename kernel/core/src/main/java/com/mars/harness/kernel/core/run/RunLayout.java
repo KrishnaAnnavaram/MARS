@@ -15,6 +15,7 @@ import java.nio.file.Path;
  *   internal-checkpoint-git/  Bootshift checkpoint repository
  *   inventory/ identity/ graph/ baseline/ discovery/{migration,security}/ decisions/ plans/
  *   proposals/ mutations/ checkpoints/ validation/ findings/ reports/ provenance/ ledger/ state/
+ *   events/              execution events (append-only witnesses of what ran; never authority)
  * </pre>
  *
  * <p>Bootshift's {@code RunContext} is constructed with {@code workspaceRoot = runsRoot}, so its
@@ -105,5 +106,9 @@ public record RunLayout(Path runsRoot, String runId) {
 
     public Path logs() {
         return area("logs");
+    }
+
+    public Path events() {
+        return area("events").resolve("events.jsonl");
     }
 }
