@@ -3,9 +3,14 @@ package com.mars.harness.tests.controlcenter;
 import com.mars.harness.controlcenter.api.dto.RunDtos;
 import com.mars.harness.controlcenter.config.ControlCenterProperties;
 import com.mars.harness.controlcenter.config.ControlCenterPaths;
+import com.mars.harness.controlcenter.events.EventIndex;
+import com.mars.harness.controlcenter.query.EvidenceProjector;
 import com.mars.harness.controlcenter.query.PipelineProjector;
 import com.mars.harness.controlcenter.query.SecretRedactor;
 import com.mars.harness.controlcenter.security.MarsRole;
+import com.mars.harness.kernel.core.event.ActivityStatus;
+import com.mars.harness.kernel.core.event.ExecutionEvent;
+import com.mars.harness.kernel.core.event.ExecutionEventType;
 import com.mars.harness.kernel.core.run.RunPhase;
 import com.mars.harness.kernel.engine.run.RunRecord;
 import org.junit.jupiter.api.Test;
@@ -186,5 +191,37 @@ class ControlCenterUnitTest {
         assertThat(paths.redact(message)).isEqualTo("No run RUN-X under <runs>");
         Function<String, String> display = s -> paths.display(Path.of(s).toAbsolutePath());
         assertThat(display.apply("/srv/repos/composite/inventory-service")).isEqualTo("repos/composite/inventory-service");
+    }
+
+    @Test
+    void evidenceLocationsInsideTheRunAreRunRelativeAndOthersAreRedacted() {
+        Path runs = Path.of("/opt/mars/runs").toAbsolutePath();
+        ControlCenterPaths paths = new ControlCenterPaths(Path.of("/opt/mars").toAbsolutePath(), runs,
+                List.of(Path.of("/srv/repos").toAbsolutePath()));
+        Path runDir = runs.resolve("RUN-X");
+        String inRun = runDir.resolve("findings").resolve("input").resolve("register.xlsx").toString();
+        assertThat(EvidenceProjector.displayPath(inRun, runDir, paths)).isEqualTo("findings/input/register.xlsx");
+        assertThat(EvidenceProjector.displayPath("baseline/baseline-build.json", runDir, paths))
+                .isEqualTo("baseline/baseline-build.json");
+        String otherRun = runs.resolve("RUN-Y").resolve("x.json").toString();
+        assertThat(EvidenceProjector.displayPath(otherRun, runDir, paths)).doesNotContain(runs.toString()).startsWith("<runs>");
+        assertThat(EvidenceProjector.displayPath("src/Main.java:12", runDir, paths)).isEqualTo("src/Main.java:12");
+    }
+
+    @Test
+    void streamedEventsCarryNoAbsoluteServerPaths() {
+        Path runs = Path.of("/opt/mars/runs").toAbsolutePath();
+        ControlCenterPaths paths = new ControlCenterPaths(Path.of("/opt/mars").toAbsolutePath(), runs, List.of());
+        String workspace = runs.resolve("RUN-X").resolve("workspace").toString();
+        ExecutionEvent raw = new ExecutionEvent("EVT-1", "RUN-X", 1, Instant.now().toString(),
+                ExecutionEventType.BASELINE_BUILD_STARTED, null, RunPhase.GRAPH_READY, "Kernel / Baseline", "baseline",
+                ActivityStatus.STARTED, "Baseline in " + workspace, "Workspaces created under " + workspace, null,
+                List.of(), List.of(), List.of(), null, Map.of("workspace", workspace));
+        ExecutionEvent shown = new EventIndex(paths).redacted(raw);
+        assertThat(shown.title()).isEqualTo("Baseline in " + "<runs>" + workspace.substring(runs.toString().length()));
+        assertThat(shown.message()).doesNotContain(runs.toString());
+        assertThat(shown.attributes().get("workspace")).startsWith("<runs>");
+        assertThat(shown.sequence()).isEqualTo(raw.sequence());
+        assertThat(shown.type()).isEqualTo(raw.type());
     }
 }
