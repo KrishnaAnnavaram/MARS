@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 import { useFinding } from '../../api/queries';
 import type { FindingDetail, JourneyStep } from '../../api/types';
+import { InlineMarkdown, Markdown } from '../../components/Markdown';
 import { EmptyState, Hash, KeyValues, Panel, QueryView, StatusBadge, Tag } from '../../components/ui';
 import { DecisionReceipt, ProposalStatusBadge } from '../../features/decisions';
 import { useRunId } from '../../layout/RunLayout';
@@ -24,7 +25,7 @@ function Journey({ steps }: { steps: JourneyStep[] }) {
                 <span className={cn('font-medium', s.status === 'CURRENT' ? 'text-primary' : 'text-strong')}>{s.label}</span>
                 <span className={cn('text-[11px]', toneClasses[st.tone].text)}>{st.label}</span>
               </div>
-              {s.detail && <div className="break-words text-[12px] text-muted">{s.detail}</div>}
+              {s.detail && <div className="break-words text-[12px] text-muted"><InlineMarkdown>{s.detail}</InlineMarkdown></div>}
             </div>
           </li>
         );
@@ -74,9 +75,13 @@ export function FindingPage() {
                   {f.item_status && <Tag tone="active">{f.item_status}</Tag>}
                 </div>
                 <p className="text-strong">{f.title}</p>
-                {f.description && <p className="max-w-4xl text-muted">{f.description}</p>}
               </div>
             </header>
+            {f.description && (
+              <Panel title="Description" actions={<span className="text-[11px] text-faint">as reported by {f.source}</span>}>
+                <Markdown className="max-w-5xl">{f.description}</Markdown>
+              </Panel>
+            )}
             <div className="grid gap-3 xl:grid-cols-3">
               <Panel title="Remediation journey">
                 <Journey steps={f.journey} />
@@ -112,12 +117,12 @@ export function FindingPage() {
                   <Panel title="Root cause">
                     {f.root_cause ? (
                       <KeyValues rows={[
-                        ['Statement', f.root_cause.statement],
+                        ['Statement', <InlineMarkdown key="s">{f.root_cause.statement}</InlineMarkdown>],
                         ['Location', f.root_cause.location],
                         ['Confidence', f.root_cause.confidence],
                         ['Entry points', f.root_cause.entry_points.join(', ') || undefined],
                         ['Data flow', f.root_cause.data_flow.join(' → ') || undefined],
-                        ['How to fix', f.root_cause.how_to_fix],
+                        ['How to fix', f.root_cause.how_to_fix ? <Markdown key="h">{f.root_cause.how_to_fix}</Markdown> : undefined],
                       ]} />
                     ) : <EmptyState title="No root-cause analysis" />}
                   </Panel>
@@ -146,19 +151,19 @@ export function FindingPage() {
                           {f.plan.research_status ? ` · research ${f.plan.research_status}` : ''} · confidence {f.plan.confidence}</span>
                       </div>
                       {f.plan.catalog_title && <div className="font-medium text-strong">{f.plan.catalog_title} {f.plan.owasp && <span className="text-muted">({f.plan.owasp})</span>}</div>}
-                      {f.plan.plain_summary && <p className="text-muted">{f.plan.plain_summary}</p>}
-                      {f.plan.approach && <p className="text-text">{f.plan.approach}</p>}
+                      {f.plan.plain_summary && <Markdown className="text-muted">{f.plan.plain_summary}</Markdown>}
+                      {f.plan.approach && <Markdown>{f.plan.approach}</Markdown>}
                       {f.plan.verification_plan.length > 0 && (
                         <div><div className="text-[11px] uppercase tracking-wide text-faint">Verification plan</div>
-                          <ul className="list-disc pl-5 text-muted">{f.plan.verification_plan.map((v) => <li key={v}>{v}</li>)}</ul></div>
+                          <ul className="list-disc pl-5 text-muted">{f.plan.verification_plan.map((v) => <li key={v}><InlineMarkdown>{v}</InlineMarkdown></li>)}</ul></div>
                       )}
                       {f.plan.risk_notes.length > 0 && (
                         <div><div className="text-[11px] uppercase tracking-wide text-faint">Risks</div>
-                          <ul className="list-disc pl-5 text-muted">{f.plan.risk_notes.map((v) => <li key={v}>{v}</li>)}</ul></div>
+                          <ul className="list-disc pl-5 text-muted">{f.plan.risk_notes.map((v) => <li key={v}><InlineMarkdown>{v}</InlineMarkdown></li>)}</ul></div>
                       )}
                       {f.plan.open_questions.length > 0 && (
                         <div><div className="text-[11px] uppercase tracking-wide text-faint">Open questions</div>
-                          <ul className="list-disc pl-5 text-muted">{f.plan.open_questions.map((v) => <li key={v}>{v}</li>)}</ul></div>
+                          <ul className="list-disc pl-5 text-muted">{f.plan.open_questions.map((v) => <li key={v}><InlineMarkdown>{v}</InlineMarkdown></li>)}</ul></div>
                       )}
                     </div>
                   ) : <EmptyState title="Not planned">Remediation planning runs after Gate A when the strategy includes security.</EmptyState>}
@@ -170,7 +175,7 @@ export function FindingPage() {
                       <ProposalStatusBadge status={f.proposal.status} />
                       <Hash value={f.proposal.proposal_hash} label="proposal hash" />
                     </div>
-                    <p className="mt-1 text-muted">{f.proposal.reason}</p>
+                    {f.proposal.reason && <Markdown className="mt-1 text-muted">{f.proposal.reason}</Markdown>}
                   </Panel>
                 )}
                 {f.decisions.map((d) => <DecisionReceipt key={d.decision_id} decision={d} />)}

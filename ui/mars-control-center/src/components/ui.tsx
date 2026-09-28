@@ -187,7 +187,9 @@ export function Button({ variant = 'default', size = 'md', className, loading, c
 }
 
 export function Modal({ open, onOpenChange, title, description, children, wide }: {
-  open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; children: ReactNode; wide?: boolean;
+  open: boolean; onOpenChange: (o: boolean) => void; title: string; description?: string; children: ReactNode;
+  /** true: a form or detail dialog; 'xl': a document reader */
+  wide?: boolean | 'xl';
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -195,7 +197,7 @@ export function Modal({ open, onOpenChange, title, description, children, wide }
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/60" />
         <Dialog.Content
           className={cn('fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2',
-            'overflow-auto rounded-lg border border-border-strong bg-panel p-4 shadow-2xl', wide ? 'max-w-3xl' : 'max-w-lg')}
+            'overflow-auto rounded-lg border border-border-strong bg-panel p-4 shadow-2xl', wide === 'xl' ? 'max-w-6xl' : wide ? 'max-w-3xl' : 'max-w-lg')}
         >
           <div className="mb-3 flex items-start justify-between gap-4">
             <div>

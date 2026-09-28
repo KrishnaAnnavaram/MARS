@@ -114,4 +114,22 @@ test.describe.serial('a MARS run through the Control Center', () => {
     await page.goto(`/runs/${runId}/actions`);
     await expect(page.getByRole('button', { name: 'Record decision' })).toHaveCount(0);
   });
+
+  test('reports read as documents: tables are tables and the executed flow is drawn', async ({ page }) => {
+    await signIn(page, 'viewer');
+    await page.goto(`/runs/${runId}/verdict`);
+    await page.getByText('reports/final-report.md').first().click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { level: 1 })).toContainText('Final Evidence Report');
+    await expect(dialog.getByRole('table').first().getByRole('columnheader').first()).toBeVisible();
+    await expect(dialog.getByText('|---|')).toHaveCount(0);
+    const diagram = dialog.getByRole('figure', { name: 'Diagram' });
+    await expect(diagram.locator('svg')).toBeVisible({ timeout: 20_000 });
+    await expect(diagram.locator('svg')).toContainText('CREATED');
+    // the source stays one click away, verbatim
+    await dialog.getByRole('tab', { name: 'Markdown source' }).click();
+    await expect(dialog.locator('pre')).toContainText('```mermaid');
+    // no absolute server path reaches the browser
+    await expect(dialog.locator('pre')).not.toContainText(/runs[\\/]RUN-/);
+  });
 });

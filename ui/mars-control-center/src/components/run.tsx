@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import type { CurrentActivity, ExecutionEvent, PipelineStage, StageProgress } from '../api/types';
 import { between, cn, formatDuration, formatTime, relative } from '../lib/format';
 import { eventStatus, lookup, stageStatus, toneClasses } from '../lib/status';
+import { InlineMarkdown } from './Markdown';
 import { EmptyState, Panel, ProgressBar, StatusBadge } from './ui';
 
 /** Completed stages out of applicable ones. A count of stages, not a time estimate. */
@@ -51,8 +52,8 @@ export function CurrentActivityPanel({ activity, advancing }: { activity?: Curre
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="text-[11px] uppercase tracking-wide text-faint">{activity.component}</div>
-              <div className="font-medium text-strong">{activity.title}</div>
-              {activity.message && <div className="text-muted">{activity.message}</div>}
+              <div className="font-medium text-strong"><InlineMarkdown>{activity.title}</InlineMarkdown></div>
+              {activity.message && <div className="text-muted"><InlineMarkdown>{activity.message}</InlineMarkdown></div>}
             </div>
             <StatusBadge status={lookup(eventStatus, activity.status)} />
           </div>
@@ -111,7 +112,7 @@ export function EventRow({ event, onSelect, selected }: { event: ExecutionEvent;
       <span className={cn('mono text-[11px] uppercase', categoryTone[event.category])}>{event.category}</span>
       <Icon aria-hidden className={cn('mt-0.5 size-3.5', toneClasses[st.tone].text, st.spin && 'animate-spin')} />
       <span className="min-w-0">
-        <span className="text-text">{event.title ?? event.type}</span>
+        <span className="text-text">{event.title ? <InlineMarkdown noLinks>{event.title}</InlineMarkdown> : event.type}</span>
         {event.progress?.total !== undefined && (
           <span className="mono ml-2 text-faint">{event.progress.completed}/{event.progress.total} {event.progress.unit}</span>
         )}

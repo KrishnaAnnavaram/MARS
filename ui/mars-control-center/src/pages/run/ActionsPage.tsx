@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import { useHumanActions, useRun } from '../../api/queries';
 import type { HumanAction, HumanLink } from '../../api/types';
 import { ArtifactViewer } from '../../components/ArtifactViewer';
+import { Markdown } from '../../components/Markdown';
 import { EmptyState, KeyValues, Panel, QueryView, StatusBadge, Tag } from '../../components/ui';
 import { ContinueExecution, DecisionReceipt, GateDecision, ProposalDecision, ProposalStatusBadge, useRecentDecisions } from '../../features/decisions';
 import { useRunId } from '../../layout/RunLayout';
@@ -137,7 +138,7 @@ function ActionCard({ runId, action }: { runId: string; action: HumanAction }) {
                     {p.strategy_only && <Tag tone="warning">strategy only</Tag>}
                     {p.finding_labels.map((f) => <Tag key={f} tone="active">{f}</Tag>)}
                   </div>
-                  <p className="mt-0.5 text-muted">{p.reason}</p>
+                  {p.reason && <Markdown className="mt-0.5 text-muted">{p.reason}</Markdown>}
                   <p className="mono text-[11px] text-faint">{p.files.join(', ')}</p>
                 </div>
                 <ProposalDecision runId={runId} proposal={p} canDecide={action.can_decide} cannotReason={action.cannot_decide_reason}

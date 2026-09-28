@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router';
 import { useProposal, useRun } from '../../api/queries';
 import type { MutationView, ProposalDetail } from '../../api/types';
 import { DiffView } from '../../components/DiffView';
+import { Markdown } from '../../components/Markdown';
 import { EmptyState, Hash, KeyValues, Panel, QueryView, Table, Tabs, Tag, td, th } from '../../components/ui';
 import { DecisionReceipt, ProposalDecision, ProposalStatusBadge } from '../../features/decisions';
 import { useRunId } from '../../layout/RunLayout';
@@ -140,7 +141,7 @@ export function ProposalPage() {
                     <Link key={f} to={`/runs/${runId}/security/${f}`}><Tag tone="active">{p.finding_labels[i] ?? f}</Tag></Link>
                   ))}
                 </div>
-                <p className="mt-1 text-text">{p.reason}</p>
+                {p.reason && <Markdown className="mt-1">{p.reason}</Markdown>}
                 {p.expected_outcome && <p className="text-muted">Expected: {p.expected_outcome}</p>}
               </div>
               <div className="text-right text-[12px]">
