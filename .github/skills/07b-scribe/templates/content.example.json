@@ -1,0 +1,14 @@
+{
+  "issue_id": "ISSUE-000",
+  "audit_narrative": "Illustrative example only. ISSUE-000 was reported as a Critical NoSQL injection ([issue](../../../docs/agent_output/00-issues/issue-register.xlsx)). The root cause analyst traced it to string-concatenated BasicQuery construction ([root cause](../../../docs/agent_output/02-root-cause/root_cause_ISSUE-000.md)); the blast radius analyst scoped it to one endpoint with no wider service impact ([blast radius](../../../docs/agent_output/03-blast-radius/blast_radius_ISSUE-000.md)). The fix strategist proposed a Criteria-based parameterised query citing CWE-943 ([fix plan](../../../docs/agent_output/04-remediation/fix_plan_ISSUE-000.md)), approved by a human. The fixer drafted and compiled the patch ([fix](../../../docs/agent_output/04-remediation/fix_ISSUE-000.md)). All three Step 1 checks passed ([re-scan](../../../docs/agent_output/05-verify/rescan_ISSUE-000.md), [red-team](../../../docs/agent_output/05-verify/redteam_ISSUE-000.md), [behavior](../../../docs/agent_output/05-verify/behavior_ISSUE-000.md)), the QA gate passed with a new mocked regression test ([qa](../../../docs/agent_output/06-test-gate/qa_ISSUE-000.md)), and the build gate passed with no dependency drift ([build](../../../docs/agent_output/06-test-gate/build_ISSUE-000.md)). The merge arbiter scored it 100/100 against a 90-point threshold and cleared it ([verdict](../../../docs/agent_output/07-ship/verdict_ISSUE-000.md)).",
+  "pr_title": "fix(employee-service): parameterise employee search query (CWE-943)",
+  "pr_summary": [
+    "Replaces string-concatenated BasicQuery construction in EmployeeSearchRepository with a parameterised Criteria/Query, closing a NoSQL injection in the employee search endpoint.",
+    "No API, return type, or call-site changes — behavior for legitimate searches is unchanged."
+  ],
+  "pr_test_plan": [
+    "New mocked regression test (EmployeeSearchRepositoryTest) verifying the constructed Criteria binds the reported injection payload as a literal value — passed.",
+    "mvn verify for employee-service — passed, no dependency drift.",
+    "Not run in CI (no live MongoDB in this environment): the original @DataMongoTest suite — run manually against a real MongoDB before merging if that suite isn't exercised elsewhere in CI."
+  ]
+}

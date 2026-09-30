@@ -1,0 +1,15 @@
+{
+  "issue_id": "ISSUE-000",
+  "verdict": "NO_BYPASS_FOUND",
+  "confidence": "Medium",
+  "plain_summary": "Illustrative example only. No way was found to make the search box misbehave again with the new code.",
+  "attempted_vectors": [
+    { "vector": "department field with a raw $where/$ne operator string", "description": "department is bound via Criteria.is(), a scalar equality match — Spring Data serializes it as a literal value, not parsed query syntax.", "result": "blocked" },
+    { "vector": "regex denial-of-service via an extremely long name value", "description": "Pattern.quote() escapes regex metacharacters but does not bound input length; a very long literal is still a linear scan, not catastrophic backtracking.", "result": "uncertain" }
+  ],
+  "bypasses_found": [],
+  "reasoning": "Both fields are now bound as Criteria values rather than spliced into query text, which closes the structural-injection mechanism the catalog entry describes. The one open question (unbounded input length) is a resource-consumption concern (CWE-400), not a re-opening of the injection itself, so it is recorded as residual risk rather than a bypass.",
+  "residual_risk": [
+    "No explicit length cap on the name parameter — likely fine at this scale, but worth a follow-up issue if input size becomes attacker-controlled at volume."
+  ]
+}

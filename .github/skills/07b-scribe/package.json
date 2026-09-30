@@ -1,0 +1,13 @@
+{
+  "name": "07b-scribe",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Writes docs/agent_output/07-ship/pr_<id>.md (PR-ready content) and docs/agent_output/07-ship/audit_<id>.md (chain-of-custody audit trail) for every fix with a rendered merge-arbiter verdict, always, regardless of Cleared/Blocked. Never touches git or GitHub. Phase C step 3, second half.",
+  "type": "commonjs",
+  "scripts": {
+    "workload": "node scripts/list-scribe-workload.js",
+    "collect": "node scripts/collect-chain.js --all",
+    "render": "node scripts/render-scribe.js --all"
+  },
+  "dependencies": {}
+}

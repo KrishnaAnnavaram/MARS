@@ -1,0 +1,13 @@
+{
+  "name": "06b-build-gatekeeper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Runs mvn verify and a dependency-tree diff for every Compiled or Compile Failed fix inside an isolated git worktree. Fully deterministic — no agent-authored content anywhere in this skill's output. Phase C step 2, second half.",
+  "type": "commonjs",
+  "scripts": {
+    "workload": "node scripts/list-build-workload.js",
+    "gate": "node scripts/run-build-gate.js --all",
+    "render": "node scripts/render-build-report.js --all"
+  },
+  "dependencies": {}
+}

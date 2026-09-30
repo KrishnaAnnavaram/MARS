@@ -1,0 +1,151 @@
+{
+  "generatedAt": "2026-08-15T12:00:00.000Z",
+  "artifactsGeneratedAt": "2026-08-15T10:02:51.800Z",
+  "author": "architect-agent",
+  "nodes": [
+    {
+      "kind": "Module",
+      "id": "employee-service",
+      "fingerprint": "bda4ddd9e0103688",
+      "summary": "The system of record for employees. Owns the `employees` Mongo collection and is the only service that writes to it; every other service reads employee data over its REST surface. Also the only service that enriches employee data with department salary by calling department-service.",
+      "role": "deployable",
+      "responsibilities": [
+        "CRUD over the employee roster",
+        "Excel bulk upload of employees",
+        "Employee search",
+        "Salary lookup, by joining an employee to its department"
+      ],
+      "criticality": "critical",
+      "sideEffects": [
+        "writes: employees Mongo collection",
+        "outbound HTTP to department-service for salary enrichment"
+      ],
+      "invariants": [
+        "An employee's `department` field must reference a department id that department-service knows about; nothing enforces this at write time"
+      ],
+      "failureModes": [
+        "When department-service is unavailable, salary lookup fails rather than degrading — the employee read path still works",
+        "Bulk upload is not transactional: a mid-file failure leaves earlier rows committed"
+      ],
+      "dataTouched": ["writes: employees", "reads: employees"],
+      "upstream": ["report-service (over HTTP)", "sheduler-service (over HTTP)"],
+      "downstream": ["department-service", "MongoDB", "discovery-service", "configuaration-server"],
+      "testHints": [
+        "Stub department-service before exercising any salary path — it is a hard dependency",
+        "Bulk upload needs a real .xlsx fixture; the parser is Apache POI, not a CSV reader"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/pom.xml (spring-boot-starter-data-mongodb, spring-boot-starter-webflux)",
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java"
+      ]
+    },
+    {
+      "kind": "Type",
+      "id": "com.aura.vihanga.employeeservice.service.EmployeeService",
+      "fingerprint": "331872576dba1207",
+      "summary": "The employee service contract. This is the type Spring injects into EmployeeController, so it is what every caller is coded against even though EmployeeServiceImpl holds the behaviour. Changing a signature here is a breaking change for the whole module.",
+      "role": "contract",
+      "criticality": "high",
+      "sideEffects": [],
+      "invariants": [
+        "Every method that takes an employeeId declares EmployeeNotFoundException — callers are expected to handle a missing employee, not receive null"
+      ],
+      "failureModes": [
+        "A caller resolving to the interface rather than the implementation will appear to dead-end in the call graph; the real behaviour is in EmployeeServiceImpl"
+      ],
+      "downstream": ["EmployeeServiceImpl"],
+      "confidence": "high",
+      "evidence": ["employee-service/src/main/java/com/aura/vihanga/employeeservice/service/EmployeeService.java"]
+    },
+    {
+      "kind": "Method",
+      "id": "com.aura.vihanga.employeeservice.service.implementation.EmployeeServiceImpl#getEmployeeSalary(String)",
+      "fingerprint": "8c624a0367914bb5",
+      "summary": "Joins an employee to its department to produce a salary view. Reads the employee locally, then makes a blocking WebClient call to department-service for the department record and copies the salary out of it. This is the only place employee data and department data are combined.",
+      "role": "service",
+      "responsibilities": ["Resolve an employee's salary by way of its department"],
+      "criticality": "high",
+      "sideEffects": [
+        "outbound HTTP GET to department-service via WebClient",
+        "blocks the calling thread on .block() until department-service responds"
+      ],
+      "invariants": [
+        "employeeResponse.getDepartment() must name a department that department-service can return",
+        "The department-service response must be non-null before its fields are read"
+      ],
+      "failureModes": [
+        "NullPointerException on departmentResponse.getDepartmentName() when department-service returns an empty body or 404 for the department id — the result of .block() is used without a null check",
+        "Thread blocks until the WebClient timeout when department-service is slow or down; no fallback despite resilience4j being on the classpath",
+        "A stale or dangling department id on the employee record surfaces here rather than at write time"
+      ],
+      "dataTouched": ["reads: employees", "reads: department-service /api/v1/department/{id}"],
+      "upstream": ["EmployeeController.getEmployeeSalary() via GET /api/v1/employee/salary/{id}"],
+      "downstream": ["department-service", "DepartmentUrlConfiguration"],
+      "testHints": [
+        "Assert the null-department case explicitly — stub department-service to return an empty body and confirm the observed behaviour",
+        "Cover the timeout path with a delayed stub; there is no circuit breaker on this call",
+        "Happy path needs both an employee fixture and a matching department stub"
+      ],
+      "confidence": "high",
+      "evidence": [
+        "employee-service/src/main/java/com/aura/vihanga/employeeservice/service/implementation/EmployeeServiceImpl.java:86-106"
+      ]
+    },
+    {
+      "kind": "Endpoint",
+      "id": "GET /api/v1/employee/salary/{id}",
+      "fingerprint": "9d56eeaaec1ac17b",
+      "summary": "Returns an employee together with their department name and salary. The only endpoint in employee-service whose response depends on another service being up.",
+      "role": "controller",
+      "criticality": "high",
+      "sideEffects": ["fans out to department-service on every request"],
+      "failureModes": [
+        "Returns a 500 rather than a degraded response when department-service is unavailable",
+        "Latency tracks department-service latency, because the downstream call is blocking"
+      ],
+      "upstream": ["external API clients"],
+      "downstream": ["EmployeeServiceImpl.getEmployeeSalary()", "department-service"],
+      "testHints": ["Replay with a valid employee id whose department id does not exist — that is the sharpest edge on this route"],
+      "confidence": "high",
+      "evidence": ["employee-service/src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java"]
+    },
+    {
+      "kind": "ExternalType",
+      "id": "MongoRepository",
+      "fingerprint": "7b7b4f3eadd14c72",
+      "summary": "Spring Data's repository base interface. Every repository in this workspace extends it and inherits findAll, findById, save, deleteById and count without declaring them, so those calls are real even though the graph holds no Method node for them.",
+      "role": "framework-base",
+      "criticality": "medium",
+      "sideEffects": ["reads and writes the backing Mongo collection for whatever entity the repository is typed on"],
+      "invariants": [
+        "Query methods derived from names (findByX) are generated at runtime — a typo in the name is a startup failure, not a compile error"
+      ],
+      "failureModes": [
+        "A call to an inherited method looks like a dead end in the call graph; do not read that as an unreached code path",
+        "findById returns Optional.empty rather than throwing for a missing document"
+      ],
+      "confidence": "high",
+      "evidence": ["Extended by EmployeeRepository, DepartmentRepository, EmployeeReportRepository, EmployeeSchedulerRepository"]
+    }
+  ],
+  "crossCutting": [
+    {
+      "id": "employee-salary-cross-service-join",
+      "topic": "service-dependency",
+      "text": "employee-service reaches department-service over HTTP to resolve salary. This edge carries no Java call edge, so a change to department-service's GET /api/v1/department/{id} contract or response shape breaks employee-service's salary endpoint without any static reference between the two modules.",
+      "modules": ["employee-service", "department-service"],
+      "types": ["com.aura.vihanga.employeeservice.service.implementation.EmployeeServiceImpl"],
+      "confidence": "high",
+      "evidence": ["EmployeeServiceImpl.getEmployeeSalary uses WebClient with DepartmentUrlConfiguration.getDepartmentByIdUrl()"]
+    },
+    {
+      "id": "shared-mongo-employee-collection",
+      "topic": "shared-datastore",
+      "text": "employee-service, report-service and sheduler-service each declare spring-boot-starter-data-mongodb and each define their own Employee document type. If they point at the same database, a schema change in one service's Employee affects reads in the others with nothing in the code to flag it.",
+      "modules": ["employee-service", "report-service", "sheduler-service"],
+      "confidence": "medium",
+      "evidence": ["Three separate Employee @Document types across the three modules", "pom.xml of each module"]
+    }
+  ]
+}
