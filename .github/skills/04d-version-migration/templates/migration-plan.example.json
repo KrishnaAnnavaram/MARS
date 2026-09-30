@@ -1,0 +1,60 @@
+{
+  "slug": "spring-boot-migration-demo",
+  "created_at": "2026-09-30",
+  "reference_pack": "references/spring-boot-3-to-4.md",
+  "source": {
+    "platform": { "name": "Spring Boot", "version": "3.5.0", "source": "baseline.json" },
+    "language": { "name": "Java", "version": "17", "source": "baseline.json" }
+  },
+  "target": {
+    "platform": { "name": "Spring Boot", "version": "4.1.1", "source": "request" },
+    "language": { "name": "Java", "version": "21", "source": "request" }
+  },
+  "path": {
+    "hops": [{ "from": "3.5.0", "to": "4.1.1", "note": "single hop — the source is on the 3.5.x preparation line" }],
+    "preparation": "On the 3.5.x line; no preparation hop needed, so boot35-preparation is not selected."
+  },
+  "constraints": [
+    { "id": "C1", "statement": "A JDK 21 is available", "status": "satisfied", "evidence": "baseline.json toolchain" },
+    { "id": "C2", "statement": "Spring Boot 4.1.1 resolves from the configured repositories", "status": "unresolved", "evidence": "proven by the first target round", "blocking": true },
+    { "id": "C3", "statement": "Testcontainers 1.20.1 (pinned) still works with the Boot 4 test stack", "status": "unresolved", "evidence": "verified by the package round" }
+  ],
+  "surfaces": [
+    { "area": "JSON", "files": ["src/main/java/com/example/migrationdemo/config/JacksonConfig.java"], "basis": "machine-detected" },
+    { "area": "Security", "files": ["src/main/java/com/example/migrationdemo/config/SecurityConfig.java"], "basis": "agent-judgement", "note": "Lambda DSL — expected to compile unchanged" }
+  ],
+  "impact": [
+    {
+      "id": "I1", "file": "pom.xml", "area": "Platform parent", "evidence": "spring-boot-starter-parent 3.5.0",
+      "reference_rule": "section 1.1", "risk": "low", "verification": "the first target round resolves 4.1.1",
+      "handled_by": "deterministic", "expected_symptoms": ["spring-boot-starter-parent"]
+    },
+    {
+      "id": "I4", "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java", "area": "JSON handling",
+      "evidence": "hand-built Jackson 2 ObjectMapper bean", "reference_rule": "section 2", "risk": "high",
+      "verification": "compile, then the serialization probe byte-identical", "handled_by": "either",
+      "expected_symptoms": ["com.fasterxml.jackson.databind", "ObjectMapper"]
+    },
+    {
+      "id": "I9", "file": "Dockerfile", "area": "Runtime image", "evidence": "FROM eclipse-temurin:17-jre",
+      "reference_rule": "section 8", "risk": "medium", "verification": "file review", "handled_by": "residual"
+    }
+  ],
+  "characterization": [
+    { "probe": "high earners", "protects": ["I4"], "category": "serialization" },
+    { "probe": "list all employees", "protects": ["I1", "I4"], "category": "business-api" },
+    { "probe": null, "protects": ["I9"], "category": "other", "reason": "no container runtime available" }
+  ],
+  "deterministic_candidates": [
+    {
+      "id": "boot4-curated", "provider": "openrewrite", "transformation": "boot4-curated", "policy": "optional",
+      "covers": ["I1", "I4"], "notes": "Pinned to the requested target; preview and inspect before applying."
+    }
+  ],
+  "residual_candidates": [
+    { "impact": "I9", "why_not_deterministic": "No recipe in the pack changes a Dockerfile base image." }
+  ],
+  "out_of_scope": ["Testcontainers 2 migration", "Fixing pre-existing test failures"],
+  "stop_conditions": ["Spring Boot 4.1.1 cannot be resolved", "A business or security probe changes status"],
+  "unresolved_questions": []
+}

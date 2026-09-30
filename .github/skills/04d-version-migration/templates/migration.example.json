@@ -1,0 +1,128 @@
+{
+  "slug": "spring-boot-migration-demo",
+  "title": "Spring Boot 3.5.0 to 4.1.1 on Java 21",
+  "summary": "The application moved from Spring Boot 3.5.0 on Java 17 to Spring Boot 4.1.1 on Java 21. The business API is unchanged: the employee endpoints answer with the same payloads and the same authentication. Most of the mechanical change — the parent, the Java level, the test starters, the Jackson 3 packages, the actuator relocation and the mocking annotations — was made by a previewed OpenRewrite recipe; the rest was fixed by hand only where a build named it. Health and default error bodies changed shape in framework-owned fields, which is reported below rather than rounded away.",
+  "migration": {
+    "reference_pack": "references/spring-boot-3-to-4.md",
+    "language": { "name": "Java", "from": "17", "to": "21" },
+    "platform": { "name": "Spring Boot", "from": "3.5.0", "to": "4.1.1" }
+  },
+  "plan": "migration-plan.json",
+  "dependency_changes": [
+    {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "from": "3.5.0",
+      "to": "4.1.1",
+      "kind": "version",
+      "reason": "The parent BOM drives every managed version; set to the requested 4.1.1 by the curated recipe (section 1.1)."
+    },
+    {
+      "coordinate": "java.version",
+      "from": "17",
+      "to": "21",
+      "kind": "property",
+      "reason": "Java 21 is the target of this migration (section 1.2)."
+    },
+    {
+      "coordinate": "org.springframework.security:spring-security-test",
+      "from": "spring-security-test",
+      "to": "org.springframework.boot:spring-boot-starter-security-test",
+      "kind": "rename",
+      "reason": "Boot 4 carries the MockMvc security test auto-configuration in its own starter (section 4.4)."
+    }
+  ],
+  "code_changes": [
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "category": "JSON handling",
+      "what": "The Jackson 2 ObjectMapper bean became a Jackson 3 JsonMapper built with the same inclusion and indentation settings.",
+      "why": "Boot 4 ships Jackson 3, which relocates the databind package and replaces the mapper configuration API.",
+      "reference_rule": "section 2",
+      "before": "import com.fasterxml.jackson.databind.ObjectMapper;\nmapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);",
+      "after": "import tools.jackson.databind.json.JsonMapper;\n.changeDefaultPropertyInclusion(incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))",
+      "origin": "openrewrite",
+      "transformation": "rewrite-02"
+    },
+    {
+      "file": "Dockerfile",
+      "category": "Runtime image",
+      "what": "Base image moved from eclipse-temurin:17-jre to eclipse-temurin:21-jre.",
+      "why": "The jar now targets Java 21 and would not start on a 17 runtime.",
+      "reference_rule": "section 8",
+      "origin": "harness-residual",
+      "evidence": "Plan impact I9; no recipe changes a Dockerfile in this pack's transformation."
+    }
+  ],
+  "round_notes": [
+    {
+      "round": 0,
+      "diagnosis": "Pre-migration reference build on Java 17: 15 tests, 2 failing actuator slice tests and 1 Testcontainers test that cannot find a Docker daemon. All three are pre-existing; the migration is judged against these counts.",
+      "changes": [],
+      "reference_rules": []
+    },
+    {
+      "round": 1,
+      "diagnosis": "Built the OpenRewrite apply immediately. Main and test code compile on JDK 21; nothing the recipe produced needed correcting at compile level.",
+      "changes": ["Applied rewrite-02 (curated Boot 3 to 4 recipe, previewed as rewrite-01), with ErrorResponse.java excluded as out of scope."],
+      "reference_rules": ["section 1", "section 2", "section 3", "section 4"],
+      "transformation": "rewrite-02",
+      "root_causes": []
+    },
+    {
+      "round": 2,
+      "diagnosis": "Same package goal as round 0: the same 15 tests, the same 2 failures and the same Docker error. Nothing was introduced.",
+      "changes": [],
+      "reference_rules": []
+    }
+  ],
+  "behaviour": {
+    "verdict": "changed",
+    "notes": "Every business endpoint is byte-identical and the authentication boundary still returns 401. The health document and the default error bodies differ in framework-owned fields only.",
+    "differences": [
+      {
+        "probe": "health is public",
+        "classification": "expected-framework-change",
+        "explanation": "Boot 4's health document orders details before status and adds fields; the component statuses are unchanged."
+      },
+      {
+        "probe": "unauthenticated is rejected",
+        "classification": "expected-framework-change",
+        "explanation": "Same 401; the default error body's timestamp format changed from +00:00 to Z."
+      }
+    ],
+    "security_boundary": "preserved",
+    "unobserved_areas": ["PostgreSQL-specific persistence behaviour (only H2 was exercised)"]
+  },
+  "impact_review": [
+    { "impact": "I4", "outcome": "handled-by-transformation", "note": "UpgradeJackson_2_3 rewrote the mapper; serialization probes byte-identical." },
+    { "impact": "I9", "outcome": "confirmed", "note": "Dockerfile edited by hand; no container runtime to run it here." }
+  ],
+  "transformations": [
+    { "record": "rewrite-01", "decision": "superseded", "rationale": "Preview inspected; applied as rewrite-02 with one file excluded." },
+    { "record": "rewrite-02", "decision": "accepted", "rationale": "Every changed file maps to a plan impact entry; ErrorResponse.java excluded because removing its @JsonFormat would change the error-contract timestamp.", "reviewed_files": ["pom.xml", "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"] }
+  ],
+  "unresolved_constraints": [
+    { "constraint": "C3", "status": "resolved", "evidence": "Round 1 resolved spring-boot-starter-parent 4.1.1." }
+  ],
+  "blocking_conditions": [
+    { "condition": "Spring Boot 4.1.1 must resolve", "status": "cleared", "evidence": "round 1" }
+  ],
+  "provenance": {
+    "sources": ["https://docs.openrewrite.org/recipes/java/spring/boot4/upgradespringboot_4_0"],
+    "notes": "Recipe attribution per file is in transformations/rewrite-02.json."
+  },
+  "out_of_scope_changes": [
+    {
+      "change": "OpenRewrite proposed removing @JsonFormat from ErrorResponse (Jackson's UseModernDateTimeSerialization).",
+      "why_separate": "Not required by Boot 4 — the annotation still works under Jackson 3 — and it would change the error body's timestamp format. Excluded from the apply."
+    }
+  ],
+  "manual_follow_ups": [
+    "Update the deployment pipeline's build image to a Java 21 JDK.",
+    "Re-run the performance suite: the runtime probes prove correctness, not throughput."
+  ],
+  "residual_risk": [
+    "Only the endpoints listed in the probe file were exercised; any route not in that list is unproven.",
+    "The H2 file database was used for both runs — PostgreSQL-specific behaviour under Hibernate 7 is untested here."
+  ]
+}

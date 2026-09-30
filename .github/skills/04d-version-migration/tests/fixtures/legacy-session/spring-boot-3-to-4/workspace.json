@@ -1,0 +1,25 @@
+{
+  "slug": "spring-boot-3-to-4",
+  "created_at": "2026-09-06T14:26:40.397Z",
+  "project_dir": "d:/Office Research/SDLC_Harness/spring-boot-3-to-4-migration-demo-master",
+  "workspace": "D:/Office Research/SDLC_Harness/sample-java-project/.github/.pipeline-context/version-migration/spring-boot-3-to-4/workspace",
+  "baseline_commit": "c692e9f74f7759102e0e30079c21d1194e2b974d",
+  "files_copied": 29,
+  "files_skipped": [
+    {
+      "file": "data/employee_db.mv.db",
+      "reason": "EBUSY"
+    }
+  ],
+  "excluded": [
+    ".git",
+    "target",
+    "build",
+    "out",
+    "node_modules",
+    ".idea",
+    ".gradle",
+    ".mvn/wrapper/maven-wrapper.jar"
+  ],
+  "mode": "copy+git-init"
+}

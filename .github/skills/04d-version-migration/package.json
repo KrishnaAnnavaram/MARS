@@ -1,0 +1,17 @@
+{
+  "name": "04d-version-migration",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Migrates a Java project to a new language level and/or framework version in a sandbox copy: detects the baseline and the application's migration surfaces, records the pre-migration build and behaviour, plans the impact, applies previewed deterministic OpenRewrite transformations where the reference pack offers them, iterates evidence-driven build rounds until green on the target runtime, compares behaviour, and renders docs/agent_output/04-remediation/migration_<slug>.md plus a cumulative migration_<slug>.diff.",
+  "type": "commonjs",
+  "scripts": {
+    "baseline": "node scripts/detect-baseline.js",
+    "workspace": "node scripts/prepare-workspace.js",
+    "build": "node scripts/run-migration-build.js",
+    "probe": "node scripts/probe-runtime.js",
+    "render": "node scripts/render-migration-report.js --all",
+    "apply": "node scripts/apply-migration.js",
+    "test": "node --test \"tests/*.test.js\""
+  },
+  "dependencies": {}
+}

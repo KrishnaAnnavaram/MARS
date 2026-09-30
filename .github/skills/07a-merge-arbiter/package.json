@@ -1,0 +1,13 @@
+{
+  "name": "07a-merge-arbiter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Deterministically scores the five Phase C upstream reports against scoring.json's weights and hard gates, then renders docs/agent_output/07-ship/verdict_<id>.md with the agent's narrative and any explicit, always-visible override. Phase C step 3, first half.",
+  "type": "commonjs",
+  "scripts": {
+    "workload": "node scripts/list-merge-workload.js",
+    "score": "node scripts/compute-score.js --all",
+    "render": "node scripts/render-verdict.js --all"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,170 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Version Migration — pre-mutation migration plan",
+  "description": "Written by the agent to .github/.pipeline-context/version-migration/<slug>/migration-plan.json AFTER round 0 and the baseline probe are recorded and BEFORE any transformation or version change. It is the agent's structured judgement about what the migration will touch and how each part will be protected and verified. It does not restate machine facts: declared versions, dependency lists and detected source surfaces stay in baseline.json and are referenced, not copied. run-migration-build.js refuses any OpenRewrite run whose recipes this plan does not name; render-migration-report.js compares every impact entry here with what actually failed and changed.",
+  "type": "object",
+  "required": ["slug", "reference_pack", "source", "target", "impact", "characterization", "deterministic_candidates", "residual_candidates", "out_of_scope", "stop_conditions"],
+  "additionalProperties": false,
+  "definitions": {
+    "stack": {
+      "type": "object",
+      "required": ["platform", "language"],
+      "additionalProperties": false,
+      "properties": {
+        "platform": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "source": { "type": "string", "description": "Where the value came from: baseline.json (source side) or request (target side). The target version is ALWAYS the one requested — never 'latest', never a recipe's intermediate target." }
+          }
+        },
+        "language": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "source": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "slug": { "type": "string" },
+    "created_at": { "type": "string" },
+    "reference_pack": { "type": "string", "description": "e.g. references/spring-boot-3-to-4.md" },
+    "source": { "$ref": "#/definitions/stack" },
+    "target": { "$ref": "#/definitions/stack" },
+    "path": {
+      "type": "object",
+      "description": "The route from source to target: hops, and whether the source sits on the line the reference pack expects a migration to start from.",
+      "additionalProperties": false,
+      "properties": {
+        "hops": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to"],
+            "additionalProperties": false,
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        },
+        "preparation": { "type": "string", "description": "What baseline.json's migration_path says about the preparation line, and what the agent decided to do about it." }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "description": "Target/system requirements and compatibility questions, each with a status. 'unresolved' means it could not be proven from local or reference evidence and must be verified by a build or a human.",
+      "items": {
+        "type": "object",
+        "required": ["id", "statement", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "statement": { "type": "string" },
+          "status": { "type": "string", "enum": ["satisfied", "unresolved", "violated", "not-applicable"] },
+          "evidence": { "type": "string" },
+          "blocking": { "type": "boolean", "description": "true when the migration must not be applied while this constraint is unresolved or violated." }
+        }
+      }
+    },
+    "surfaces": {
+      "type": "array",
+      "description": "Migration-relevant parts of the application, as the agent understood them after reading the code. basis says whether the entry is taken from baseline.json's machine scan or is the agent's reading.",
+      "items": {
+        "type": "object",
+        "required": ["area", "files", "basis"],
+        "additionalProperties": false,
+        "properties": {
+          "area": { "type": "string" },
+          "files": { "type": "array", "items": { "type": "string" } },
+          "basis": { "type": "string", "enum": ["machine-detected", "agent-judgement"] },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "impact": {
+      "type": "array",
+      "description": "Predicted impact, one entry per file-and-reason. A prediction, not an observation — the report shows it next to what actually failed and changed.",
+      "items": {
+        "type": "object",
+        "required": ["id", "file", "area", "evidence", "reference_rule", "risk", "verification"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "description": "Short stable id, e.g. I1." },
+          "file": { "type": "string", "description": "Path relative to the project root." },
+          "area": { "type": "string" },
+          "evidence": { "type": "string", "description": "What in the source shows this file is affected (an import, an annotation, a pinned version)." },
+          "reference_rule": { "type": "string", "description": "The reference-pack section that predicts the impact." },
+          "risk": { "type": "string", "enum": ["low", "medium", "high"] },
+          "verification": { "type": "string", "description": "How the result will be proven: a build goal, a test, a probe name." },
+          "handled_by": { "type": "string", "enum": ["deterministic", "residual", "either"] },
+          "expected_symptoms": { "type": "array", "items": { "type": "string" }, "description": "Text a build error would contain if this impact is hit (a package, a symbol). Used only for heuristic correlation, which is labelled as such." }
+        }
+      }
+    },
+    "characterization": {
+      "type": "array",
+      "description": "Which recorded probes protect which impact. A probe named here must exist in probes.json. An impacted area with no probe is listed with probe null and a reason — it is then reported as not observed, never as preserved.",
+      "items": {
+        "type": "object",
+        "required": ["protects", "category"],
+        "additionalProperties": false,
+        "properties": {
+          "probe": { "type": ["string", "null"] },
+          "protects": { "type": "array", "items": { "type": "string" } },
+          "category": { "type": "string", "enum": ["business-api", "security-boundary", "serialization", "actuator", "error-contract", "persistence", "test-suite", "other"] },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "deterministic_candidates": {
+      "type": "array",
+      "description": "Transformations allowed to run before a build asks for them. Each must come from the reference pack (transformation id) and may narrow its recipes. run-migration-build.js --rewrite only runs recipes named here.",
+      "items": {
+        "type": "object",
+        "required": ["id", "provider", "covers"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "provider": { "type": "string", "enum": ["openrewrite", "reference-rule"] },
+          "transformation": { "type": "string", "description": "The reference pack's transformations[].id this candidate uses." },
+          "recipes": { "type": "array", "items": { "type": "string" } },
+          "artifacts": { "type": "array", "items": { "type": "string" } },
+          "plugin_version": { "type": "string" },
+          "gradle_plugin_version": { "type": "string" },
+          "policy": { "type": "string", "enum": ["optional", "required"] },
+          "license": { "type": "string" },
+          "source_repository": { "type": "string" },
+          "covers": { "type": "array", "items": { "type": "string" }, "description": "Impact ids this candidate is expected to handle." },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "residual_candidates": {
+      "type": "array",
+      "description": "Impact the agent expects to fix by hand, only once a build, test or probe demands it.",
+      "items": {
+        "type": "object",
+        "required": ["impact", "why_not_deterministic"],
+        "additionalProperties": false,
+        "properties": {
+          "impact": { "type": "string" },
+          "why_not_deterministic": { "type": "string" }
+        }
+      }
+    },
+    "out_of_scope": { "type": "array", "items": { "type": "string" }, "description": "Work deliberately not done in this migration." },
+    "stop_conditions": { "type": "array", "items": { "type": "string" }, "description": "Conditions under which the migration stops and reports instead of continuing." },
+    "unresolved_questions": { "type": "array", "items": { "type": "string" } }
+  }
+}
