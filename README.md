@@ -43,6 +43,9 @@ harness report  --run RUN-…                             # the evidence report
 
 New here? Read [§1](#1-why-mars-exists), [§2](#2-the-five-non-negotiable-rules) and
 [§15](#15-quick-start), then try the [worked example](#16-worked-example-a-composite-run).
+Working with an AI coding agent? [§27](#27-agent-04-the-fix-generator) describes **Agent 04**, which
+plans fixes, writes patches for approved decisions and resolves migration errors, feeding the
+harness without ever approving anything itself.
 
 ---
 
@@ -74,7 +77,8 @@ New here? Read [§1](#1-why-mars-exists), [§2](#2-the-five-non-negotiable-rules
 24. [Glossary](#24-glossary)
 25. [Troubleshooting](#25-troubleshooting)
 26. [Further documentation](#26-further-documentation)
-27. [License](#27-license)
+27. [Agent 04: the Fix Generator](#27-agent-04-the-fix-generator)
+28. [License](#28-license)
 
 ---
 
@@ -120,6 +124,11 @@ Everything in the design follows from these rules. Each one is enforced in code 
 | **Bootshift** (Java) | Persistent file identity (`FILE_ID`), immutable snapshot, isolated workspace, hash-chained change ledger, file mutation gateway, inventory / build model / application graph, lifecycle facts | **Called unchanged.** It is built from `legacy-sources/bootshift` in the same Maven reactor and forms the kernel base. Its 190 tests still run on every build. |
 | **Vulnerability Remediation Harness (VRH)** (Node.js skills) | Excel issue register; CWE routing catalog → knowledge base → research; fix strategies; re-scan / red-team / QA gates; merge arbiter scoring | **Ported to Java rule-for-rule.** Knowledge files are read in place, unchanged. Parity tests run the original JavaScript and compare results. |
 | **Spring migration reference** (`04d-version-migration`) | Spring Boot 3 → 4 reference pack, a round-based compiler-driven workflow, behaviour probes, a recorded real migration | **Ported as a deterministic engine.** Its rules are pinned to the pack's SHA-256, and the recorded run is used as the parity baseline. |
+
+Both VRH and the Spring migration reference also had an agent layer: an "Agent 04" Fix Generator
+with four skills each. MARS merges them into one **Agent 04 with five skills** (04a to 04e), kept as
+runnable skills in `.github/skills/` next to the Java ports. See
+[§27](#27-agent-04-the-fix-generator).
 
 ---
 
@@ -905,7 +914,9 @@ MARS/
 ├── schemas/v1/                     # JSON Schemas for every artifact contract
 ├── fixtures/                       # composite and migration test projects + inputs
 ├── tests/                          # all harness test suites
-└── docs/                           # analysis, plan, protection map, ADRs, implementation report
+├── docs/                           # analysis, plan, protection map, ADRs, implementation report
+├── .github/                        # Agent 04: agent definition, skills 04a–04e, consistency check (§27)
+└── .claude/                        # Claude Code entry points for Agent 04 and its skills
 ```
 
 ---
@@ -998,6 +1009,7 @@ The full list is in [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT
 | **Probe** | An HTTP request replayed against the running app before and after, to compare behaviour. |
 | **Evidence (`EVID-`)** | A hash-chained record backing every claim MARS makes. |
 | **Verdict** | The final outcome: `CLEARED`, `PARTIAL`, `NEEDS_HUMAN`, `INSUFFICIENT_EVIDENCE` or `BLOCKED`. |
+| **Agent 04** | The Fix Generator agent: five skills (04a to 04e) that plan fixes, write patches for approved decisions, supply research and resolve migration errors. It feeds the harness proposals and never approves them. See [§27](#27-agent-04-the-fix-generator). |
 
 ---
 
@@ -1027,6 +1039,7 @@ Exit codes are listed in [§17](#17-cli-reference).
 | [`docs/README.md`](docs/README.md) | Index of all documentation |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md) · [`CHANGELOG.md`](CHANGELOG.md) | How to contribute, how to report a vulnerability, what changed |
 | [`docs/user-guide.md`](docs/user-guide.md) | Task-based guide: analyze, decide, review proposals, submit patches, apply, audit |
+| [`.github/README.md`](.github/README.md) | Agent 04, the Fix Generator: its five skills, Harness and Pipeline modes, and how it stays in sync with the harness |
 | [`docs/writing-a-reference-pack.md`](docs/writing-a-reference-pack.md) | How to add a migration path: pack format, rule kinds, pinning, testing |
 | [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT.md) | Final architecture, preserved behaviour, changes, full test evidence, defects found and fixed, limitations |
 | [`docs/current-system-analysis.md`](docs/current-system-analysis.md) | Analysis of the three source systems and their baseline test state |
@@ -1039,7 +1052,42 @@ Exit codes are listed in [§17](#17-cli-reference).
 
 ---
 
-## 27. License
+## 27. Agent 04: the Fix Generator
+
+The harness is deterministic by design, so it never invents a research analysis, a patch for an
+approved strategy, or a fix for a migration error its rules do not cover (§23). **Agent 04** is the
+AI agent that supplies that judgement. It enters the run only as inputs and proposals, and a person
+approves every one.
+
+It merges the Agent 04 of VRH (four skills) with the Agent 04 of the Spring migration reference
+(four skills) into one agent with five skills:
+
+| # | Skill | Job | Harness counterpart |
+|---|---|---|---|
+| 04a | Fix Strategist | CWE-catalog remediation plans, never a diff | `CATALOG` route (same 11-entry catalog) |
+| 04b | Fixer | The smallest verified patch for an *approved* plan. Code-logic path, plus a dependency-upgrade path for CWE-1104 | Deterministic fixers; `submit-patch` for strategy-only proposals |
+| 04c | Remediation Intelligence | KB-derived strategy when every CWE is a catalog gap | `KB` route (same KB and ranking weights) |
+| 04d | Remediation Research | Novel strategy or evidence-gap plan on a double gap | `submit-research`, then the `RESEARCH` route |
+| 04e | Version Migration | Framework and Java upgrades, round by round, with behaviour probes | Reference-Pack Engine; `submit-patch` when it stops in `NEEDS_HUMAN` |
+
+It runs in two modes:
+
+- **Harness mode**, the default. Agent 04 reads a run, writes research before Gate A, writes
+  patches for approved strategy-only proposals and for migration errors, and registers them with
+  `harness submit-research` / `harness submit-patch`. It never runs `decide`, `approve` or `apply`.
+- **Pipeline mode.** VRH's original file workflow under `docs/agent_output/`, driven by the skills'
+  own zero-dependency Node.js scripts, with the plan's Status cell as the approval gate.
+
+`node .github/scripts/agent04-check.js` confirms that the skills' catalog, KB, ranking weights and
+reference pack match what the harness loads.
+
+Full documentation: **[`.github/README.md`](.github/README.md)**. The canonical agent specification
+is [`.github/agents/04_fix-generator.agent.md`](.github/agents/04_fix-generator.agent.md). Claude Code
+users start from [`.claude/agents/04-fix-generator.md`](.claude/agents/04-fix-generator.md).
+
+---
+
+## 28. License
 
 MIT — see [LICENSE](LICENSE). The systems under `legacy-sources/` retain their original licenses
 and provenance.

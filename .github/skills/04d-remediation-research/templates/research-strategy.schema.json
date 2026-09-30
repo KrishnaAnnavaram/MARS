@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "04d research strategy (extends the base Agent 4 strategy)",
+  "description": "The strategy 04d hands to the existing render-fix-plan.js. It satisfies the base strategy contract (so the standard renderer works) and adds a `research` payload plus provenance so the plan can show the full novel-research analysis. It is ALWAYS confidence: Low, catalog_reference.title: null, and remediation_source: 04d-remediation-research. It never contains a diff.",
+  "type": "object",
+  "required": ["issue_id", "cwe", "confidence", "remediation_source", "plain_summary", "approach", "catalog_reference", "affected_files", "verification_plan", "research", "derived_pattern"],
+  "additionalProperties": true,
+  "properties": {
+    "issue_id": { "type": "string" },
+    "cwe": { "type": "string" },
+    "confidence": { "type": "string", "enum": ["Low"], "description": "04d is Low by default and never self-upgrades." },
+    "remediation_source": { "type": "string", "enum": ["04d-remediation-research"] },
+    "plain_summary": { "type": "string" },
+    "approach": { "type": "string", "description": "The recommended remediation in prose. No diff — 04b implements it after approval." },
+    "catalog_reference": {
+      "type": "object",
+      "required": ["cwe", "title"],
+      "properties": { "cwe": { "type": "string" }, "title": { "type": ["null"], "description": "Always null — there is no catalog entry." } }
+    },
+    "affected_files": {
+      "type": "array", "minItems": 1,
+      "items": { "type": "object", "required": ["file", "planned_change"], "properties": { "file": { "type": "string" }, "planned_change": { "type": "string" } } }
+    },
+    "verification_plan": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "alternatives_considered": { "type": "array", "items": { "type": "string" } },
+    "risk_notes": { "type": "array", "items": { "type": "string" } },
+    "open_questions": { "type": "array", "items": { "type": "string" } },
+    "research": {
+      "type": "object",
+      "description": "The full 04d analysis, rendered into the plan's extra sections.",
+      "required": ["security_objective", "threat", "candidates", "recommendation", "research_status"],
+      "properties": {
+        "research_status": { "type": "string", "enum": ["established", "insufficient_evidence"] },
+        "vulnerability_understanding": { "type": "object" },
+        "root_cause": { "type": "object", "description": "facts / conclusions / hypotheses kept distinct" },
+        "threat": { "type": "object", "description": "actor, vector, path, impacts, attack_narrative" },
+        "security_objective": { "type": "string", "description": "What must become impossible after remediation." },
+        "candidates": { "type": "array", "minItems": 1, "description": "See remediation-candidate.schema.json." },
+        "evaluation": { "type": "array", "description": "Per-candidate scoring against the fixed questions." },
+        "recommendation": {
+          "type": "object",
+          "required": ["candidate_id", "why_selected", "why_alternatives_rejected", "security_property_restored", "residual_risk"],
+          "properties": {
+            "candidate_id": { "type": "string" },
+            "why_selected": { "type": "string" },
+            "why_alternatives_rejected": { "type": "string" },
+            "security_property_restored": { "type": "string" },
+            "expected_behavior_after": { "type": "string" },
+            "known_limitations": { "type": "array", "items": { "type": "string" } },
+            "residual_risk": { "type": "string" }
+          }
+        },
+        "validation_requirements": { "type": "array", "items": { "type": "object" }, "description": "TEST-00N items for 05/06." }
+      }
+    },
+    "derived_pattern": {
+      "type": "object",
+      "required": ["type", "sources", "reasoning"],
+      "properties": {
+        "type": { "type": "string", "enum": ["novel-research"], "description": "Distinguishes 04d novel research from 04c's expanded-catalog derivation." },
+        "sources": { "type": "array", "items": { "type": "string" }, "description": "Actual references if the environment provided any; empty when internally derived. Never fabricated." },
+        "reasoning": { "type": "string" },
+        "candidate_count": { "type": "integer" },
+        "external_research_available": { "type": "boolean", "description": "false when the runtime had no web/external access — the strategy is then labelled internally derived." }
+      }
+    },
+    "promotion_candidate": { "type": "boolean", "description": "Eligible to become a KB entry ONLY after approved+implemented+verified+cleared. Never auto-written to the KB." }
+  }
+}

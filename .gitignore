@@ -22,3 +22,11 @@ legacy-sources/bootshift/bootshift-workspaces/
 .project
 .DS_Store
 Thumbs.db
+
+# Agent 04 skills (.github/skills). Intermediate context bundles, drafted patches, throwaway
+# worktrees and migration sandboxes are regenerable. docs/agent_output/ (Pipeline mode's
+# deliverables) is meant to be committed and is not ignored.
+/.github/.pipeline-context/
+.github/skills/**/node_modules/
+# 04c's optional local Python venv for the embedding ranking signal (machine-specific, ~900MB)
+.github/skills/04c-remediation-intelligence/.venv/

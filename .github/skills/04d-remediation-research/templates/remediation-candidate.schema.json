@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "04d remediation candidate",
+  "description": "One possible remediation the 04d research produced. 04d must generate at least two when technically meaningful, so the recommendation is a choice, not a single unexamined guess.",
+  "type": "object",
+  "required": ["candidate_id", "approach", "security_mechanism", "affected_layer", "advantages", "limitations", "bypass_risks", "implementation_complexity"],
+  "additionalProperties": true,
+  "properties": {
+    "candidate_id": { "type": "string", "description": "e.g. CAND-001" },
+    "approach": { "type": "string", "description": "What the fix does, in prose. No diff." },
+    "security_mechanism": { "type": "string", "description": "The concrete control that restores the security objective (e.g. allow-list ObjectInputFilter, format change to JSON DTO)." },
+    "affected_layer": { "type": "string", "description": "controller | service | repository | authentication | authorization | configuration | infrastructure | input-validation | output-encoding | dependency-upgrade | architectural | centralized-policy" },
+    "advantages": { "type": "array", "items": { "type": "string" } },
+    "limitations": { "type": "array", "items": { "type": "string" } },
+    "bypass_risks": { "type": "array", "items": { "type": "string" }, "description": "How this control could still be evaded." },
+    "behavioral_risks": { "type": "array", "items": { "type": "string" } },
+    "implementation_complexity": { "type": "string", "enum": ["Low", "Medium", "High"] },
+    "validation_requirements": { "type": "array", "items": { "type": "string" } }
+  }
+}
