@@ -1,5 +1,0 @@
-{
-  "recipe": "maven.parent-version",
-  "version": "3.5.16",
-  "assert": "Comments, indentation and element order are unchanged. A diff a reviewer cannot read is a diff nobody reviews."
-}
