@@ -90,6 +90,19 @@
         "cve": { "type": "string", "description": "The CVE id, if one exists, e.g. CVE-2025-31672." },
         "advisory_url": { "type": "string", "description": "Link to the advisory used to determine minimum_fixed_version." }
       }
+    },
+    "derived_pattern": {
+      "type": "object",
+      "description": "Present ONLY when this strategy was produced by the 04a1 remediation-intelligence fallback because the CWE had no catalog entry. Records where the derived pattern came from so a reviewer and the audit stage can trace it to a real, local source. Full shape: ../../04a1-remediation-intelligence/templates/derived_pattern.schema.json. A catalogued (04a) plan omits this field.",
+      "required": ["source_type", "sources", "kb_entry", "note"],
+      "additionalProperties": true,
+      "properties": {
+        "source_type": { "type": "string", "enum": ["expanded-catalog", "historical-fix", "external", "blend"] },
+        "sources": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "kb_entry": { "type": ["string", "null"] },
+        "ranked_examples": { "type": "array", "items": { "type": "object" } },
+        "note": { "type": "string" }
+      }
     }
   }
 }

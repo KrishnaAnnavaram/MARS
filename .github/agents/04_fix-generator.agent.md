@@ -29,6 +29,24 @@ negotiating — any plan that is not exactly `Approved`.
 - **Fix Strategist** (`.github/skills/04a-fix-strategist/`) — Stage 1. Three scripts
   (`list-remediation-workload.js`, `collect-remediation-context.js`, `render-fix-plan.js`) and the CWE
   pattern catalog at `catalog/cwe-patterns.json`.
+- **Remediation Intelligence** (`.github/skills/04a1-remediation-intelligence/`) — Stage 1 fallback
+  (level 2 under 04a), used **only** when every detected CWE is a catalog gap. Searches a local
+  knowledge base (`detect-gap.js`, `run-fallback.js`) and derives a grounded, cited strategy into the
+  same `<id>.strategy.json` — marked `confidence: Low` with a `derived_pattern` provenance block —
+  which `render-fix-plan.js` then renders as a normal `Proposed` plan. Never invents a pattern, never
+  writes a diff. If the gap CWE is **also** absent from the KB, `run-fallback.js` exits reporting a
+  **KB gap** — that is the hand-off to 04a2.
+- **Remediation Research** (`.github/skills/04a2-remediation-research/`) — Stage 1 deepest fallback
+  (level 3 under 04a), used **only** on a KB gap (CWE in neither catalog nor KB). It runs a
+  structured, evidence-driven security investigation (`research-context.js` extracts the
+  vulnerability understanding from Agent 1/2/3 artifacts; the agent authors the threat model,
+  security objective, ≥2 candidates, evaluation, recommendation and validation; `generate-strategy.js`
+  assembles a base-contract-compatible `<id>.strategy.json` with `remediation_source:
+  04a2-remediation-research`, `confidence: Low`, `derived_pattern.type: novel-research`, plus a KB
+  promotion candidate). `render-fix-plan.js` renders it as a normal `Proposed` plan with the
+  novel-research sections. It **never** invents a citation, writes a diff, or self-approves, and on
+  insufficient evidence it produces a **Proposed EVIDENCE-GAP plan**
+  (`research_status: insufficient_evidence`) for human review rather than forcing a confident fix.
 - **Fixer** (`.github/skills/04b-fixer/`) — Stage 2, for every CWE except `CWE-1104`. Three scripts
   (`list-fix-workload.js`, `verify-patch.js`, `render-fix-report.js`).
 - **Dependency Upgrader** (`.github/skills/04c-dependency-upgrader/`) — Stage 2, for `CWE-1104` plans
@@ -37,7 +55,12 @@ negotiating — any plan that is not exactly `Approved`.
   diff, and verifies both the *declared* version and the `mvn dependency:tree`-*resolved* version meet
   the plan's target — not just that the module compiles.
 
-Read each `SKILL.md` before running its stage. All three are zero-dependency — nothing to `npm install`.
+Stage 1 resolves a strategy in a fixed order — `04a` (catalog) → `04a1` (knowledge base) → `04a2`
+(novel research) — and stops at the first level that has an answer. Stage 2 (`04b`, or `04c` for
+`CWE-1104`) never needs to know which level produced a plan.
+
+Read each `SKILL.md` before running its stage. All five are zero-npm-dependency — nothing to
+`npm install` (04a1 has one optional local Python venv for embedding-based ranking; see its SKILL.md).
 
 ## Inputs
 
@@ -47,7 +70,9 @@ Read each `SKILL.md` before running its stage. All three are zero-dependency —
    present; its absence is not a blocker.
 3. **The issue row**, read through `00-issue-register` from
    `docs/agent_output/00-issues/issue-register.xlsx` — affected files, entry points, and the original symptom.
-4. **`catalog/cwe-patterns.json`** — the only source Stage 1 draws a remediation *strategy* from.
+4. **`catalog/cwe-patterns.json`** — the primary source Stage 1 draws a remediation *strategy* from.
+   Only on a catalog gap does Stage 1 fall back to 04a1's `knowledge/remediation-kb.json`, and only
+   on a KB gap too to 04a2's structured investigation.
 5. **`docs/agent_output/04-remediation/fix_plan_<id>.md`** — read-only in Stage 2. Its **Status** cell is the gate:
    only plans reading `Approved` are Stage 2 workload. `Proposed` and `Rejected` are skipped, always.
 6. **The current source of every affected file**, read straight off disk — what Stage 1 plans against
@@ -74,7 +99,21 @@ when the user names it.
 3. Per issue: read `.github/.pipeline-context/fix-strategy/<id>.context.md` in full, then the matched CWE
    catalog entry's `canonical_approach` and `anti_patterns` in full — not just the title. If more than
    one CWE was detected, pick the one that names the root cause. A detected CWE with no catalog entry
-   is a **catalog gap** — say so explicitly rather than inventing a pattern to fill it.
+   is a **catalog gap** — say so explicitly rather than inventing a pattern to fill it. When **every**
+   detected CWE is a gap, invoke the `04a1-remediation-intelligence` fallback (`run-fallback.js`) to
+   derive a grounded, cited strategy from the local knowledge base instead of leaving a hollow plan;
+   it writes the same `<id>.strategy.json` (marked Low confidence, with provenance). Do not use the
+   fallback when any detected CWE is catalogued. **If `run-fallback.js` reports a KB gap** (the gap
+   CWE is in neither catalog nor KB), do not stop: invoke the `04a2-remediation-research` skill —
+   `research-context.js` to extract the vulnerability understanding, then author the analysis (threat,
+   objective, ≥2 candidates, evaluation, recommendation, validation) and run `generate-strategy.js`.
+   That produces the same `<id>.strategy.json` (`remediation_source: 04a2-remediation-research`, Low
+   confidence, `derived_pattern.type: novel-research`) which `render-fix-plan.js` renders as a
+   `Proposed` plan. If 04a2 cannot establish a *confident* strategy
+   (`research_status: insufficient_evidence`), it still produces a **Proposed evidence-gap plan**
+   (what is known + what evidence is missing + a conservative default) for human review — never a
+   dead-end, and never a fabricated confident fix. When a fallback produced the strategy, skip step 4
+   and go straight to step 5.
 4. Write `.github/.pipeline-context/fix-strategy/<id>.strategy.json` per `templates/strategy.schema.json`: one
    CWE per plan, strategy in prose (no diff), every recommendation traced to the cited catalog entry,
    rejected alternatives named with why, and a `verification_plan` concrete enough to act on directly
@@ -117,7 +156,8 @@ Every other CWE uses `04b-fixer/` as below.
 
 - DO NOT write a diff, patch, or code presented as ready to apply in Stage 1. An `illustrative_sketch`
   is optional and must read as illustrative — Stage 2 decides the exact implementation.
-- DO NOT invent a remediation pattern for a CWE with no catalog entry. Report the gap.
+- DO NOT invent a remediation pattern for a CWE with no catalog entry. Report the gap, then take the
+  `04a1` → `04a2` fallback path above; never skip a level or run a fallback for a catalogued CWE.
 - DO NOT set a plan's Status to `Approved` or `Rejected`, and DO NOT hand-edit a rendered plan file
   outside the render script — only a human approves a plan, by editing that cell themselves. DO NOT
   silently reset an already-`Approved`/`Rejected` plan back to `Proposed` by re-rendering it.
@@ -138,14 +178,15 @@ Every other CWE uses `04b-fixer/` as below.
 - DO NOT leave a kept worktree (`--keep`) behind after a normal run.
 - DO NOT merge two issues into one plan or diff, and DO NOT rename any output file.
 - DO NOT print full context bundles, plans, diffs, or rationale into chat — link to the files.
-- No `npm install` is needed for any of the three skills — all have zero dependencies.
+- No `npm install` is needed for any of the five skills — all have zero npm dependencies.
 
 ## Output Format
 
 Two short sections, never the plans or diffs themselves:
 
 **Stage 1 — Strategize**: a one-line coverage statement (`Proposed N of N plans`), then per issue:
-id/title, CWE and catalog pattern cited, one-sentence approach, current Status, and a link to
+id/title, CWE and catalog pattern cited (or which fallback — 04a1 or 04a2 — produced it),
+one-sentence approach, current Status, and a link to
 `docs/agent_output/04-remediation/fix_plan_<id>.md`.
 
 **Stage 2 — Implement**: a one-line coverage statement (`Compiled N of M Approved plan(s)`), then per

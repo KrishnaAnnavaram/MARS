@@ -1,0 +1,182 @@
+{
+  "$comment": "Remediation-intelligence knowledge base for the 04a1 fallback skill. Keyed by CWE, one entry per weakness class the main 04a catalog does NOT cover. Each entry is the same SHAPE as a cwe-patterns.json entry (so a derived plan is indistinguishable downstream) plus three extra fields: historical_fixes (concrete, citable prior remediations the ranker scores), keyword_synonyms (optional — a map of a historical_fixes[].keywords[] term to paraphrases the ranker should also credit, at a lower weight than an exact hit; see ranking-weights.json), and provenance (who curated it, when, from where). The ranker (scripts/lib/fallback.js: rankExamples) scores each historical fix with a HYBRID of keyword/synonym overlap and TF-IDF cosine similarity against the root-cause text, weighted by ranking-weights.json — see that file and SKILL.md's Ranking algorithm section. Everything here is local and version-controlled so a derived plan can cite a real repo path — never the model's memory. To add a CWE: copy an entry, fill every field, cite a real file under knowledge/refs/, and keep guidance framework-generic (the skill adapts it to the defect site). A CWE with no entry here is a KB gap: the skill reports it, it does not invent one.",
+  "CWE-22": {
+    "title": "Improper Limitation of a Pathname to a Restricted Directory (Path Traversal)",
+    "owasp": "A01:2021 - Broken Access Control",
+    "applicable_when": "A file path used to read or write is built from user-controlled input (a request parameter, header, upload filename) without resolving it against a fixed base directory and confirming the result stays inside that base.",
+    "canonical_approach": "Resolve the requested target against a single fixed, allow-listed base directory, normalize the resolved path, and reject any result that does not remain inside the base. Prefer deriving only the file's base name from user input and generating the rest server-side; never pass raw user input to a filesystem API.",
+    "anti_patterns": [
+      "Blacklisting '..' or '/' by string match instead of canonicalizing and checking containment (encodings and symlinks defeat it)",
+      "Passing user input straight to new File(userInput) / Paths.get(userInput) and trusting it",
+      "Checking the path BEFORE normalization rather than AFTER"
+    ],
+    "verification_hints": [
+      "Replay the traversal payload from the issue (e.g. filename=../../<something outside the base>) and confirm the write/read no longer escapes the base directory",
+      "Replay a benign in-scope name and confirm the feature still works unchanged",
+      "Assert that a resolved path outside the base is rejected with a safe error, not silently coerced"
+    ],
+    "historical_fixes": [
+      {
+        "id": "HF-PATH-001",
+        "pattern": "resolve-under-base-and-verify-containment",
+        "summary": "Resolve target under a fixed reports directory, normalize(), and reject when the normalized path does not startWith(baseDir). Derive the filename server-side.",
+        "keywords": ["path", "traversal", "file", "write", "export", "filename", "directory", "download", "base"],
+        "language": "java",
+        "source": "knowledge/refs/path-traversal.md#L1"
+      },
+      {
+        "id": "HF-PATH-002",
+        "pattern": "basename-only-plus-generated-name",
+        "summary": "Ignore any caller-supplied directory component; keep only Path.getFileName(), and write under a server-owned directory using a generated, validated name.",
+        "keywords": ["filename", "basename", "upload", "generated", "sanitize"],
+        "language": "java",
+        "source": "knowledge/refs/path-traversal.md#L23"
+      }
+    ],
+    "keyword_synonyms": {
+      "file": ["document", "attachment", "resource"],
+      "write": ["save", "persist", "store"],
+      "export": ["download", "generate", "report"],
+      "directory": ["folder", "dir"],
+      "base": ["root", "sandbox", "allowlist"],
+      "filename": ["name", "basename"],
+      "upload": ["import"],
+      "sanitize": ["validate", "cleanse", "normalize"]
+    },
+    "references": [
+      "https://cwe.mitre.org/data/definitions/22.html",
+      "OWASP Path Traversal / File Path Injection Prevention Cheat Sheet"
+    ],
+    "provenance": {
+      "curated_by": "security-eng",
+      "curated_on": "2026-09-03",
+      "derived_from": ["CWE-22 MITRE definition", "OWASP file-path guidance"]
+    }
+  },
+  "CWE-918": {
+    "title": "Server-Side Request Forgery (SSRF)",
+    "owasp": "A10:2021 - Server-Side Request Forgery",
+    "applicable_when": "The server makes an outbound HTTP/network request to a URL or host that is wholly or partly derived from user-controlled input, letting a caller steer the server at internal or unintended destinations.",
+    "canonical_approach": "Do not build outbound request targets from raw user input. Constrain the destination to a fixed allow-list of hosts/base URLs resolved from configuration; if a caller must select a target, map an opaque identifier to a server-side entry rather than accepting a URL. Validate scheme/host after DNS resolution and block internal/link-local ranges.",
+    "anti_patterns": [
+      "Allow-listing by substring match on the URL string ('contains internal-api') instead of parsing and comparing the resolved host",
+      "Validating the hostname before DNS resolution, leaving DNS-rebinding open",
+      "Following redirects to an unvalidated Location"
+    ],
+    "verification_hints": [
+      "Replay a request pointing the outbound call at an internal/metadata address and confirm it is refused",
+      "Confirm a legitimate configured destination still succeeds",
+      "Confirm redirects to a non-allow-listed host are not followed"
+    ],
+    "historical_fixes": [
+      {
+        "id": "HF-SSRF-001",
+        "pattern": "allow-list-base-url-from-config",
+        "summary": "Replace a user-supplied URL with a base URL loaded from configuration; the caller supplies only a path/id appended to the fixed base.",
+        "keywords": ["url", "http", "outbound", "request", "host", "config", "cross-service", "ssrf", "fetch"],
+        "language": "java",
+        "source": "knowledge/refs/ssrf.md#L1"
+      }
+    ],
+    "keyword_synonyms": {
+      "url": ["uri", "link", "endpoint"],
+      "request": ["call", "fetch"],
+      "outbound": ["external", "downstream"],
+      "host": ["hostname", "domain"],
+      "config": ["configuration", "settings"]
+    },
+    "references": [
+      "https://cwe.mitre.org/data/definitions/918.html",
+      "OWASP Server-Side Request Forgery Prevention Cheat Sheet"
+    ],
+    "provenance": {
+      "curated_by": "security-eng",
+      "curated_on": "2026-09-03",
+      "derived_from": ["CWE-918 MITRE definition", "OWASP SSRF guidance"]
+    }
+  },
+  "CWE-359": {
+    "title": "Exposure of Private Personal Information to an Unauthorized Actor",
+    "owasp": "A01:2021 - Broken Access Control",
+    "applicable_when": "An endpoint or view returns personal/sensitive fields (PII, payroll, contact data) to a caller who is not authorized to see them, because the response is not filtered or the caller is not checked against the data's owner/role.",
+    "canonical_approach": "Return only the fields the specific caller is authorized to see: separate the internal entity from an outbound DTO/view that carries just the permitted fields, and enforce an authorization check tying the caller to the record or role before the sensitive projection is built. Default to excluding sensitive fields and opt them in per authorization.",
+    "anti_patterns": [
+      "Serializing the full persistence entity directly to the response and relying on the client to ignore extra fields",
+      "Filtering sensitive fields in the UI while the API still returns them",
+      "Authorizing the endpoint's existence but not the specific record/field visibility"
+    ],
+    "verification_hints": [
+      "Request the resource as an unauthorized caller and confirm sensitive fields are absent, not merely hidden",
+      "Confirm an authorized caller still receives the fields they are entitled to",
+      "Assert the outbound DTO has no path back to the sensitive persistence fields"
+    ],
+    "historical_fixes": [
+      {
+        "id": "HF-PII-001",
+        "pattern": "response-dto-projection",
+        "summary": "Introduce a response DTO exposing only non-sensitive fields; map the entity to it and never serialize the entity itself.",
+        "keywords": ["pii", "dto", "response", "projection", "employee", "payroll", "salary", "expose", "field", "serialize"],
+        "language": "java",
+        "source": "knowledge/refs/pii-exposure.md#L1"
+      }
+    ],
+    "keyword_synonyms": {
+      "expose": ["leak", "disclose", "reveal"],
+      "response": ["payload", "body"],
+      "field": ["attribute", "property"],
+      "serialize": ["marshal"],
+      "pii": ["personal", "sensitive"]
+    },
+    "references": [
+      "https://cwe.mitre.org/data/definitions/359.html",
+      "OWASP Sensitive Data Exposure guidance"
+    ],
+    "provenance": {
+      "curated_by": "security-eng",
+      "curated_on": "2026-09-03",
+      "derived_from": ["CWE-359 MITRE definition", "OWASP data-exposure guidance"]
+    }
+  },
+  "CWE-862": {
+    "title": "Missing Authorization",
+    "owasp": "A01:2021 - Broken Access Control",
+    "applicable_when": "A request reaches a protected action or resource without any check that the authenticated caller is permitted to perform it — authentication may exist, but per-action/per-record authorization is absent.",
+    "canonical_approach": "Enforce an explicit authorization check at the boundary of every protected action, evaluated server-side against the caller's role and the target resource's ownership. Deny by default and make the check impossible to bypass by adding a centralized rule (method security / a filter) rather than scattering per-controller ad-hoc checks.",
+    "anti_patterns": [
+      "Assuming authentication implies authorization",
+      "Enforcing access only in the UI/navigation while the endpoint stays open",
+      "Per-endpoint hand-rolled checks that are easy to forget on a new endpoint"
+    ],
+    "verification_hints": [
+      "Call the protected action as an authenticated but unauthorized caller and confirm it is denied",
+      "Confirm an authorized caller still succeeds",
+      "Add a new sibling endpoint mentally and confirm the centralized rule would cover it"
+    ],
+    "historical_fixes": [
+      {
+        "id": "HF-AUTHZ-001",
+        "pattern": "centralized-method-security",
+        "summary": "Add a deny-by-default authorization rule (e.g. method-level security / a security filter) covering the protected actions, checked against role and resource ownership.",
+        "keywords": ["authorization", "access", "control", "role", "denied", "protected", "endpoint", "authz", "permission"],
+        "language": "java",
+        "source": "knowledge/refs/missing-authorization.md#L1"
+      }
+    ],
+    "keyword_synonyms": {
+      "authorization": ["authz", "permission", "entitlement"],
+      "access": ["reach", "entry"],
+      "denied": ["blocked", "rejected", "forbidden"],
+      "protected": ["secured", "restricted"],
+      "endpoint": ["route", "api"]
+    },
+    "references": [
+      "https://cwe.mitre.org/data/definitions/862.html",
+      "OWASP Authorization Cheat Sheet"
+    ],
+    "provenance": {
+      "curated_by": "security-eng",
+      "curated_on": "2026-09-03",
+      "derived_from": ["CWE-862 MITRE definition", "OWASP authorization guidance"]
+    }
+  }
+}

@@ -16,6 +16,12 @@ const DATA_DIR = process.env.PIPELINE_CONTEXT_DATA_DIR
   ? path.resolve(process.env.PIPELINE_CONTEXT_DATA_DIR)
   : path.join(REPO_ROOT, '.github', '.pipeline-context');
 
+// The rendered-plan output dir. Defaults to the repo's remediation folder; PIPELINE_OUTPUT_DIR
+// redirects it (used by isolated tests, e.g. 04a1's sample run, so a demo never touches real docs).
+const OUTPUT_DIR = process.env.PIPELINE_OUTPUT_DIR
+  ? path.resolve(process.env.PIPELINE_OUTPUT_DIR)
+  : path.join(REPO_ROOT, 'docs', 'agent_output', '04-remediation');
+
 const PATHS = {
   SKILL_DIR,
   REPO_ROOT,
@@ -27,8 +33,8 @@ const PATHS = {
   BLAST_RADIUS_DIR: path.join(REPO_ROOT, 'docs', 'agent_output', '03-blast-radius'),
   ARCHITECTURE_MD: path.join(REPO_ROOT, 'docs', 'agent_output', '01-architecture', 'architecture.md'),
   FUNCTION_REFERENCE_MD: path.join(REPO_ROOT, 'docs', 'agent_output', '01-architecture', 'function-reference.md'),
-  OUT_DIR: path.join(REPO_ROOT, 'docs', 'agent_output', '04-remediation'),
-  OUT_README: path.join(REPO_ROOT, 'docs', 'agent_output', '04-remediation', 'README.md'),
+  OUT_DIR: OUTPUT_DIR,
+  OUT_README: path.join(OUTPUT_DIR, 'README.md'),
   CATALOG_FILE: path.join(SKILL_DIR, 'catalog', 'cwe-patterns.json'),
 };
 

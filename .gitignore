@@ -67,6 +67,11 @@ replay_pid*
 
 ### Agentic harness (.claude/agents + .claude/skills) ###
 node_modules/
+# 04a1-remediation-intelligence's local Python venv for the optional sentence-embedding ranking
+# signal (scripts/embed.py). Machine-specific and large (~900MB with torch) — never committed.
+# Recreate with: python -m venv .venv && .venv/Scripts/pip install -r requirements.txt (Windows)
+# or .venv/bin/pip install -r requirements.txt (macOS/Linux). See SKILL.md's Setup section.
+.venv/
 # Everything under .claude/.pipeline-context/ is a regeneratable build output (scan results,
 # blast radius, rca, verify, graph-context) EXCEPT descriptions.json — that file is
 # authored interpretive content (agent-written or paid-API-generated), not cheap to
