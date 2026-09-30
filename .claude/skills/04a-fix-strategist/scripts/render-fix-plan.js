@@ -92,6 +92,98 @@ function linkFromOutput(repoRelativePath, label) {
 }
 
 // ---------------------------------------------------------------------------
+// 04a2 novel-research sections (only rendered when strategy.research is present;
+// 04a and 04a1 plans have no `research` payload, so their output is unchanged).
+// ---------------------------------------------------------------------------
+
+function renderResearchSections(strategy) {
+  const r = strategy.research;
+  if (!r) return [];
+  const out = [];
+  const v = r.vulnerability || {};
+  const t = r.threat || {};
+  const rec = r.recommendation || {};
+  const dp = strategy.derived_pattern || {};
+
+  out.push('## Novel research — vulnerability');
+  out.push('');
+  if (v.statement) out.push(v.statement);
+  if (v.location) out.push('', `**Location:** \`${v.location}\``);
+  if (v.entry_points && v.entry_points.length) out.push('', `**Entry point(s):** ${v.entry_points.map((e) => `\`${e}\``).join(', ')}`);
+  if (v.data_flow) out.push('', `**Data flow:** ${v.data_flow}`);
+  out.push('');
+
+  if (r.root_cause) {
+    const rc = r.root_cause;
+    out.push('## Novel research — root cause (facts vs conclusions vs hypotheses)');
+    out.push('');
+    if ((rc.facts || []).length) { out.push('**Observed facts:**'); rc.facts.forEach((f) => out.push(`- ${f}`)); out.push(''); }
+    if ((rc.conclusions || []).length) { out.push('**Derived conclusions:**'); rc.conclusions.forEach((f) => out.push(`- ${f}`)); out.push(''); }
+    if ((rc.hypotheses || []).length) { out.push('**Hypotheses (unconfirmed — not fact):**'); rc.hypotheses.forEach((f) => out.push(`- ${f}`)); out.push(''); }
+  }
+
+  out.push('## Novel research — security threat');
+  out.push('');
+  if (t.actor) out.push(`- **Actor:** ${t.actor}`);
+  if (t.vector) out.push(`- **Vector:** ${t.vector}`);
+  if (t.attacker_input) out.push(`- **Attacker input:** ${t.attacker_input}`);
+  out.push(`- **Impact:** C=${t.confidentiality_impact || '?'} · I=${t.integrity_impact || '?'} · A=${t.availability_impact || '?'}`);
+  if (t.attack_narrative) { out.push(''); out.push(`> ${t.attack_narrative}`); }
+  out.push('');
+
+  if (r.security_objective) {
+    out.push('## Novel research — security objective (invariant to restore)');
+    out.push('');
+    out.push(`> ${r.security_objective}`);
+    out.push('');
+  }
+
+  if ((r.candidates || []).length) {
+    out.push('## Novel research — remediation candidates');
+    out.push('');
+    out.push('| Candidate | Layer | Complexity | Approach | Key limitation / bypass |');
+    out.push('|---|---|---|---|---|');
+    for (const c of r.candidates) {
+      const chosen = rec.candidate_id === c.candidate_id ? ' **(recommended)**' : '';
+      const lim = ([...(c.limitations || []), ...(c.bypass_risks || [])][0] || '—');
+      out.push(`| ${c.candidate_id}${chosen} | ${c.affected_layer || '—'} | ${c.implementation_complexity || '—'} | ${(c.approach || '').replace(/\|/g, '\\|')} | ${lim.replace(/\|/g, '\\|')} |`);
+    }
+    out.push('');
+  }
+
+  out.push('## Novel research — why this remediation');
+  out.push('');
+  if (rec.why_selected) out.push(`- **Why chosen:** ${rec.why_selected}`);
+  if (rec.why_alternatives_rejected) out.push(`- **Why alternatives rejected:** ${rec.why_alternatives_rejected}`);
+  if (rec.security_property_restored) out.push(`- **Security property restored:** ${rec.security_property_restored}`);
+  if (rec.expected_behavior_after) out.push(`- **Expected behavior after:** ${rec.expected_behavior_after}`);
+  if (rec.residual_risk) out.push(`- **Residual risk:** ${rec.residual_risk}`);
+  out.push('');
+
+  if ((r.validation_requirements || []).length) {
+    out.push('## Novel research — validation requirements (for Agent 05 / 06)');
+    out.push('');
+    r.validation_requirements.forEach((tt) => out.push(`- **${tt.id}** [${tt.type}]: ${tt.assertion}`));
+    out.push('');
+  }
+
+  out.push('## Novel research — provenance');
+  out.push('');
+  out.push('| | |');
+  out.push('|---|---|');
+  out.push('| Catalog | NOT AVAILABLE |');
+  out.push('| Internal KB | NOT AVAILABLE / INSUFFICIENT |');
+  out.push('| Remediation source | 04a2 — Novel Remediation Research |');
+  out.push('| Confidence | Low |');
+  out.push(`| External research available | ${dp.external_research_available ? 'yes' : 'no (internally derived)'} |`);
+  out.push(`| Research references | ${(dp.sources || []).length ? dp.sources.map((s) => `\`${s}\``).join(', ') : 'none — no citation claimed'} |`);
+  out.push('');
+  if (dp.reasoning) { out.push(`_Reasoning: ${dp.reasoning}_`); out.push(''); }
+
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Report
 // ---------------------------------------------------------------------------
 
@@ -107,6 +199,13 @@ function render(context, strategy, previousStatus, catalog) {
   out.push('');
   out.push(`> ${strategy.plain_summary.trim()}`);
   out.push('');
+  if (strategy.research && strategy.research.research_status === 'insufficient_evidence') {
+    out.push('> ⚠ **Evidence gap — this is NOT a confident fix.** 04a2 could not establish a targeted '
+      + 'remediation from the available evidence. This plan states what is known and what evidence is '
+      + 'still needed, for human investigation — gather the missing evidence and re-run 04a2 before '
+      + 'implementing anything.');
+    out.push('');
+  }
   out.push(`_Generated by the Fix Strategist agent on ${new Date().toISOString().slice(0, 10)}. Context collected ${context.generatedAt}._`);
   out.push('');
   if (previousStatus === 'Approved' || previousStatus === 'Rejected') {
@@ -127,6 +226,11 @@ function render(context, strategy, previousStatus, catalog) {
   }
   out.push(`| **Affected files** | ${strategy.affected_files.length} |`);
   out.push(`| **Confidence** | ${strategy.confidence || 'not stated'} |`);
+  if (strategy.research) {
+    out.push('| **Remediation source** | 04a2 — Novel Remediation Research |');
+    out.push('| **Internal KB** | No relevant remediation found (gap) |');
+    out.push(`| **Research status** | ${strategy.research.research_status === 'insufficient_evidence' ? '⚠ EVIDENCE GAP — needs investigation' : 'established'} |`);
+  }
   out.push(`| **Root cause report** | ${linkFromOutput(context.sources.rootCauseReport, context.sources.rootCauseReport)} |`);
   out.push(`| **Blast radius report** | ${context.sources.blastRadiusReport ? linkFromOutput(context.sources.blastRadiusReport, context.sources.blastRadiusReport) : 'not available'} |`);
   out.push('');
@@ -186,6 +290,8 @@ function render(context, strategy, previousStatus, catalog) {
     out.push('');
   }
 
+  renderResearchSections(strategy).forEach((l) => out.push(l));
+
   out.push('## Approval');
   out.push('');
   out.push('This plan is a **checkpoint**, not an authorization to write code. The Fixer agent will '
@@ -202,7 +308,18 @@ function render(context, strategy, previousStatus, catalog) {
   out.push(`| Root cause report | \`${context.sources.rootCauseReport}\` |`);
   out.push(`| Blast radius report | ${context.sources.blastRadiusReport ? `\`${context.sources.blastRadiusReport}\`` : 'not available'} |`);
   out.push(`| Issue report | \`${context.sources.issueFile}\` |`);
-  out.push(`| CWE catalog | \`.claude/skills/04a-fix-strategist/catalog/cwe-patterns.json\`, entry \`${strategy.cwe}\` |`);
+  if (strategy.research || (strategy.derived_pattern && strategy.derived_pattern.type === 'novel-research')) {
+    const dp = strategy.derived_pattern || {};
+    out.push(`| CWE catalog | \`${strategy.cwe}\` — **no catalog entry (gap)** |`);
+    out.push('| Internal KB | **no relevant remediation (gap)** |');
+    out.push(`| Remediation source | 04a2 novel research (confidence Low)${(dp.sources || []).length ? `; sources: ${dp.sources.map((s) => `\`${s}\``).join(', ')}` : '; internally derived, no citation claimed'} |`);
+  } else if (strategy.derived_pattern) {
+    const dp = strategy.derived_pattern;
+    out.push(`| CWE catalog | \`${strategy.cwe}\` — **no catalog entry (gap)** |`);
+    out.push(`| Derived remediation | 04a1 fallback (${dp.source_type}); sources: ${(dp.sources || []).map((s) => `\`${s}\``).join(', ') || '_none recorded_'} |`);
+  } else {
+    out.push(`| CWE catalog | \`.claude/skills/04a-fix-strategist/catalog/cwe-patterns.json\`, entry \`${strategy.cwe}\` |`);
+  }
   out.push('');
 
   out.push('---');

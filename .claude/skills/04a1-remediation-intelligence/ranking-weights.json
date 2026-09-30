@@ -1,0 +1,8 @@
+{
+  "$comment": "Externalised weights for 04a1's hybrid historical-fix ranking (see scripts/lib/fallback.js: rankExamples). Never buried in code, same convention as 07a-merge-arbiter/scoring.json. score = weighted average of keyword_score, tfidf_score, and (if the local embedding model is set up -- see SKILL.md's Setup section) embedding_score, each normalized 0-1. keyword_weight + tfidf_weight + embedding_weight should sum to 1.0; if embedding_score is unavailable on a given machine, the other two weights are automatically renormalized so score stays 0-1 either way. exact_match_weight / synonym_match_weight control how much an exact keyword hit counts versus a synonym hit (see each KB entry's optional keyword_synonyms map) before keyword_score is normalized. Edit this file to retune ranking without touching code; a missing file or field falls back to these same values.",
+  "keyword_weight": 0.3,
+  "tfidf_weight": 0.3,
+  "embedding_weight": 0.4,
+  "exact_match_weight": 1.0,
+  "synonym_match_weight": 0.5
+}
