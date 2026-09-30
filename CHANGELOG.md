@@ -4,6 +4,23 @@ All notable changes to MARS are recorded here. Versions follow the project versi
 
 ## Unreleased
 
+### Agent 04: the Fix Generator
+
+- New: **Agent 04 with five skills**, merging the Agent 04 of VRH and of the Spring migration
+  reference. The skills are 04a fix strategist, 04b fixer, 04c remediation intelligence,
+  04d remediation research and 04e version migration. Definitions are in `.github/agents/` and
+  `.claude/agents/`, and the skills are in `.github/skills/`, with the originals left unchanged under
+  `legacy-sources/`.
+- 04a gains the CWE-1104 catalog entry and `dependency_upgrade` block, and refuses a CWE-1104
+  strategy without it. The Spring reference's `04c-dependency-upgrader` becomes 04b's
+  dependency-upgrade path, and each 04b path refuses the other's plans. The Spring reference's
+  `04d-version-migration` becomes 04e.
+- Harness mode: the agent feeds MARS runs through `submit-research` and `submit-patch` and never
+  approves anything.
+- New: `.github/scripts/agent04-check.js`, which fails if the skills' catalog, KB, ranking weights
+  or reference pack drift from what the harness loads.
+- Docs: [`.github/README.md`](.github/README.md) and README §27.
+
 ### Documentation
 
 - README: overview section, Windows and run-ID tips, step-by-step worked example, glossary, troubleshooting,

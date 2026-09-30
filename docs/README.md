@@ -7,6 +7,7 @@
 | [Project README](../README.md) | You want the overview: rules, architecture, flow, CLI and configuration |
 | [User guide](user-guide.md) | You are running MARS and want to know how to do a specific task |
 | [Writing a reference pack](writing-a-reference-pack.md) | You want to add a new migration path |
+| [Agent 04: the Fix Generator](../.github/README.md) | You want an AI agent to plan fixes, write patches for approved decisions, supply research or resolve migration errors |
 
 ## Design and evidence
 
