@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Context Weaver — node descriptions",
+  "description": "The semantic layer of the knowledge graph. Written by the Architect agent (or by generate-descriptions.js) to .claude/.pipeline-context/context/descriptions.json after reading the authoring brief, then loaded onto Neo4j nodes by Graph Forge. Everything here is INTERPRETATION, not parser output — downstream agents treat it as orienting context to be verified against source, never as evidence in its own right.",
+  "type": "object",
+  "required": ["generatedAt", "artifactsGeneratedAt", "author", "nodes"],
+  "additionalProperties": false,
+  "properties": {
+    "generatedAt": {
+      "type": "string",
+      "description": "ISO-8601 timestamp of when these descriptions were written."
+    },
+    "artifactsGeneratedAt": {
+      "type": "string",
+      "description": "Copy of `artifactsGeneratedAt` from the workload file. Ties this description set to the scan it was written against."
+    },
+    "author": {
+      "type": "string",
+      "description": "Who wrote these. Use `architect-agent` when the agent authored them in-context, or `llm:<model-id>` (e.g. `llm:claude-opus-5`) when generate-descriptions.js did. Stored on every node so a consumer knows the provenance."
+    },
+    "nodes": {
+      "type": "array",
+      "description": "One entry per described node. Nodes may be omitted — a missing description is a smaller problem than a wrong one.",
+      "items": {
+        "type": "object",
+        "required": ["kind", "id", "fingerprint", "summary", "confidence"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["Module", "Package", "Type", "Method", "Endpoint", "ExternalType"],
+            "description": "Neo4j label this description attaches to. Copy verbatim from the workload."
+          },
+          "id": {
+            "type": "string",
+            "description": "The node's key, copied verbatim from the workload: Module/Package/ExternalType use `name`, Type uses the FQN, Method uses `TypeId#name(paramTypes)`, Endpoint uses `METHOD /path`. A value that matches no node in artifacts.json is a validation error."
+          },
+          "fingerprint": {
+            "type": "string",
+            "description": "Copied verbatim from the workload. Records which shape of the code this description was written against, so a later scan can mark it stale instead of serving a description that has silently become false."
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 20,
+            "description": "1-3 sentences: what this is and what it is for, in the language of the domain rather than the language of the code. Say what a reader could not get from the signature. Bad: 'A service class with three methods.' Good: 'Owns the employee roster and is the only writer of the employees Mongo collection; every other service reads employees through its REST surface.'"
+          },
+          "role": {
+            "type": "string",
+            "description": "Short architectural role label, used for filtering and grouping. Suggested values: controller, service, repository, entity, dto, configuration, client, scheduler, exception, mapper, util, bootstrap, discovery, gateway, contract, framework-base, layer, deployable."
+          },
+          "responsibilities": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "The distinct jobs this node owns, one per entry. Keep to what it actually does, not what its name suggests."
+          },
+          "criticality": {
+            "type": "string",
+            "enum": ["low", "medium", "high", "critical"],
+            "description": "How much damage a defect here does — not how complex the code is. `critical` means an outage or data loss across services; `low` means a contained, cosmetic, or easily-noticed failure. Blast Radius uses this to rank impact."
+          },
+          "sideEffects": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Observable effects beyond returning a value: database writes, outbound HTTP calls, message publishes, cache mutation, file or config writes, scheduled triggers. This is the primary input to blast-radius reasoning — an empty array means genuinely pure, not merely unknown."
+          },
+          "invariants": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "What must hold true for this to be correct — required ordering, non-null guarantees, uniqueness, idempotency, transaction boundaries, expected value ranges. A violated invariant is usually the root cause, so state them even when they look obvious."
+          },
+          "failureModes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "How this realistically breaks and what the caller sees when it does — 'returns an empty list instead of 404 when the id is unknown', 'silently drops the update when the collection is missing'. Written for a Root Cause agent triaging a symptom."
+          },
+          "dataTouched": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Named collections, tables, entities, config keys, or topics this reads or writes. Prefix with `reads:` / `writes:` where the distinction matters."
+          },
+          "upstream": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Who or what drives this — callers, schedules, external services, user actions. Include callers the Java call graph cannot see, such as cross-service HTTP consumers."
+          },
+          "downstream": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "What this depends on to do its job — services, datastores, config sources, third-party APIs."
+          },
+          "testHints": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Concrete ways to exercise this: the request to replay, the fixture the test needs, the boundary condition worth asserting, the collaborator worth stubbing. Written for the QA agent building a test plan."
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"],
+            "description": "`high` only when the source and its collaborators make the intent unambiguous. `low` when this is a plausible reading that a reader should verify before acting on it. Downstream agents weight claims by this — an honest `low` is more useful than a confident guess."
+          },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Where the claims came from: `path/to/File.java:42`, an annotation, a pom dependency. Lets a reader check the description instead of trusting it."
+          },
+          "openQuestions": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "What the source could not settle. Use this instead of guessing — an explicit unknown is a lead for the next agent."
+          }
+        }
+      }
+    },
+    "crossCutting": {
+      "type": "array",
+      "description": "Facts that belong to no single node: shared datastores, service-to-service dependencies that carry no Java call edge, deployment ordering, environment coupling. Loaded as `:ContextNote` nodes linked by `[:ABOUT]` to everything they concern.",
+      "items": {
+        "type": "object",
+        "required": ["id", "topic", "text", "confidence"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable kebab-case identifier, e.g. `shared-employee-collection`. Re-using it on a later run updates the note rather than duplicating it."
+          },
+          "topic": {
+            "type": "string",
+            "description": "Short label: `shared-datastore`, `service-dependency`, `deployment-order`, `config-coupling`, `known-risk`."
+          },
+          "text": {
+            "type": "string",
+            "minLength": 20,
+            "description": "The fact and why it matters, in 1-3 sentences."
+          },
+          "modules": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Module names this note concerns. Must exist in artifacts.json."
+          },
+          "types": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Fully-qualified type ids this note concerns. Must exist in artifacts.json."
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
