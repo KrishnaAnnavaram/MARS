@@ -1,1 +1,80 @@
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Windows ###
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Logs ###
+*.log
+logs/
+
+### Environment / secrets ###
+.env
+*.pem
+application-local.properties
+application-local.yml
+
+### Maven wrapper (keep jar, ignore local repo cache if vendored) ###
+.mvn/wrapper/maven-wrapper.properties.bak
+
+### Build/Runtime artifacts ###
+*.class
+*.war
+*.ear
+*.jar
+!**/*wrapper*.jar
+hs_err_pid*
+replay_pid*
+
+### Agentic harness (.claude/agents + .claude/skills) ###
+node_modules/
+# Everything under .claude/.pipeline-context/ is a regeneratable build output (scan results,
+# blast radius, rca, verify, graph-context) EXCEPT descriptions.json — that file is
+# authored interpretive content (agent-written or paid-API-generated), not cheap to
+# reproduce, so it is tracked even though the rest of .claude/.pipeline-context/ is not.
+/.claude/.pipeline-context/*
+!/.claude/.pipeline-context/context/
+/.claude/.pipeline-context/context/*
+!/.claude/.pipeline-context/context/descriptions.json
+
+### Previous MARS project (kept locally, not tracked) ###
 older-project/
