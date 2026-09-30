@@ -1,9 +1,0 @@
-{
-  "issue_id": "ISSUE-000",
-  "verdict": "FIXED",
-  "confidence": "High",
-  "plain_summary": "Illustrative example only. The search feature no longer lets a crafted value change what the search does.",
-  "reasoning": "The old signature (BasicQuery built from a StringBuilder) is absent from the patched file, and the replacement construction (Criteria.where(...).regex(Pattern.quote(...))) binds the value as data rather than splicing it into query syntax — the injection mechanism itself, not just today's payload shape, is closed.",
-  "residual_indicators": [],
-  "open_questions": []
-}

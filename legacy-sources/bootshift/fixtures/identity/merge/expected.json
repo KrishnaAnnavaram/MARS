@@ -1,5 +1,0 @@
-{
-  "each_source_records": "mergedInto",
-  "survivor_records": "mergedFrom: [FILE-…, …]",
-  "ids_never_reused": true
-}
