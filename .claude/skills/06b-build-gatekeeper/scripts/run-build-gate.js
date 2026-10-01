@@ -20,6 +20,10 @@ const {
   changedFilesFromPatch, modulesFromFiles, diffDependencyTrees, tail, resultPathFor,
 } = require('./lib/gate');
 
+// Mission Control telemetry (optional, additive): emits a ledger witness event after this script has
+// written its own record. Never changes this script's records, reports, output or exit code.
+const marsTelemetry = (() => { try { return require('../../../scripts/telemetry/gate-events'); } catch (_) { return null; } })();
+
 function parseArgs(argv) {
   const args = { keep: false };
   for (let i = 0; i < argv.length; i += 1) {
@@ -127,6 +131,7 @@ function main() {
     const record = runOne(fix, args);
     fs.mkdirSync(WORK_DIR, { recursive: true });
     fs.writeFileSync(resultPathFor(fix.id), JSON.stringify(record, null, 2));
+    if (marsTelemetry) marsTelemetry.gateCompleted('build', record, fix);
     if (record.refused) {
       console.log(`\n${record.id} — REFUSED: ${record.reason}`);
     } else {
