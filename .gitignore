@@ -91,3 +91,11 @@ node_modules/
 
 ### Previous MARS project (kept locally, not tracked) ###
 older-project/
+
+### MARS Mission Control ###
+# Local event ledger (append-only telemetry witness; machine-specific, never committed).
+/.mars/
+mission-control/dist/
+mission-control/test-results/
+mission-control/playwright-report/
+mission-control/e2e/screens/
