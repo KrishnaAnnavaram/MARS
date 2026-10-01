@@ -1,0 +1,81 @@
+{
+  "slug": "issue-001",
+  "history": [
+    {
+      "state": "BASELINE_DETECTED",
+      "at": "2026-10-01T03:34:03.078Z",
+      "by": "detect-baseline.js",
+      "detail": "project src/spring-boot-migration-demo"
+    },
+    {
+      "state": "WORKSPACE_PREPARED",
+      "at": "2026-10-01T03:34:58.789Z",
+      "by": "prepare-workspace.js",
+      "detail": "baseline commit d24d154165"
+    },
+    {
+      "state": "BASELINE_BUILT",
+      "at": "2026-10-01T03:35:54.690Z",
+      "by": "run-migration-build.js",
+      "detail": "round 0 tests-failed"
+    },
+    {
+      "state": "BASELINE_PROBED",
+      "at": "2026-10-01T03:37:02.765Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 19 probe(s)"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T03:39:18.469Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-00: 7 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T03:40:51.095Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-01: 6 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T03:40:59.946Z",
+      "by": "run-migration-build.js",
+      "detail": "round 1 passed"
+    },
+    {
+      "state": "TARGET_TESTED",
+      "at": "2026-10-01T03:42:10.467Z",
+      "by": "run-migration-build.js",
+      "detail": "round 2 tests-failed"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T03:42:34.664Z",
+      "by": "run-migration-build.js",
+      "detail": "round 3 passed"
+    },
+    {
+      "state": "FINAL_PROBED",
+      "at": "2026-10-01T03:43:32.686Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 19 probe(s)"
+    },
+    {
+      "state": "RENDERED",
+      "at": "2026-10-01T03:46:28.304Z",
+      "by": "render-migration-report.js",
+      "detail": "final round 3 passed"
+    },
+    {
+      "state": "RENDERED",
+      "at": "2026-10-01T03:47:04.486Z",
+      "by": "render-migration-report.js",
+      "detail": "final round 3 passed"
+    }
+  ],
+  "state": "RENDERED",
+  "updated_at": "2026-10-01T03:47:04.486Z",
+  "run_id": "issue-001-20261001T033403Z",
+  "run_started_at": "2026-10-01T03:34:03.024Z"
+}

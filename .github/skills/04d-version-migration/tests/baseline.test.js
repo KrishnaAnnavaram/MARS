@@ -14,7 +14,8 @@ function detect(extraArgs = []) {
   const root = tempRoot('baseline');
   const env = envFor(root, { MIGRATION_MVN: fakeMaven(path.join(root, 'bin')) });
   const before = treeHash(SAMPLE_PROJECT);
-  const result = runScript('detect-baseline.js', ['--project', SAMPLE_PROJECT, '--slug', 'fixture', '--to-java', '21', ...extraArgs], env);
+  // Pack mode: these tests pin the v1/v2 baseline shape of a single-pack session.
+  const result = runScript('detect-baseline.js', ['--project', SAMPLE_PROJECT, '--slug', 'fixture', '--to-java', '21', '--reference', 'spring-boot-3-to-4', ...extraArgs], env);
   const baseline = JSON.parse(fs.readFileSync(path.join(sessionDir(root, 'fixture'), 'baseline.json'), 'utf8'));
   return { root, result, baseline, unchanged: before === treeHash(SAMPLE_PROJECT) };
 }

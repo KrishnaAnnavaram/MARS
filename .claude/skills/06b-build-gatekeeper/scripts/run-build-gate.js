@@ -17,7 +17,7 @@ const path = require('path');
 const {
   REPO_ROOT, WORK_DIR, WORKTREES_DIR,
   rel, resolveFix, listStep2Fixes, run, removeWorktreeIfPresent, wrapperFor, runWrapper,
-  changedFilesFromPatch, modulesFromFiles, diffDependencyTrees, tail, resultPathFor,
+  changedFilesFromPatch, modulesFromFiles, diffDependencyTrees, tail, resultPathFor, buildEnvFor,
 } = require('./lib/gate');
 
 function parseArgs(argv) {
@@ -50,7 +50,8 @@ function runOne(fix, args) {
   if (!fix.patchFile || !fs.existsSync(patchAbs)) throw new Error(`Fix patch not found (looked for ${fix.patchFile || 'none'}).`);
 
   const worktreeDir = path.join(WORKTREES_DIR, fix.id);
-  const record = { generatedAt: new Date().toISOString(), id: fix.id, worktree: rel(worktreeDir) };
+  const { env, jdk } = buildEnvFor(fix);
+  const record = { generatedAt: new Date().toISOString(), id: fix.id, worktree: rel(worktreeDir), fixType: fix.fixType || null, jdk };
 
   fs.mkdirSync(WORKTREES_DIR, { recursive: true });
   removeWorktreeIfPresent(worktreeDir);
@@ -72,7 +73,7 @@ function runOne(fix, args) {
     for (const module of modules) {
       const moduleDir = path.join(worktreeDir, module);
       const wrapper = wrapperFor(moduleDir);
-      const treeBefore = runWrapper(wrapper, ['-q', 'dependency:tree'], { cwd: moduleDir });
+      const treeBefore = runWrapper(wrapper, ['-q', 'dependency:tree'], { cwd: moduleDir, env });
       baselineTrees[module] = treeBefore.stdout;
     }
 
@@ -87,14 +88,14 @@ function runOne(fix, args) {
       const moduleDir = path.join(worktreeDir, module);
       const wrapper = wrapperFor(moduleDir);
 
-      const verify = runWrapper(wrapper, ['-q', 'verify', '-DskipITs'], { cwd: moduleDir });
+      const verify = runWrapper(wrapper, ['-q', 'verify', '-DskipITs'], { cwd: moduleDir, env });
       record.steps.push({
         module, command: 'mvnw verify', exitCode: verify.status,
         output: tail(verify.stdout + verify.stderr + (verify.error ? `\n[spawn error] ${verify.error}` : '')),
       });
       if (verify.status !== 0) allPassed = false;
 
-      const treeAfter = runWrapper(wrapper, ['-q', 'dependency:tree'], { cwd: moduleDir });
+      const treeAfter = runWrapper(wrapper, ['-q', 'dependency:tree'], { cwd: moduleDir, env });
       const depDiff = diffDependencyTrees(baselineTrees[module], treeAfter.stdout);
       record.dependencyChecks.push({ module, added: depDiff.added, removed: depDiff.removed });
     }

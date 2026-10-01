@@ -1,0 +1,25 @@
+{
+  "slug": "b1-employee-2x",
+  "history": [
+    {
+      "state": "BASELINE_DETECTED",
+      "at": "2026-10-01T02:46:44.870Z",
+      "by": "detect-baseline.js",
+      "detail": "project src/employee-service"
+    },
+    {
+      "state": "WORKSPACE_PREPARED",
+      "at": "2026-10-01T02:46:57.021Z",
+      "by": "prepare-workspace.js",
+      "detail": "baseline commit 891a8a433e"
+    },
+    {
+      "state": "BASELINE_BUILT",
+      "at": "2026-10-01T02:49:17.000Z",
+      "by": "run-migration-build.js",
+      "detail": "round 0 tests-failed"
+    }
+  ],
+  "state": "BASELINE_BUILT",
+  "updated_at": "2026-10-01T02:49:17.000Z"
+}

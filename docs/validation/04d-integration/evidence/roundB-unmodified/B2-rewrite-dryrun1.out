@@ -1,0 +1,28 @@
+
+OpenRewrite dry-run — boot4-curated
+  recipes   mars.migration.SpringBoot3To4Curated
+  artifacts org.openrewrite.recipe:rewrite-spring:6.37.1
+  licence   Moderne Source Available License · policy optional
+  sandbox   ../evidence/roundB/ctx/version-migration/b2-golden/workspace on JDK 21
+  running…
+
+  Record    ../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-00.json
+  Status    PREVIEWED (exit 0)
+  Command   E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:dryRunNoFork -Drewrite.activeRecipes=mars.migration.SpringBoot3To4Curated -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-spring:6.37.1 -Drewrite.configLocation=<session>\transformations\rewrite-00.rewrite.yml
+  Log       ../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-00.log
+
+  Proposed changes to 7 file(s) — the sandbox source is unchanged:
+    Dockerfile   ← UpgradeJavaVersion, UpgradeDockerImageVersion
+    pom.xml   ← UpgradeParentVersion, MigrateToModularStarters
+    src/main/java/com/example/migrationdemo/config/JacksonConfig.java   ← UpgradeSpringFramework_7_0, UpgradeJackson_2_3, UpgradeJavaVersion
+    src/main/java/com/example/migrationdemo/exception/ErrorResponse.java   ← UpgradeSpringFramework_7_0, UpgradeJackson_2_3, UpgradeJavaVersion
+    src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java   ← MigrateToModularStarters, MigrateAutoconfigurePackages, UpgradeJavaVersion
+    src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java   ← UpgradeSpringFramework_7_0, UpgradeJackson_2_3, ReplaceMockBeanAndSpyBean
+    src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java   ← MigrateToModularStarters, MigrateAutoconfigurePackages, UpgradeJavaVersion
+
+  Patch     ../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-00.patch
+  Read the patch against the plan's impact list. Reject anything outside the migration's scope
+  (narrow --rewrite-recipe or pick another candidate and preview again). Only then apply with
+    --rewrite apply --rewrite-id boot4-curated --rewrite-preview rewrite-00
+
+exit=0

@@ -6,9 +6,9 @@
 to a scored, auditable ship decision, with optional cleared-only PR publication on explicit request.**
 
 ![Agents](https://img.shields.io/badge/Agents-7-1F3864?style=for-the-badge)
-![Skills](https://img.shields.io/badge/Skills-14-2E5FD9?style=for-the-badge)
+![Skills](https://img.shields.io/badge/Skills-18-2E5FD9?style=for-the-badge)
 ![Pipeline stages](https://img.shields.io/badge/Pipeline_stages-9-6E86E8?style=for-the-badge)
-![Zero-dependency skills](https://img.shields.io/badge/Zero--dep_skills-8_of_14-3DA35B?style=for-the-badge)
+![Zero-dependency skills](https://img.shields.io/badge/Zero--dep_skills-12_of_18-3DA35B?style=for-the-badge)
 ![PR publication](https://img.shields.io/badge/PR_publish-explicit%20cleared--only-A0399B?style=for-the-badge)
 
 </div>
@@ -124,7 +124,7 @@ the real working tree" rule, "zero agent-authored judgment" for the build gate, 
 
 | # | Agent | What it does | Writes |
 |:--|:--|:--|:--|
-| **04** | `04_fix-generator` | **Stage 1 (strategize):** matches the defect against a curated **CWE-aligned remediation catalog** and writes a strategy — *never* a diff — at `Status: Proposed`. **Stage 2 (implement, Approved plans only):** the **only agent that produces code**. Turns an *Approved* plan into the smallest diff in the app's existing style, compiles it inside a throwaway worktree, and refuses any plan not marked Approved. | `04-remediation/` |
+| **04** | `04_fix-generator` | **Stage 1 (strategize):** matches the defect against a curated **CWE-aligned remediation catalog** (`04a`) and writes a strategy — *never* a diff — at `Status: Proposed`. When the CWE has no catalog entry, it falls back to a local **knowledge base** of historical fixes (`04a1`); when even that has nothing, it falls back to a structured **research investigation** that derives a brand-new, Low-confidence proposal (`04a2`) — or, if the evidence is too thin, an honest **evidence-gap plan** for a human to fill in. **Stage 2 (implement, Approved plans only):** the **only agent that produces code** (`04b`, or `04c` for a `CWE-1104` dependency upgrade). Turns an *Approved* plan into the smallest diff in the app's existing style, compiles it inside a throwaway worktree, and refuses any plan not marked Approved. | `04-remediation/` |
 
 ### 🟣 Phase C — Verify & Ship
 
@@ -140,13 +140,13 @@ the real working tree" rule, "zero agent-authored judgment" for the build gate, 
 
 ---
 
-## The 14 skills
+## The 18 skills
 
 An **agent** is the persona and the judgement. A **skill** is the toolbox it drives: deterministic
 Node scripts, JSON schemas, and reference catalogs. Skills live in [`skills/`](./skills/) and are
 numbered to match **the agent that runs them**.
 
-Three relationships are worth knowing:
+Four relationships are worth knowing:
 
 ```mermaid
 flowchart LR
@@ -157,14 +157,21 @@ flowchart LR
   K2 --> K3["01c-graph-forge"]
   K3 --> K4["01d-blueprint-scribe"]
 
+  AF["1 agent<br/>04_fix-generator"] -->|"tries in order, falls back on gaps"| K7["04a-fix-strategist"]
+  K7 -.->|"catalog gap"| K8["04a1-remediation-intelligence"]
+  K8 -.->|"KB gap too"| K9["04a2-remediation-research"]
+  K7 -->|"Approved plan"| K10["04b-fixer"]
+  K8 -->|"Approved plan"| K10
+  K9 -->|"Approved plan"| K10
+
   AV["1 agent<br/>05_existing-app-test-agent"] -->|"runs all three checks"| K6["05-verify"]
 
   classDef skill fill:#2E5FD9,stroke:#1e42a0,color:#fff,font-weight:bold
   classDef agent fill:#1F3864,stroke:#14254a,color:#fff,font-weight:bold
   classDef shared fill:#A0399B,stroke:#732770,color:#fff,font-weight:bold
-  class K1,K2,K3,K4 skill
+  class K1,K2,K3,K4,K7,K8,K9,K10 skill
   class K0,K6 shared
-  class A0,AA,AV agent
+  class A0,AA,AF,AV agent
 ```
 
 | Skill | Run by | Purpose |
@@ -176,8 +183,12 @@ flowchart LR
 | `01d-blueprint-scribe` | 01 | Synthesizes `architecture.md` + `function-reference.md` |
 | `02-root-cause-analyst` | 02 | Evidence collection, analysis schema, report rendering |
 | `03-blast-radius-analyst` | 03 | Reach measurement, narrative schema, diagram-led report |
-| `04a-fix-strategist` | 04 (Stage 1) | CWE pattern catalog + fix-plan rendering |
+| `04a-fix-strategist` | 04 (Stage 1) | CWE pattern catalog + fix-plan rendering — the default path |
+| `04a1-remediation-intelligence` | 04 (Stage 1 fallback) | Fires only on a **catalog gap**; derives a cited, Low-confidence strategy from a local knowledge base of historical fixes |
+| `04a2-remediation-research` | 04 (Stage 1 deepest fallback) | Fires only on a **KB gap** too (neither catalog nor KB has the CWE); runs a structured research investigation and derives a novel, Low-confidence proposal — or an honest evidence-gap plan if proof is too thin |
 | `04b-fixer` | 04 (Stage 2) | Patch verification in an isolated worktree + fix-report rendering |
+| `04c-dependency-upgrader` | 04 (Stage 2, `CWE-1104` only) | Version-bump diff verified against both the declared and the `dependency:tree`-resolved version |
+| `04d-version-migration` | on request | Framework/Java version migration with OpenRewrite in a sandbox, plus a before/after behaviour comparison |
 | `05-verify` | 05 | One agent, three independent checks (re-scan, red-team, behavior guard) against identical inputs |
 | `06a-qa-runner` | 06 (Gate 1) | Regression-test scaffolding + deterministic test gate |
 | `06b-build-gatekeeper` | 06 (Gate 2) | `mvn verify` + dependency-tree diff gate |
@@ -190,6 +201,13 @@ flowchart LR
 > (`04a-fix-strategist`/`04b-fixer`, `06a-qa-runner`/`06b-build-gatekeeper`,
 > `07a-merge-arbiter`/`07b-scribe`). `00-issue-register` keeps its own `00` prefix — it's shared
 > infrastructure with no single owning agent.
+>
+> **A fallback that belongs to one lettered skill takes that skill's number plus a digit, in fallback
+> order.** `04a1-remediation-intelligence` and `04a2-remediation-research` are not separate stages —
+> they are levels 2 and 3 of `04a`'s strategy lookup. `04a` runs first on every issue; `04a1` only
+> runs when `04a` finds no catalog entry for the CWE; `04a2` only runs when `04a1` also finds nothing
+> in the knowledge base. All three write the identical `<id>.strategy.json` shape, so `04b` and
+> everything downstream never needs to know which one produced a given plan.
 
 ---
 
@@ -448,9 +466,10 @@ Full column contract: [`docs/00-issues/README.md`](./docs/00-issues/README.md).
 ## Repository layout
 
 Everything the harness owns lives under `.github/`. **Skill and output-folder numbers still match
-each other** (skill `04a-fix-strategist`/`04b-fixer` ↔ output `04-remediation/`) even though agents
-were consolidated — an agent now simply drives more than one skill, writing into one merged output
-folder per agent.
+each other** (skills `04a-fix-strategist`/`04a1-remediation-intelligence`/`04a2-remediation-research`/
+`04b-fixer`/`04c-dependency-upgrader` ↔ output `04-remediation/`) even though agents were
+consolidated — an agent now simply drives more than one skill, writing into one merged output folder
+per agent.
 
 ```
 .github/
@@ -465,7 +484,7 @@ folder per agent.
 │   ├── 06_additional-test-execution.agent.md  QA gate + build gate
 │   └── 07_audit-and-pr.agent.md             arbitrate (Cleared|Blocked) then write up
 │
-├── skills/                      14 toolboxes, numbered to the agent(s) that run them
+├── skills/                      18 toolboxes, numbered to the agent(s) that run them
 │   ├── 00-issue-register/       shared by every issue-consuming agent
 │   ├── 01a-code-cartographer/   ┐
 │   ├── 01b-context-weaver/      ├─ the Architect runs all four, in order
@@ -473,8 +492,12 @@ folder per agent.
 │   ├── 01d-blueprint-scribe/    ┘
 │   ├── 02-root-cause-analyst/
 │   ├── 03-blast-radius-analyst/
-│   ├── 04a-fix-strategist/      + catalog/cwe-patterns.json  ┐ both run by 04_fix-generator
-│   ├── 04b-fixer/                                              ┘
+│   ├── 04a-fix-strategist/               + catalog/cwe-patterns.json       ┐
+│   ├── 04a1-remediation-intelligence/    fallback: catalog gap → local KB  │
+│   ├── 04a2-remediation-research/        fallback: KB gap too → research   ├─ all run by
+│   ├── 04b-fixer/                        implement an Approved plan        │  04_fix-generator
+│   ├── 04c-dependency-upgrader/          implement a CWE-1104 plan         ┘
+│   ├── 04d-version-migration/            framework/Java migration, on request
 │   ├── 05-verify/               all three checks run by 05_existing-app-test-agent
 │   ├── 06a-qa-runner/           ┐ both run by 06_additional-test-execution
 │   ├── 06b-build-gatekeeper/    ┘
@@ -517,8 +540,9 @@ cd ../01c-graph-forge
 Copy-Item .env.example .env      # then fill in NEO4J_URI / USERNAME / PASSWORD
 ```
 
-> Skills `00`, `04a`, `04b`, `05`, `06a`, `06b`, `07a` and `07b` have **zero dependencies** — nothing
-> to install. Even the Excel reader is built on Node's own `zlib`.
+> Skills `00`, `04a`, `04a1`, `04a2`, `04b`, `04c`, `04d`, `05`, `06a`, `06b`, `07a` and `07b` have
+> **zero npm dependencies** — nothing to install (`04a1` can optionally use a local Python venv for
+> embedding-based ranking; see its SKILL.md). Even the Excel reader is built on Node's own `zlib`.
 
 **Then drive it from Copilot Chat**, one agent at a time, in numeric order:
 

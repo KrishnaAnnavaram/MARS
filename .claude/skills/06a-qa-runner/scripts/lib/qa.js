@@ -67,10 +67,15 @@ function parseFixReport(text) {
   // its own folder depth requires, so never hard-code that count here.
   const patchLink = /\|\s*\*\*Patch\*\*\s*\|\s*\[[^\]]*\]\((?:\.\.\/)+([^)]+)\)/.exec(text);
   const whatChanged = sectionBody(text, 'What changed');
+  // A VERSION_MIGRATION fix (written by 04d-version-migration) also names the JDK its patched code targets.
+  const fixType = /\|\s*\*\*Fix Type\*\*\s*\|\s*`?([A-Z_]{4,})`?/.exec(text);
+  const targetJava = /\|\s*\*\*Target Java\*\*\s*\|\s*(\d+)/.exec(text);
   return {
     title: title ? title[1].trim() : '(untitled)',
     status: status ? status[1].trim() : 'unknown',
     cwe: cwe ? cwe[1].trim() : null,
+    fixType: fixType ? fixType[1] : null,
+    targetJava: targetJava ? targetJava[1] : null,
     patchFile: patchLink ? patchLink[1].trim() : null,
     filesChanged: linkedPaths(whatChanged),
   };
@@ -134,7 +139,23 @@ function removeWorktreeIfPresent(worktreeDir) {
 }
 
 function wrapperFor(moduleDir) {
-  return process.platform === 'win32' ? path.join(moduleDir, 'mvnw.cmd') : path.join(moduleDir, 'mvnw');
+  const wrapper = process.platform === 'win32' ? path.join(moduleDir, 'mvnw.cmd') : path.join(moduleDir, 'mvnw');
+  if (fs.existsSync(wrapper)) return wrapper;
+  // A module without a Maven wrapper builds with the Maven named by MIGRATION_MVN, else `mvn` on PATH.
+  return process.env.MIGRATION_MVN || 'mvn';
+}
+
+/**
+ * The child-process environment for building a fix. A VERSION_MIGRATION fix targets a newer Java
+ * than the project declared before it, so it is built on that JDK when MIGRATION_JDK_<n> names one
+ * (the same variable 04d-version-migration uses); every other fix builds on the inherited JAVA_HOME.
+ */
+function buildEnvFor(fix) {
+  if (fix.fixType !== 'VERSION_MIGRATION' || !fix.targetJava) return { env: undefined, jdk: process.env.JAVA_HOME || 'inherited' };
+  const home = process.env[`MIGRATION_JDK_${fix.targetJava}`];
+  if (!home || !fs.existsSync(home)) return { env: undefined, jdk: `inherited — MIGRATION_JDK_${fix.targetJava} not set` };
+  const bin = path.join(home, 'bin');
+  return { env: { ...process.env, JAVA_HOME: home, PATH: `${bin}${path.delimiter}${process.env.PATH || ''}` }, jdk: `${home} (MIGRATION_JDK_${fix.targetJava})` };
 }
 
 /**
@@ -170,7 +191,10 @@ function modulesFromFiles(files) {
   const modules = new Set();
   for (const f of files) {
     const [root, top] = f.split('/');
-    if (root === SOURCE_ROOT && KNOWN_MODULES.includes(top)) modules.add(`${SOURCE_ROOT}/${top}`);
+    // A known service, or any other Maven project under SOURCE_ROOT (e.g. one a migration fix touches).
+    if (root === SOURCE_ROOT && top && (KNOWN_MODULES.includes(top) || fs.existsSync(path.join(REPO_ROOT, SOURCE_ROOT, top, 'pom.xml')))) {
+      modules.add(`${SOURCE_ROOT}/${top}`);
+    }
   }
   return [...modules];
 }
@@ -203,6 +227,7 @@ module.exports = {
   runWrapper,
   changedFilesFromPatch,
   modulesFromFiles,
+  buildEnvFor,
   tail,
   testPlanPathFor,
   testDiffPathFor,

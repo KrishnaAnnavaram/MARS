@@ -1,0 +1,15 @@
+{
+  "issue_id": "SAMPLE-THIN",
+  "title": "Suspected logic flaw with insufficient evidence",
+  "severity": "Medium",
+  "services": ["report-service"],
+  "cwe": [{ "id": "CWE-840", "inCatalog": false, "inKb": false }],
+  "gap": { "catalog_status": "gap", "kb_status": "gap", "research_required": true, "primary_cwe": "CWE-840" },
+  "defect": { "statement": "A business-logic error is suspected but the sink, the attacker-controlled input, and the trust boundary could not be established from the available evidence.", "location": null, "confidence": "Low", "recommended_fix_from_rca": null, "source": null },
+  "evidence": { "summary": "SYNTHETIC — safe-stop test. The root cause report is inconclusive and no vulnerable source location could be resolved.", "data_flow": null, "observed_behavior": null, "expected_behavior": null, "impact": null, "detection_notes": "CWE-840 (Business Logic Errors) — not in catalog or KB. Evidence insufficient to model the defect." },
+  "affected_files": [],
+  "affected_symbols": [],
+  "entry_points": [],
+  "blast_radius": null,
+  "evidence_sources": { "root_cause_report": "docs/agent_output/02-root-cause/root_cause_SAMPLE-THIN.md", "issue_register": "docs/agent_output/00-issues/issue-register.xlsx#SAMPLE-THIN", "blast_radius_report": null, "vulnerable_source": null }
+}

@@ -1,0 +1,13 @@
+{
+  "slug": "golden",
+  "history": [
+    {
+      "state": "BASELINE_DETECTED",
+      "at": "2026-10-01T02:50:51.812Z",
+      "by": "detect-baseline.js",
+      "detail": "project ../golden"
+    }
+  ],
+  "state": "BASELINE_DETECTED",
+  "updated_at": "2026-10-01T02:50:51.812Z"
+}

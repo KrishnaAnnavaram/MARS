@@ -65,6 +65,21 @@ one issue only when named — refuse only when that fix is `Refused`.
 3. `node scripts/render-build-report.js --all`.
 4. Re-run `list-build-workload.js` and confirm every Compiled fix shows "report written".
 
+## Version migrations (Fix Type `VERSION_MIGRATION`)
+
+A `VERSION_MIGRATION` fix (written by `04d-version-migration`) is gated like every other drafted fix —
+both gates run against the migrated project, independently of 04D's own build rounds.
+
+- **Build on the target JDK.** The patched code targets the fix report's **Target Java**. Both gate
+  scripts read it and run Maven with `JAVA_HOME` set from `MIGRATION_JDK_<n>` (the variable 04D uses);
+  set it before running them, and the gate records which JDK it used. A module without a Maven wrapper
+  builds with `MIGRATION_MVN` or `mvn` on PATH.
+- **The QA test** exercises the migrated application's behaviour that the migration put at risk (the
+  report's §0 impact list — e.g. a controller, serialization or security boundary), mocked as usual,
+  and must compile against the *target* framework's APIs.
+- **The build gate**'s dependency-tree diff is expected to be large for a generation jump; it is
+  evidence for 07, not a failure by itself. Pass/fail is still only the exit code.
+
 ## Constraints
 
 - DO NOT create, edit, rename or delete anything in `docs/agent_output/04-remediation/`.

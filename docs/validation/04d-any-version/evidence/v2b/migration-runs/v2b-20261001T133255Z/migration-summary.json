@@ -1,0 +1,632 @@
+{
+  "schema": "migration-summary/1",
+  "run_id": "v2b-20261001T133255Z",
+  "slug": "v2b",
+  "generated_at": "2026-10-01T13:44:23.768Z",
+  "final_status": "IN_PROGRESS",
+  "status_reason": "stopped after FINAL_PROBED — the migration has not been rendered; if the run ends here it is incomplete",
+  "state": "FINAL_PROBED",
+  "states_reached": [
+    "BASELINE_DETECTED",
+    "WORKSPACE_PREPARED",
+    "BASELINE_BUILT",
+    "BASELINE_PROBED",
+    "PLAN_READY",
+    "TRANSFORMATION_PREVIEWED",
+    "TRANSFORMATION_APPLIED",
+    "TARGET_COMPILED",
+    "FINAL_PROBED"
+  ],
+  "metadata": {
+    "started_at": "2026-10-01T13:32:55.853Z",
+    "last_transition_at": "2026-10-01T13:44:10.404Z",
+    "duration_ms": 674551,
+    "input_location": "E:/mv/golden",
+    "source_commit": "08625161ca388fce117db2a6f9864f999275f519",
+    "working_branch": "master",
+    "worktree": "E:/mv/golden",
+    "output_location": "../evidence/v3/v2b/ctx/version-migration/v2b",
+    "selected_pack": "spring-boot-3-to-4",
+    "agent04_issue_id": null,
+    "approval_mode": "n/a — direct request, not routed by Agent 04"
+  },
+  "versions": {
+    "source_platform_name": "Spring Boot",
+    "source_platform": "3.5.0",
+    "target_platform_name": "Spring Boot",
+    "target_platform": "4.1.1",
+    "final_declared_platform": "4.1.1",
+    "source_java": "17",
+    "source_jdk": "17.0.20.1",
+    "target_java": "21",
+    "target_jdk": "21.0.11",
+    "final_declared_java": "21"
+  },
+  "trigger": {
+    "kind": "direct-request",
+    "note": "invoked directly, not by 04_fix-generator Stage 2"
+  },
+  "detection": [
+    {
+      "what": "build tool",
+      "value": "maven (env) Apache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937)",
+      "where": "pom.xml"
+    },
+    {
+      "what": "declared Java",
+      "value": "17",
+      "where": "pom.xml (java.version / compiler release)"
+    },
+    {
+      "what": "source platform",
+      "value": "3.5.0",
+      "where": "org.springframework.boot:spring-boot-starter-parent (parent)"
+    },
+    {
+      "what": "requested target platform",
+      "value": "4.1.1",
+      "where": "request"
+    },
+    {
+      "what": "requested target Java",
+      "value": "21",
+      "where": "request"
+    },
+    {
+      "what": "JDKs available",
+      "value": "17 (17.0.20.1), 21 (21.0.11)",
+      "where": "local toolchain probe"
+    }
+  ],
+  "migration_path": {
+    "status": "SUPPORTED",
+    "source": "3.5.0",
+    "target": "4.1.1",
+    "required_path": {
+      "stack": "Spring Boot",
+      "source": "3.5.0",
+      "target": "4.1.1",
+      "steps": [
+        {
+          "from": "3.5.0",
+          "to": "3.5.16",
+          "capability": "pin-only (core-apache-2.0)",
+          "available": true
+        },
+        {
+          "from": "3.5.16",
+          "to": "4.0.8",
+          "capability": "openrewrite/spring-boot-3-to-4.oss.yml",
+          "available": true
+        },
+        {
+          "from": "4.0.8",
+          "to": "4.1.1",
+          "capability": "pin-only (core-apache-2.0)",
+          "available": true
+        }
+      ],
+      "missing_capability": []
+    },
+    "missing_capability": [],
+    "pack_eligibility": [
+      {
+        "pack": "spring-boot-3-to-4",
+        "stack": "Spring Boot",
+        "pack_from": "3",
+        "pack_to": "4",
+        "matched_on": [
+          "org.springframework.boot:spring-boot-starter-parent:3",
+          "org.springframework.boot:spring-boot-starter-web"
+        ],
+        "platform_coordinates": [
+          "org.springframework.boot:spring-boot-starter-parent",
+          "org.springframework.boot:spring-boot-dependencies"
+        ],
+        "source_platform": {
+          "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+          "version": "3.5.0",
+          "where": "parent",
+          "descriptor": "pom.xml"
+        },
+        "nominated": true,
+        "eligible": true,
+        "relation": "in-generation",
+        "reason": "source org.springframework.boot:spring-boot-starter-parent 3.5.0 (parent) is in the pack's 3.x generation"
+      }
+    ],
+    "warnings": [],
+    "unresolved": []
+  },
+  "license_policy": "open-source-only",
+  "path": {
+    "ladder": "references/openrewrite/spring-boot-ladder.json",
+    "granularity": "boundary",
+    "versions_from": "maven-metadata https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter-parent/maven-metadata.xml",
+    "edges": [
+      {
+        "id": "E1",
+        "class": "PATCH",
+        "role": "transit",
+        "from": "3.5.0",
+        "to": "3.5.16",
+        "java": "17",
+        "jdk": "17.0.20.1",
+        "recipe_source": "pin-only",
+        "recipe": null,
+        "stack": "core-apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "cloud_train": null,
+        "pack": null,
+        "notes": [
+          "patch edge within 3.5: pins the platform only — a patch release carries no framework migration"
+        ],
+        "previews": [
+          "rewrite-00 previewed (1 files)"
+        ],
+        "applies": [
+          "rewrite-01 applied (1 files)"
+        ],
+        "rounds": [
+          "R1 compile passed"
+        ],
+        "complete": true,
+        "completed_by": "R1"
+      },
+      {
+        "id": "E2",
+        "class": "MAJOR_BOUNDARY",
+        "role": "transit",
+        "from": "3.5.16",
+        "to": "4.0.8",
+        "java": "17",
+        "jdk": "17.0.20.1",
+        "recipe_source": "oss-composite",
+        "recipe": "openrewrite/spring-boot-3-to-4.oss.yml",
+        "stack": "core-apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "cloud_train": null,
+        "pack": "spring-boot-3-to-4",
+        "notes": [],
+        "previews": [
+          "rewrite-02 previewed (5 files)"
+        ],
+        "applies": [
+          "rewrite-03 applied (5 files)"
+        ],
+        "rounds": [
+          "R2 compile compile-failed",
+          "R4 test-compile passed"
+        ],
+        "complete": true,
+        "completed_by": "R4"
+      },
+      {
+        "id": "E3",
+        "class": "MINOR",
+        "role": "landing",
+        "from": "4.0.8",
+        "to": "4.1.1",
+        "java": "21",
+        "jdk": "21.0.11",
+        "recipe_source": "pin-only",
+        "recipe": null,
+        "stack": "core-apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "cloud_train": null,
+        "pack": null,
+        "notes": [
+          "no open-source-only upstream recipe for 4.1: the edge pins the platform and Java level; compiler-driven repair handles the rest"
+        ],
+        "previews": [
+          "rewrite-04 previewed (1 files)",
+          "rewrite-05 previewed (1 files)"
+        ],
+        "applies": [
+          "rewrite-06 applied (1 files)"
+        ],
+        "rounds": [
+          "R5 compile passed"
+        ],
+        "complete": true,
+        "completed_by": "R5"
+      }
+    ]
+  },
+  "endpoints": {
+    "static": {
+      "before": 7,
+      "after": 7,
+      "preserved": [
+        "GET /api/v1/employees",
+        "POST /api/v1/employees",
+        "DELETE /api/v1/employees/{id}",
+        "GET /api/v1/employees/{id}",
+        "PUT /api/v1/employees/{id}",
+        "GET /api/v1/employees/high-earners",
+        "GET /api/v1/employees/search"
+      ],
+      "missing": [],
+      "added": []
+    },
+    "runtime": {
+      "source": "actuator /mappings",
+      "missing": [],
+      "note": "/actuator/mappings not exposed or not probed — static inventory only"
+    }
+  },
+  "planned_transformations": {
+    "impact_areas": [
+      "Platform parent",
+      "JSON handling",
+      "Runtime image"
+    ],
+    "impact_entries": 3,
+    "deterministic_candidates": [
+      "edge:E1",
+      "edge:E2",
+      "edge:E3"
+    ],
+    "residual_candidates": [
+      {
+        "impact": "I9",
+        "why_not_deterministic": "No recipe in the pack changes a Dockerfile base image."
+      }
+    ]
+  },
+  "openrewrite": [
+    {
+      "seq": 0,
+      "id": "rewrite-00",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E1"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": null
+    },
+    {
+      "seq": 1,
+      "id": "rewrite-01",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.edge.E1"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": null
+    },
+    {
+      "seq": 2,
+      "id": "rewrite-02",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E2"
+      ],
+      "files": 5,
+      "error": null,
+      "decision": null
+    },
+    {
+      "seq": 3,
+      "id": "rewrite-03",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.edge.E2"
+      ],
+      "files": 5,
+      "error": null,
+      "decision": null
+    },
+    {
+      "seq": 4,
+      "id": "rewrite-04",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E3"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": null
+    },
+    {
+      "seq": 5,
+      "id": "rewrite-05",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E3"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": null
+    },
+    {
+      "seq": 6,
+      "id": "rewrite-06",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.edge.E3"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": null
+    }
+  ],
+  "actual_transformations": [],
+  "file_changes": [
+    {
+      "file": "pom.xml",
+      "change": "modified",
+      "tool": null,
+      "reason": null
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "change": "modified",
+      "tool": null,
+      "reason": null
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+      "change": "modified",
+      "tool": null,
+      "reason": null
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+      "change": "modified",
+      "tool": null,
+      "reason": null
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java",
+      "change": "modified",
+      "tool": null,
+      "reason": null
+    }
+  ],
+  "dependency_changes": [
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-parent (parent)",
+      "old": "3.5.0",
+      "new": "4.1.1",
+      "reason": "platform parent"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-webmvc",
+      "old": null,
+      "new": "(managed)",
+      "reason": "added"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-data-jpa-test",
+      "old": null,
+      "new": "(managed)",
+      "reason": "added"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-security-test",
+      "old": null,
+      "new": "(managed)",
+      "reason": "added"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-webmvc-test",
+      "old": null,
+      "new": "(managed)",
+      "reason": "added"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-web",
+      "old": "(managed)",
+      "new": null,
+      "reason": "removed"
+    },
+    {
+      "dependency": "org.springframework.security:spring-security-test",
+      "old": "(managed)",
+      "new": null,
+      "reason": "removed"
+    },
+    {
+      "dependency": "property java.version",
+      "old": "17",
+      "new": "21",
+      "reason": "build property"
+    }
+  ],
+  "compile_history": [
+    {
+      "round": 0,
+      "baseline": true,
+      "label": "Pre-migration reference build",
+      "intent": "compile",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 3774,
+      "errors": 0,
+      "declared_platform": "3.5.0",
+      "diagnosis": null,
+      "repair": null
+    },
+    {
+      "round": 1,
+      "baseline": false,
+      "label": "OpenRewrite rewrite-01 applied (mars.migration.edge.E1)",
+      "intent": "compile",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 3978,
+      "errors": 0,
+      "declared_platform": "3.5.16",
+      "diagnosis": null,
+      "repair": null
+    },
+    {
+      "round": 2,
+      "baseline": false,
+      "label": "OpenRewrite rewrite-03 applied (mars.migration.edge.E2)",
+      "intent": "compile",
+      "jdk": "17.0.20.1",
+      "outcome": "compile-failed",
+      "exit_code": 1,
+      "duration_ms": 4261,
+      "errors": 10,
+      "declared_platform": "4.0.8",
+      "diagnosis": null,
+      "repair": null
+    },
+    {
+      "round": 3,
+      "baseline": false,
+      "label": "Jackson 3 JacksonConfig repair (same reviewed edit as V2)",
+      "intent": "test-compile",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 4818,
+      "errors": 0,
+      "declared_platform": "4.0.8",
+      "diagnosis": null,
+      "repair": null
+    },
+    {
+      "round": 4,
+      "baseline": false,
+      "label": "E2 residual repair re-check (edge inferred)",
+      "intent": "test-compile",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 4706,
+      "errors": 0,
+      "declared_platform": "4.0.8",
+      "diagnosis": null,
+      "repair": null
+    },
+    {
+      "round": 5,
+      "baseline": false,
+      "label": "OpenRewrite rewrite-06 applied (mars.migration.edge.E3)",
+      "intent": "compile",
+      "jdk": "21.0.11",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 4775,
+      "errors": 0,
+      "declared_platform": "4.1.1",
+      "diagnosis": null,
+      "repair": null
+    },
+    {
+      "round": 6,
+      "baseline": false,
+      "label": "Landing 4.1.1 test suite",
+      "intent": "test",
+      "jdk": "21.0.11",
+      "outcome": "tests-failed",
+      "exit_code": 1,
+      "duration_ms": 21306,
+      "errors": 7,
+      "declared_platform": "4.1.1",
+      "diagnosis": null,
+      "repair": null
+    }
+  ],
+  "tests": {
+    "before": {
+      "round": 6,
+      "total": 19,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 17
+    },
+    "after": null,
+    "new_failures": false
+  },
+  "runtime": {
+    "baseline_probed": true,
+    "final_probed": true,
+    "baseline_started": true,
+    "final_started": true,
+    "final_startup_seconds": 7.606,
+    "readiness": {
+      "path": "/actuator/health",
+      "status": 200,
+      "ready_after_ms": 9503
+    },
+    "probes": 4,
+    "failures": []
+  },
+  "behaviour": {
+    "total": 4,
+    "identical": 1,
+    "body_differs": 3,
+    "status_changed": 0,
+    "expected_differences": [],
+    "unexpected_differences": [],
+    "verdict": "🟡 same status on all 4, body differs on 3"
+  },
+  "compiled_on_target": true,
+  "target_reached": true,
+  "validation": [
+    [
+      "Build rounds",
+      "7 (R0 passed, R1 passed, R2 compile-failed, R3 passed, R4 passed, R5 passed, R6 tests-failed)"
+    ],
+    [
+      "Final round",
+      "R6 test on JDK 21.0.11 — tests-failed"
+    ],
+    [
+      "Target declared by final build",
+      "4.1.1 (matches request)"
+    ],
+    [
+      "Tests before → after",
+      "not comparable"
+    ],
+    [
+      "Runtime probes",
+      "4 compared: 1 identical, 3 body-only differences, 0 status changes"
+    ],
+    [
+      "Migration result",
+      "IN_PROGRESS — stopped after FINAL_PROBED — the migration has not been rendered; if the run ends here it is incomplete"
+    ]
+  ],
+  "handoff": null,
+  "paths": {
+    "session": "../evidence/v3/v2b/ctx/version-migration/v2b",
+    "report_md": "E:\\mv\\evidence\\v3\\v2b\\reports\\migration_v2b.md",
+    "report_md_exists": false,
+    "report_diff": "E:\\mv\\evidence\\v3\\v2b\\reports\\migration_v2b.diff",
+    "report_diff_exists": false,
+    "summary_md": "E:\\mv\\evidence\\v3\\v2b\\reports\\migration-runs\\v2b-20261001T133255Z\\MIGRATION_SUMMARY.md",
+    "summary_json": "E:\\mv\\evidence\\v3\\v2b\\reports\\migration-runs\\v2b-20261001T133255Z\\migration-summary.json",
+    "evidence": [
+      "../evidence/v3/v2b/ctx/version-migration/v2b/baseline.json",
+      "../evidence/v3/v2b/ctx/version-migration/v2b/migration-plan.json",
+      "../evidence/v3/v2b/ctx/version-migration/v2b/probes.json",
+      "../evidence/v3/v2b/ctx/version-migration/v2b/state.json",
+      "../evidence/v3/v2b/ctx/version-migration/v2b/rounds",
+      "../evidence/v3/v2b/ctx/version-migration/v2b/runtime",
+      "../evidence/v3/v2b/ctx/version-migration/v2b/transformations"
+    ]
+  },
+  "finalized_by": "render-migration-report.js"
+}

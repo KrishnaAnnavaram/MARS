@@ -26,6 +26,11 @@
  * Usage:
  *   node scripts/probe-runtime.js --slug <slug> --phase baseline --jdk 17 --probes probes.json
  *   node scripts/probe-runtime.js --slug <slug> --phase final --jdk 21 --probes probes.json
+ *   node scripts/probe-runtime.js --slug <slug> --discover     # draft probes from the endpoint inventory
+ *
+ * Endpoint preservation: every run also records the endpoints the running application serves
+ * (/actuator/mappings, when exposed) and the endpoints its source maps (static scan of the sandbox
+ * as it stands), so the report can show that every endpoint before the migration still exists after.
  */
 const fs = require('fs');
 const path = require('path');
@@ -34,7 +39,7 @@ const { spawn } = require('child_process');
 const {
   sessionPaths, readJson, writeJson, rel, runTool, run, tail, IS_WIN,
   resolveJdk, envForJdk, resolveBuildTool, buildArgs, stripRootFromText,
-  recordState, changedSince, createCheckpoint, isSandboxRepo,
+  recordState, changedSince, createCheckpoint, isSandboxRepo, scanEndpoints,
 } = require('./lib/migration');
 
 const DEFAULT_PROBES = {
@@ -56,6 +61,7 @@ function parseArgs(argv) {
     else if (a === '--arg') args.appArgs.push(argv[++i]);
     else if (a === '--rebuild') args.rebuild = true;
     else if (a === '--timeout') args.timeout = Number(argv[++i]);
+    else if (a === '--discover') args.discover = true;
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
@@ -98,11 +104,14 @@ function findArtifact(workspace, tool) {
     : [path.join(workspace, 'target')];
   for (const dir of dirs) {
     if (!fs.existsSync(dir)) continue;
-    const jars = fs.readdirSync(dir)
-      .filter((f) => f.endsWith('.jar') && !/(\.original|-sources|-javadoc|-plain)\.jar$/.test(f))
+    // A Spring Boot executable war runs with `java -jar` just like a jar (war packaging is common for
+    // apps also deployed to an external container); a jar is preferred when both exist.
+    const runnable = (ext) => fs.readdirSync(dir)
+      .filter((f) => f.endsWith(ext) && !new RegExp(`(\\.original|-sources|-javadoc|-plain)\\${ext}$`).test(f))
       .map((f) => path.join(dir, f))
       .sort((a, b) => fs.statSync(b).size - fs.statSync(a).size);
-    if (jars.length) return jars[0];
+    const found = [...runnable('.jar'), ...runnable('.war')];
+    if (found.length) return found[0];
   }
   return null;
 }
@@ -167,15 +176,23 @@ function semanticObservations(body, request = {}) {
   return out;
 }
 
+/**
+ * Basic auth for the probes. Prefer `username_env` / `password_env` (names of environment variables)
+ * so no secret is written into probes.json; a literal `username`/`password` is for credentials the
+ * application's own source already commits (demo or test users), and is never echoed into a record.
+ */
 function authHeader(auth) {
   if (!auth || auth.type !== 'basic') return {};
-  const token = Buffer.from(`${auth.username}:${auth.password}`).toString('base64');
+  const username = auth.username_env ? process.env[auth.username_env] : auth.username;
+  const password = auth.password_env ? process.env[auth.password_env] : auth.password;
+  if (username === undefined || password === undefined) return {};
+  const token = Buffer.from(`${username}:${password}`).toString('base64');
   return { Authorization: `Basic ${token}` };
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function attempt(url, options, request = null) {
+async function attempt(url, options, request = null, keepBody = false) {
   try {
     const response = await fetch(url, options);
     const body = await response.text();
@@ -187,6 +204,7 @@ async function attempt(url, options, request = null) {
       body_hash: hashBody(body),
       body_excerpt: body.length > 1500 ? `${body.slice(0, 1500)}…` : body,
     };
+    if (keepBody) raw.body_full = body;
     if (!request) return raw;
     const extra = semanticObservations(body, request);
     if (request.expect_status !== undefined) extra.expect_status_met = response.status === Number(request.expect_status);
@@ -213,6 +231,76 @@ function stopProcess(child) {
   }
 }
 
+/**
+ * Drafts probes from the endpoint inventory detect-baseline.js recorded, so every endpoint the
+ * application serves is either probed or explicitly listed as not probed, with the reason. Only
+ * requests that cannot change state are drafted (GET with no path variable); a mutating or
+ * parameterised endpoint needs a request the agent writes from the source. Writes
+ * <session>/probes.discovered.json — never overwrites the agent's probes.json.
+ */
+function discoverProbes(slug, port = 8080) {
+  const paths = sessionPaths(slug);
+  const baseline = readJson(paths.baseline);
+  if (!baseline || !baseline.observations) {
+    console.error(`No baseline for "${slug}" — run detect-baseline.js first.`);
+    process.exitCode = 1;
+    return;
+  }
+  const endpoints = baseline.observations.endpoints || [];
+  const requests = [];
+  const notProbed = [];
+  for (const e of endpoints) {
+    const params = e.required_params || [];
+    if (e.method === 'GET' && !/[{}*]/.test(e.path) && !params.length) {
+      // Config-enabled framework endpoints (H2 console, exposed actuator endpoints) are probed too:
+      // no controller maps them, and a major upgrade can drop them silently.
+      const framework = e.source === 'config';
+      requests.push({ name: `${e.method} ${e.path}`, method: 'GET', path: e.path, category: framework ? (/actuator/.test(e.handler || '') ? 'actuator' : 'framework-endpoint') : 'endpoint-inventory', handler: `${e.file}:${e.line}${framework ? ` (${e.handler})` : ''}` });
+    } else {
+      let reason = 'mutating or unspecified method — needs a request body and an expectation the agent writes from the source';
+      if (/[{}*]/.test(e.path)) reason = 'path variable — needs a real id from the application\'s data';
+      else if (params.length) reason = `required request parameter(s) ${params.join(', ')} — needs real values from the application's data`;
+      notProbed.push({ endpoint: `${e.method} ${e.path}`, handler: `${e.file}:${e.line}`, reason, ...(params.length ? { required_params: params } : {}) });
+    }
+  }
+  const draft = {
+    $comment: 'Drafted by probe-runtime.js --discover from the static endpoint inventory. Add auth, real ids, request bodies and expect_status from the application\'s source, then pass it as --probes. not_probed must end empty or each entry must stay explained.',
+    base_url: `http://localhost:${port}`,
+    readiness: { path: '/actuator/health', timeout_seconds: 120 },
+    requests: [{ name: 'endpoint inventory (actuator)', method: 'GET', path: '/actuator/mappings', category: 'endpoint-inventory' }, ...requests],
+    not_probed: notProbed,
+  };
+  const file = writeJson(path.join(paths.root, 'probes.discovered.json'), draft);
+  console.log(`\nProbe draft — ${endpoints.length} endpoint(s) in the inventory`);
+  console.log(`  drafted    ${requests.length} safe GET probe(s) (+ /actuator/mappings)`);
+  console.log(`  not probed ${notProbed.length} — listed with the reason; write those requests from the source`);
+  console.log(`  written    ${rel(file)}\n`);
+}
+
+/**
+ * The endpoints the running application actually serves, from /actuator/mappings when the app
+ * exposes it: "METHOD pattern" per request mapping. Absent or secured is recorded as such — never
+ * guessed — and the static inventory remains the fallback.
+ */
+async function runtimeEndpointInventory(baseUrl, auth) {
+  const res = await attempt(`${baseUrl}/actuator/mappings`, { method: 'GET', headers: authHeader(auth) }, null, true);
+  if (!res.ok || res.status !== 200) return { source: 'actuator', available: false, status: res.status || null, endpoints: [] };
+  let doc;
+  try { doc = JSON.parse(res.body_full || res.body_excerpt || ''); } catch { return { source: 'actuator', available: false, status: res.status, note: 'response was not complete JSON', endpoints: [] }; }
+  const endpoints = new Set();
+  const visit = (node) => {
+    if (!node || typeof node !== 'object') return;
+    const cond = node.details && node.details.requestMappingConditions;
+    if (cond && Array.isArray(cond.patterns)) {
+      const methods = cond.methods && cond.methods.length ? cond.methods : ['ANY'];
+      for (const p of cond.patterns) for (const m of methods) endpoints.add(`${m} ${p}`);
+    }
+    for (const v of Object.values(node)) if (v && typeof v === 'object') visit(v);
+  };
+  visit(doc.contexts || doc);
+  return { source: 'actuator', available: true, status: res.status, endpoints: [...endpoints].sort() };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) return usage();
@@ -221,6 +309,7 @@ async function main() {
     process.exitCode = 1;
     return;
   }
+  if (args.discover) return discoverProbes(args.slug, args.port);
   if (!['baseline', 'final'].includes(args.phase)) {
     console.error('--phase must be "baseline" or "final".');
     process.exitCode = 1;
@@ -378,6 +467,8 @@ async function main() {
     }
   }
 
+  // What the running application serves, before it is stopped (actuator /mappings when exposed).
+  const endpointInventory = ready ? await runtimeEndpointInventory(baseUrl, probes.auth) : null;
   stopProcess(child);
   await sleep(500);
   const sideEffects = beforeRun ? changedSince(paths.workspace, beforeRun.commit) : [];
@@ -400,6 +491,9 @@ async function main() {
     probes_file: probeFile ? rel(probeFile) : null,
     probes_sha: probesSha,
     sandbox_side_effects: sideEffects,
+    // v3 — endpoint preservation: what the app served at runtime, and what its source maps statically
+    endpoint_inventory: endpointInventory,
+    static_endpoints: scanEndpoints(paths.workspace),
   };
   const file = writeJson(path.join(paths.runtimeDir, `${args.phase}.json`), record);
   recordState(args.slug, args.phase === 'baseline' ? 'BASELINE_PROBED' : 'FINAL_PROBED', 'probe-runtime.js',
@@ -422,7 +516,7 @@ async function main() {
 }
 
 if (require.main === module) {
-  main().catch((error) => {
+  require('./lib/summary').runAndFinalize(main, 'probe-runtime.js').catch((error) => {
     console.error(error.stack || error.message);
     process.exitCode = 1;
   });

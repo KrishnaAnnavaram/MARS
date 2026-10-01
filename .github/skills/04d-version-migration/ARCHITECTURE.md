@@ -279,3 +279,48 @@ received it), in a disposable session, produced:
 
 The two things that differ are the ones that should: fewer failed rounds, and complete provenance
 for every change.
+
+## 12. v3 — any version to any version (the migration ladder)
+
+v2 migrated one generation per session from one pack. v3 plans a path from any published Spring Boot
+line to any later one, with OpenRewrite at the centre and bootshift's path discipline. It adds **no new
+script**: the six public scripts gain options, three libraries gain functions, and the knowledge is
+data.
+
+| Capability | Origin | Where |
+|---|---|---|
+| Rung-by-rung recipe ladder (2.0 … 4.1) | OpenRewrite `UpgradeSpringBoot_X_Y`, cumulative recipes | `references/openrewrite/spring-boot-ladder.json` |
+| Every major gets its own boundary edge; last line of the major before is reached first | bootshift path builder | `lib/references.js` `planLadderPath` |
+| Transit vs landing edges; Java level per edge from the rung's floor | bootshift target resolver | `planLadderPath`; `edge.java` / `edge.jdk` |
+| Spring Cloud train per edge, verified from the train's published POMs (starter parent to 2025.0; `spring-cloud-build`'s `spring-boot.version` from 2025.1) | bootshift compatibility registry | `lib/migration.js` `publishedCloudTrains`, `cloudTrainBootParent` |
+| Published lines and latest patches read from Maven Central, never remembered | bootshift artifact-channel probe | `lib/migration.js` `publishedLines` (offline fallback in the ladder) |
+| Licence policy (`open-source-only` default), enforced at execution | this work (licence audit below) | `lib/openrewrite.js` licence gate |
+| Generated per-edge recipe with platform / Java / Cloud pins | this work | `lib/openrewrite.js` `renderEdgeRecipe` |
+| Open-source 3 → 4 composite from Apache-2.0 core recipes only | this work | `references/openrewrite/spring-boot-3-to-4.oss.yml` |
+| Endpoint inventory before/after (controller scan + config-enabled framework endpoints + `/actuator/mappings`); loss = FAIL | bootshift characterization contracts | `scanEndpoints`, `configEndpoints`, `probe-runtime.js --discover`, summary, apply gate |
+| 2 → 3 rules pack (Jakarta, Security 6, Data 2022, Cloud 2022) | Spring migration guides | `references/spring-boot-2-to-3.md` |
+
+**Licence audit (2026-10-01, from each artifact's POM on Maven Central).** `rewrite-spring` 5.24.1
+(2024-11-28) is the last Apache-2.0 release and ships `UpgradeSpringBoot_2_0` … `3_3`; its recipe
+dependencies at that version (migrate-java 2.30.1, testing-frameworks 2.23.1, hibernate 1.13.1,
+java-dependencies 1.24.1, static-analysis 1.21.1, apache 1.9.1, micrometer 0.11.1, openapi 0.10.1,
+reactive-streams 0.6.1) are all Apache-2.0, as are `rewrite-maven-plugin` 5.46.1 / 6.46.1 and
+OpenRewrite core 8.41.1 / 8.90.4. From 5.25.0 (2024-12-18) `rewrite-spring` and most recipe modules
+are under the Moderne Source Available License. Hence the default stack mapping: Apache recipes to
+3.3, then 04D's open-source composites and compiler-driven repair; the source-available recipes only
+on explicit opt-in.
+
+**Execution model.** Edges run strictly in order; each is previewed, inspected, applied, and built
+green on its planned version before the next (`edgeComplete` in `run-migration-build.js`). Round 0
+and the baseline probe still come first; the final probe and the same-goal test round run on the
+landing edge. A residual-repair round run without `--edge` is tagged with the open edge whose target
+the sandbox declares (`openEdgeFor`), so repairs complete their edge. Each edge also moves explicitly
+versioned platform artifacts with the platform, so a composite's `AddDependency` on one edge cannot
+leave a stale version for the next. The summary shows every edge with its previews, applies, rounds and
+completion, and the apply gate (`apply-migration.js` `eligibility`) refuses an unfinished path or a
+lost endpoint.
+
+**Validation.** Real runs, all under `open-source-only`, are recorded in
+`docs/validation/04d-any-version/`. V1 went from 2.7.12 + Cloud 2021.0.7 to 3.5.16 in 4 edges (Apache upstream
+recipes 3_0 and 3_3). V2, V2b and V2c went from 3.5.0 to 4.1.1 in 3 edges (open-source composite). V2c is
+the clean re-run with every fix in place.

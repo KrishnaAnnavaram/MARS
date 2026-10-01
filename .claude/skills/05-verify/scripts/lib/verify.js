@@ -82,10 +82,23 @@ function parseFixReport(text) {
   const whatChanged = sectionBody(text, 'What changed');
   const why = sectionBody(text, 'Why this is the smallest correct diff');
 
+  // A VERSION_MIGRATION fix (04d-version-migration) links its detailed migration evidence.
+  const cell = (label) => (new RegExp(`\\|\\s*\\*\\*${label}\\*\\*\\s*\\|\\s*([^|]+)\\|`).exec(text) || [])[1];
+  const linkIn = (label) => { const c = cell(label); const m = c && /\]\((?:\.\.\/)+([^)]+)\)/.exec(c); return m ? m[1].trim() : null; };
+  const fixType = cell('Fix Type');
   return {
     title: title ? title[1].trim() : '(untitled)',
     status: status ? status[1].trim() : 'unknown',
     cwe: cwe ? cwe[1].trim() : null,
+    fixType: fixType ? fixType.replace(/`/g, '').trim() : null,
+    migration: fixType && /VERSION_MIGRATION/.test(fixType) ? {
+      status: (cell('Migration Status') || '').trim() || null,
+      source: (cell('Source Version') || '').trim() || null,
+      target: (cell('Target Version') || '').trim() || null,
+      report: linkIn('Migration Report'),
+      diff: linkIn('Migration Diff'),
+      summary: linkIn('Migration Summary'),
+    } : null,
     fixPlanFile: planLink ? planLink[1].trim() : null,
     patchFile: patchLink ? patchLink[1].trim() : null,
     filesChanged: linkedPaths(whatChanged),
@@ -141,6 +154,30 @@ function resolveFix(idOrPath) {
     `No fix report for "${idOrPath}" in ${rel(PATHS.FIXES_DIR)}. `
     + `Available (Compiled or Compile Failed): ${all.map((f) => f.id).join(', ') || 'none — run the Fixer agent first'}`
   );
+}
+
+/**
+ * Appends the version-migration context to a check's briefing when the fix is a VERSION_MIGRATION:
+ * the patch is a whole-project migration, so each check must also read the migration report (its
+ * predicted vs. actual impact, round history and behaviour comparison) and the baseline evidence —
+ * and must judge the patch independently rather than trust 04D's own result.
+ */
+function appendMigrationContext(fix, name) {
+  if (!fix.migration) return;
+  const m = fix.migration;
+  const lines = [
+    '',
+    '## Version migration context',
+    '',
+    `This fix is a **VERSION_MIGRATION** written by \`04d-version-migration\` (${m.source || '?'} → ${m.target || '?'}; 04D's own result: **${m.status || 'unknown'}**). Verify it independently — 04D's result is evidence to check, not a verdict to inherit.`,
+    '',
+    `- Migration report: ${m.report ? `\`${m.report}\`` : '_not linked_'} — read §0 (predicted impact), §2–§3 (rounds), §4–§5 (every change) and §6 (behaviour before/after).`,
+    `- Migration diff (project-relative): ${m.diff ? `\`${m.diff}\`` : '_not linked_'}; the repo-rooted patch is the fix diff itself.`,
+    `- Per-run summary: ${m.summary ? `\`${m.summary}\`` : '_not linked_'} (baseline round 0, probes, file and dependency changes).`,
+    '- Changed files: the "What changed" list in the fix report; every one is materialized above when the patch applied.',
+    '',
+  ];
+  fs.appendFileSync(briefingPathFor(fix.id, name), lines.join('\n'));
 }
 
 // ---------------------------------------------------------------------------
@@ -361,6 +398,7 @@ module.exports = {
   loadCatalogEntry,
   materializePatchedFiles,
   factsPathFor,
+  appendMigrationContext,
   briefingPathFor,
   verdictPathFor,
   reportPathFor,

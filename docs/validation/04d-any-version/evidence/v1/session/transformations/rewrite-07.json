@@ -1,0 +1,75 @@
+{
+  "id": "rewrite-07",
+  "seq": 7,
+  "provider": "openrewrite",
+  "mode": "dry-run",
+  "applied": false,
+  "transformation": "edge-E4",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "wrapper",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.edge.E4"
+  ],
+  "artifacts": [],
+  "config": null,
+  "config_sha": "1f81ee02a914cb9f",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "3.5.16",
+  "jdk": {
+    "major": 21,
+    "version": "21.0.11"
+  },
+  "started_at": "2026-10-01T13:16:32.735Z",
+  "finished_at": "2026-10-01T13:16:57.040Z",
+  "duration_ms": 24305,
+  "command": "mvnw.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:dryRunNoFork -Drewrite.activeRecipes=mars.migration.edge.E4 -Drewrite.configLocation=<session>\\transformations\\rewrite-07.rewrite.yml",
+  "exit_code": 0,
+  "status": "previewed",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": null,
+  "proposed_files": [
+    "pom.xml"
+  ],
+  "changed_files": [],
+  "excluded_files": [],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.maven.ChangeParentPom: {oldGroupId=org.springframework.boot, oldArtifactId=spring-boot-starter-parent, newVersion=3.5.16, allowVersionDowngrades=true}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=java.version, newValue=21}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=spring-cloud.version, newValue=2025.0.3}"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-07.patch",
+  "log": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-07.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-07-before",
+    "commit": "84b9c3706c69bea09b3fc82ad7e09c0169a964d0"
+  },
+  "scope_check": null,
+  "reconciliation": null,
+  "build_round": null,
+  "notes": [],
+  "edge": "E4",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-07.rewrite.yml",
+  "goal": "dryRunNoFork"
+}

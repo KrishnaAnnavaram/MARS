@@ -18,6 +18,7 @@ const path = require('path');
 const {
   REPO_ROOT, WORK_DIR, readIfPresent, rel, listStep1Fixes, resolveFix, upstreamChainFor,
   materializePatchedFiles, factsPathFor, briefingPathFor,
+  appendMigrationContext,
 } = require('./lib/verify');
 
 function parseArgs(argv) {
@@ -162,6 +163,7 @@ function collectForFix(fix) {
   fs.mkdirSync(WORK_DIR, { recursive: true });
   fs.writeFileSync(factsPathFor(fix.id, 'behavior'), JSON.stringify(facts, null, 2));
   fs.writeFileSync(briefingPathFor(fix.id, 'behavior'), renderBriefing(facts));
+  appendMigrationContext(fix, 'behavior');
 
   const anySigChange = Object.values(signatureDiffs).some((s) => s.added.length || s.removed.length);
   return {

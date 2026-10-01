@@ -107,6 +107,28 @@ than to whatever release the upstream recipe happens to target.
 Existing packs need none of this. The local pack stays the reviewable migration contract and
 nothing requires network access just to read it.
 
+## Ladders — any version to any version
+
+A pack covers one generation step. A **ladder** (`openrewrite/<stack>-ladder.json`) covers a whole
+platform, so `detect-baseline.js` can plan a path of edges across several steps. Contract:
+
+| Field | Meaning |
+|---|---|
+| `id`, `stack` | `spring-boot`; `stack` must equal the packs' `stack` so boundary edges find their rules pack |
+| `platform_coordinates` | `groupId:artifactId` whose declared version is the platform version |
+| `metadata` | where Maven metadata is read for published lines (`group_id`, `artifact_id`, `repository`) |
+| `recipe_stacks.<name>` | `license`, `open_source` (true only for an OSI licence, read from every artifact's POM), `plugin_version`, `gradle_plugin_version`, `artifacts`, `evidence` |
+| `lines[]` | one rung per line: `line`, `major`, `java_min`, `latest_known` (offline fallback), `recipe` (the rung's OpenRewrite upgrade recipe, verified against the jar), `recipe_stacks` (which stacks ship it) |
+| `oss_composites` | major → `openrewrite/<file>.yml`: a 04D-authored recipe made only of Apache-2.0 core recipes, used for a boundary no open-source upstream recipe covers. Placeholders: `{{edge_platform_version}}` |
+| `cloud.trains` | Boot line → Spring Cloud train series; verified at detect time against the train's `spring-cloud-starter-parent` POM |
+
+Rules: a recipe name enters `lines[]` only after it is found in the published jar; a licence enters
+`recipe_stacks` only as the artifact's POM declares it; an `oss_composites` file uses only recipes
+from Apache-2.0 modules (`rewrite-java`, `rewrite-maven`, `rewrite-properties`, `rewrite-yaml`,
+`rewrite-gradle`, `rewrite-java-dependencies`) and never copies mappings out of a source-available
+recipe. Adding a new line (Boot 4.2, say) is a data change: a new rung, and — when it opens a new
+major — a rules pack and, if no open-source recipe exists, a composite.
+
 ## What a pack must contain
 
 1. **The version baseline** — what the target release requires (language level, build tool, JDK),

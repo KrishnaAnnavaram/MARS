@@ -1,0 +1,36 @@
+
+Round 0 — maven -B clean package on JDK 17 (17.0.20.1)
+  workspace ../evidence/roundB/ctx/version-migration/b2-golden/workspace
+  building…
+
+  Outcome     TESTS-FAILED  (exit 1, 48.3s)
+  Declared    Java 17 · spring-boot-starter-parent 3.5.0
+  Workspace   no changes yet
+
+  7 error line(s) by category:
+       6  Test failure
+          The code compiled but behaviour or test wiring changed.
+       1  Build plugin failed
+          A build plugin is too old for the new platform, or its configuration changed.
+
+  Error groups (parser facts — same category and subject):
+    G1     5× test EmployeeControllerTest — 0 file(s)
+    G2     1× message Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:N.N.N:test (default-test) on p — 0 file(s)
+    G3     1× message Tests run: N, Failures: N, Errors: N, Skipped: N — 0 file(s)
+
+  Distinct messages (first 12):
+    - Tests run: 9, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 8.794 s <<< FAILURE! -- in com.example.migrationdemo.controller.EmployeeControllerTest
+    - com.example.migrationdemo.controller.EmployeeControllerTest.testActuatorHealth_Public -- Time elapsed: 0.063 s <<< FAILURE!
+    - com.example.migrationdemo.controller.EmployeeControllerTest.testActuatorInfo_Public -- Time elapsed: 0.018 s <<< FAILURE!
+    - EmployeeControllerTest.testActuatorHealth_Public:145 Status expected:<200> but was:<404>
+    - EmployeeControllerTest.testActuatorInfo_Public:151 Status expected:<200> but was:<404>
+    - Tests run: 19, Failures: 2, Errors: 0, Skipped: 0
+    - Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project spring-boot-migration-demo: There are test …
+
+  Round record ../evidence/roundB/ctx/version-migration/b2-golden/rounds/round-00.json
+  Full log     ../evidence/roundB/ctx/version-migration/b2-golden/rounds/round-00.log
+
+  Read the grouped errors against the plan and the reference pack; prefer a deterministic recipe,
+  otherwise make the narrowest residual edit in the sandbox, then run the next round.
+
+exit=0

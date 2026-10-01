@@ -1,0 +1,161 @@
+{
+  "slug": "v1-employee",
+  "title": "employee-service: Spring Boot 2.7.12 to 3.5.16 on Java 21 (4-edge ladder, open-source recipes only)",
+  "summary": "employee-service moved from Spring Boot 2.7.12 on Java 17 (Spring Cloud 2021.0.7) to Spring Boot 3.5.16 on Java 21 (Spring Cloud 2025.0.3), in four edges each built green before the next: 2.7.18, 3.0.13, 3.3.13 and 3.5.16. Only Apache-2.0 OpenRewrite recipes ran; from their previews, the version pins, the Framework 6 exception-handler signature and the javax.ws.rs to jakarta.ws.rs test import were accepted, and every cleanup or unrelated upgrade they proposed was rejected. Two changes were made by hand because a build demanded them: removing the deleted @EnableEurekaClient annotation, and moving the pinned JaCoCo plugin from 0.8.7 to 0.8.11 so it can read Java 21 class files. The same 7 tests pass before and after, every endpoint is still served, and the business responses are byte-identical. Two framework-owned behaviours changed and are reported, not hidden: a URL with a trailing slash now answers 404 instead of 200, and a missing required query parameter now returns a ProblemDetail JSON body instead of an empty 400.",
+  "migration": {
+    "reference_pack": "references/spring-boot-2-to-3.md",
+    "language": { "name": "Java", "from": "17", "to": "21" },
+    "platform": { "name": "Spring Boot", "from": "2.7.12", "to": "3.5.16" }
+  },
+  "plan": "migration-plan.json",
+  "dependency_changes": [
+    { "coordinate": "org.springframework.boot:spring-boot-starter-parent", "from": "2.7.12", "to": "3.5.16", "kind": "version", "reason": "The requested target (line 3.5, resolved to 3.5.16), reached through edges 2.7.18, 3.0.13, 3.3.13 by the generated edge recipes (pack section 1)." },
+    { "coordinate": "spring-cloud.version", "from": "2021.0.7", "to": "2025.0.3", "kind": "property", "reason": "Spring Cloud train verified per edge (2021.0.9, 2022.0.5, 2023.0.6, 2025.0.3) against each train's spring-cloud-starter-parent POM (pack section 1 / section 8)." },
+    { "coordinate": "java.version", "from": "17", "to": "21", "kind": "property", "reason": "Java 21 is the requested target; set by the landing edge E4." },
+    { "coordinate": "org.jacoco:jacoco-maven-plugin (unitTest profile plugin)", "from": "0.8.7", "to": "0.8.11", "kind": "plugin", "reason": "Round 7: the report goal failed with 'Unsupported class file major version 65'; 0.8.11 is the first release that officially supports Java 21 (JaCoCo changes.html)." }
+  ],
+  "code_changes": [
+    {
+      "file": "pom.xml", "category": "Platform versions",
+      "what": "Parent 2.7.12 -> 2.7.18 -> 3.0.13 -> 3.3.13 -> 3.5.16, spring-cloud.version per edge, java.version 17 -> 21.",
+      "why": "The migration path's four edges, each pinned by its generated recipe.",
+      "reference_rule": "section 1", "origin": "openrewrite", "transformation": "rewrite-02, rewrite-04, rewrite-06, rewrite-08"
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java", "category": "Web error handling",
+      "what": "handleHttpRequestMethodNotSupported now overrides the Framework 6 signature taking HttpStatusCode instead of HttpStatus.",
+      "why": "Spring Framework 6 changed ResponseEntityExceptionHandler's handler signatures to HttpStatusCode; the old override would no longer override anything.",
+      "reference_rule": "section 5.2",
+      "before": "protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatus status, WebRequest request)",
+      "after": "protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request)",
+      "origin": "openrewrite", "transformation": "rewrite-04"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java", "category": "Test glue",
+      "what": "import javax.ws.rs.core.Application became import jakarta.ws.rs.core.Application.",
+      "why": "Jakarta EE 9 namespace; Eureka's Jersey moved to jakarta.ws.rs, which round 3 resolved on the test classpath.",
+      "reference_rule": "section 2",
+      "before": "import javax.ws.rs.core.Application;", "after": "import jakarta.ws.rs.core.Application;",
+      "origin": "openrewrite", "transformation": "rewrite-04"
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java", "category": "Spring Cloud",
+      "what": "Removed the @EnableEurekaClient annotation and its import.",
+      "why": "Spring Cloud 2022.0 removed the annotation; the Eureka client starter on the classpath registers the service.",
+      "reference_rule": "section 8",
+      "before": "import org.springframework.cloud.netflix.eureka.EnableEurekaClient;\n@EnableEurekaClient", "after": "(removed)",
+      "found_in_round": 2, "origin": "reference-rule",
+      "evidence": "Round 2 G1: 2x cannot find symbol class EnableEurekaClient at EmployeeServiceApplication.java:7 and :10."
+    },
+    {
+      "file": "pom.xml", "category": "Build plugins",
+      "what": "jacoco-maven-plugin in the unitTest profile 0.8.7 -> 0.8.11 (the unused test-scope dependency declaration left at 0.8.7).",
+      "why": "JaCoCo 0.8.7 cannot read Java 21 (major 65) class files, so the report goal failed after the tests passed.",
+      "reference_rule": "residual (plan I12)",
+      "before": "<artifactId>jacoco-maven-plugin</artifactId>\n<version>0.8.7</version>", "after": "<artifactId>jacoco-maven-plugin</artifactId>\n<version>0.8.11</version>",
+      "found_in_round": 7, "origin": "harness-residual",
+      "evidence": "Round 7: 'Failed to execute goal org.jacoco:jacoco-maven-plugin:0.8.7:report ... Unsupported class file major version 65'. Version verified against Maven Central metadata and JaCoCo's release notes (0.8.11, 2023/10/14: officially supports Java 21)."
+    },
+    {
+      "file": "pom.xml", "category": "Rejected recipe hunks (reverted)",
+      "what": "After rewrite-04 and rewrite-06, hand-reverted the junit exclusion on cucumber-junit, jacoco 0.8.7 -> 0.8.15 (x2) and maven-surefire-plugin 2.19.1 -> 3.1.2 in the inactive cucumberTest profile.",
+      "why": "Unrelated upgrades and a JUnit 4 removal the jump does not require; the exclusion actively broke test compilation (round 4).",
+      "reference_rule": "section 10",
+      "origin": "harness-residual",
+      "evidence": "Rejected at preview inspection (rewrite-03, rewrite-05); round 4 showed the exclusion removes JUnit 4 (org.junit.runner / org.junit.Before / org.junit.Assert not found in 4 test files); round 5 green after the revert."
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java", "category": "Rejected recipe hunks (reverted)",
+      "what": "After rewrite-04, hand-reverted org.junit.Before -> org.junit.jupiter.api.BeforeEach (kept the jakarta import from the same file).",
+      "why": "A JUnit 4 -> 5 migration of Cucumber glue is not required by the Boot jump.",
+      "reference_rule": "section 10",
+      "origin": "harness-residual",
+      "evidence": "Rejected at preview inspection of rewrite-03; round 3 green with the revert."
+    }
+  ],
+  "round_notes": [
+    { "round": 0, "diagnosis": "Pre-migration reference build of the untouched project on JDK 17, goal package: 7 JUnit 5 tests across 4 classes, all passing (the @DataMongoTest class runs against the local MongoDB). The JUnit 4 Cucumber runner is not executed by surefire on the JUnit Platform, so the Cucumber glue is only ever compiled. These are the counts the migration is judged against.", "changes": [], "reference_rules": [] },
+    { "round": 1, "diagnosis": "Edge E1 (PATCH 2.7.12 -> 2.7.18): the pin-only recipe moved the parent and the Spring Cloud train to 2021.0.9; main and test code compile unchanged on JDK 17. Edge complete.", "changes": ["Applied rewrite-02 (edge E1, previewed as rewrite-01): parent 2.7.18, spring-cloud.version 2021.0.9."], "reference_rules": ["section 0", "section 1"], "transformation": "rewrite-02", "root_causes": [] },
+    { "round": 2, "diagnosis": "Edge E2 apply build (2.7.18 -> 3.0.13, Cloud 2022.0.5). UpgradeSpringBoot_3_0 fixed the advice signature and the javax.ws.rs import, but Spring Cloud 2022.0 deleted @EnableEurekaClient, which no recipe in the chain removed, so main compilation stopped there before any test code was compiled. The rejected pom hunks were still present in this round.", "changes": ["Applied rewrite-04 (edge E2, previewed as rewrite-03) to pom.xml, EmployeeAdvice.java and CucumberConfig.java; WebClientConfig.java, EmployeeController.java, CucumberSteps.java and EmployeeRepositoryTest.java excluded as out of scope."], "reference_rules": ["section 1", "section 2", "section 5.2"], "transformation": "rewrite-04", "root_causes": [ { "groups": ["G1", "G2", "G3"], "judgement": "One problem: the removed Spring Cloud annotation @EnableEurekaClient (import line and usage); G2/G3 are the same javac error and Maven's wrapper line.", "reference_rule": "section 8", "impact": ["I3"] } ] },
+    { "round": 3, "diagnosis": "With the annotation removed and the rejected hunks reverted, main and test code compile on 3.0.13. jakarta.ws.rs.core.Application resolves on the test classpath (Eureka's Jakarta Jersey), confirming the accepted import move. Edge E2 complete.", "changes": ["Removed @EnableEurekaClient and its import from EmployeeServiceApplication.java (pack section 8).", "Hand-reverted rejected rewrite-04 hunks: cucumber-junit junit exclusion, jacoco 0.8.15 x2, surefire 3.1.2 (pom.xml) and @BeforeEach (CucumberConfig.java)."], "reference_rules": ["section 8", "section 10"], "root_causes": [] },
+    { "round": 4, "diagnosis": "Edge E3 apply build (3.0.13 -> 3.3.13, Cloud 2023.0.6). Every error is JUnit 4 disappearing from the test classpath: the rejected cucumber-junit junit exclusion was still in pom.xml for this round (the hunk is reverted by hand after the apply, per the procedure). Nothing here is caused by Boot 3.3.", "changes": ["Applied rewrite-06 (edge E3, previewed as rewrite-05) to pom.xml only; WebClientConfig.java, EmployeeController.java, CucumberConfig.java, CucumberSteps.java and EmployeeRepositoryTest.java excluded as out of scope."], "reference_rules": [], "transformation": "rewrite-06", "root_causes": [ { "groups": ["G1", "G2", "G3", "G4", "G5", "G6", "G7"], "judgement": "All seven groups are one cause: the recipe's <exclusion> of junit:junit from cucumber-junit removed JUnit 4 (org.junit.runner.RunWith, org.junit.Before, org.junit.Assert) still used by the Cucumber runner, its glue and EmployeeRepositoryTest. Recipe-introduced, not a framework change.", "reference_rule": "section 10" } ] },
+    { "round": 5, "diagnosis": "With the rejected pom hunks reverted, everything compiles on 3.3.13 / JDK 17. Edge E3 complete.", "changes": ["Hand-reverted rejected rewrite-06 pom.xml hunks (junit exclusion, jacoco 0.8.15 x2, surefire 3.1.2)."], "reference_rules": ["section 10"], "root_causes": [] },
+    { "round": 6, "diagnosis": "Landing edge E4 apply build (3.3.13 -> 3.5.16, Cloud 2025.0.3, java.version 21) on JDK 21: main and test code compile. Only warnings remain: @MockBean is deprecated for removal from Boot 3.4 (plan I13), which still compiles on 3.5. Edge E4 complete.", "changes": ["Applied rewrite-08 (edge E4, previewed as rewrite-07): parent 3.5.16, java.version 21, spring-cloud.version 2025.0.3."], "reference_rules": [], "transformation": "rewrite-08", "root_causes": [] },
+    { "round": 7, "diagnosis": "Same goal as round 0 (package) on JDK 21: the 7 tests all pass, then the pinned JaCoCo 0.8.7 report goal fails because it cannot parse Java 21 (major 65) class files; its agent also logged instrumentation errors during the tests. The script records the outcome as compile-failed, but compilation and tests succeeded; the failure is the reporting plugin. This is the predicted impact I12.", "changes": [], "reference_rules": [], "root_causes": [ { "groups": ["G1"], "judgement": "jacoco-maven-plugin 0.8.7 predates Java 21 class-file support (Unsupported class file major version 65).", "impact": ["I12"] } ] },
+    { "round": 8, "diagnosis": "With JaCoCo 0.8.11 the package goal is green on JDK 21: 7 tests run, 0 failures, 0 errors, 0 skipped, which are the same counts as round 0, and the executable war is built for Boot 3.5.16 (manifest Build-Jdk-Spec 21).", "changes": ["jacoco-maven-plugin 0.8.7 -> 0.8.11 in the unitTest profile (pom.xml)."], "reference_rules": [], "root_causes": [] }
+  ],
+  "behaviour": {
+    "verdict": "changed",
+    "notes": "Same 13-request probe file (probes_sha 695fd59113f06848) and same application arguments on both sides. 10 probes are byte-identical (health, create, get, unknown 404, both searches, the advice's 405-as-400 contract, excel upload, both salary fallbacks). 3 differ: /actuator/mappings (body only; the endpoint inventory is identical), the trailing-slash GET (200 -> 404) and the missing-parameter 400 (empty body -> ProblemDetail). The endpoint inventory is unchanged: actuator 10 mappings before and after, static 5 endpoints before and after.",
+    "differences": [
+      { "probe": "endpoint inventory (actuator)", "classification": "expected-framework-change", "explanation": "The /actuator/mappings document is framework-owned and describes handlers and conditions in a Boot 3.5 format; the set of request mappings extracted from it is identical before and after (10 entries, all 5 business endpoints)." },
+      { "probe": "get employee trailing slash", "classification": "expected-framework-change", "explanation": "Spring Framework 6 turned trailing-slash matching off (pack section 5.1): GET /api/v1/employee/V1PROBE01/ answered 200 with the employee at baseline and now answers 404 with a ProblemDetail ('No static resource'). This is a client-visible contract change. It was not re-enabled silently; a client that relies on it needs a decision (see manual follow-ups)." },
+      { "probe": "search without name is 400", "classification": "expected-framework-change", "explanation": "Same 400 status. EmployeeAdvice extends ResponseEntityExceptionHandler, whose Framework 6 version writes an RFC 7807 ProblemDetail body (type, title, status, detail, instance) for MissingServletRequestParameterException where Framework 5 wrote an empty body. Clients parsing error bodies see a new JSON shape." }
+    ],
+    "security_boundary": "not-observed",
+    "unobserved_areas": [
+      "Config Server and Eureka integration (both disabled by probe arguments on both sides; the app could not reach them in this environment)",
+      "The department-service call inside the salary endpoint: only the circuit-breaker fallback (503) was observed, never a successful WebClient call",
+      "Excel parsing of a real .xlsx workbook (only the non-xlsx branch was probed, to avoid writing bulk data)",
+      "The Cucumber scenarios (the JUnit 4 runner is not executed by surefire and targets a hard-coded port 8500)",
+      "War deployment to an external servlet container (only java -jar on the executable war was exercised)"
+    ]
+  },
+  "impact_review": [
+    { "impact": "I1", "outcome": "handled-by-transformation", "note": "rewrite-02; round 1 green on 2.7.18." },
+    { "impact": "I2", "outcome": "handled-by-transformation", "note": "rewrite-04; 3.0.13 and Cloud 2022.0.5 resolved (round 2/3)." },
+    { "impact": "I3", "outcome": "confirmed", "note": "Not removed by any recipe in the chain; round 2 named it and it was removed by hand per pack section 8." },
+    { "impact": "I4", "outcome": "handled-by-transformation", "note": "UpgradeSpringFramework_6_0 in rewrite-04; the advice probe is byte-identical (400 {code:405})." },
+    { "impact": "I5", "outcome": "handled-by-transformation", "note": "JavaxMigrationToJakarta in rewrite-04; jakarta.ws.rs resolved on the test classpath (round 3)." },
+    { "impact": "I6", "outcome": "not-needed", "note": "CucumberSteps compiles on Framework 6; HttpClient 5 availability is never exercised because the Cucumber runner does not run." },
+    { "impact": "I7", "outcome": "not-needed", "note": "getStatusCodeValue() still compiles on Framework 6.2; the controller test passes." },
+    { "impact": "I8", "outcome": "confirmed", "note": "Trailing-slash probe 200 -> 404; reported as a behaviour change, not re-enabled." },
+    { "impact": "I9", "outcome": "confirmed", "note": "400 status kept; body became a ProblemDetail." },
+    { "impact": "I10", "outcome": "handled-by-transformation", "note": "rewrite-06; round 5 green on 3.3.13." },
+    { "impact": "I11", "outcome": "handled-by-transformation", "note": "rewrite-08; rounds 6 and 8 green on 3.5.16 / JDK 21." },
+    { "impact": "I12", "outcome": "confirmed", "note": "Round 7 failed in jacoco:report; fixed by hand (0.8.11), round 8 green." },
+    { "impact": "I13", "outcome": "still-open", "note": "@MockBean compiles with deprecation-for-removal warnings on 3.5; it must move to @MockitoBean before Boot 4." }
+  ],
+  "transformations": [
+    { "record": "rewrite-00", "decision": "superseded", "rationale": "Edge E1 dry-run that the script marked FAILED and void: OpenRewrite itself succeeded, but mvnw re-downloaded .mvn/wrapper/maven-wrapper.jar (excluded from the sandbox copy) during the run, so the script saw the sandbox change and voided the preview. Re-run as rewrite-01 after placing the project's identical wrapper jar in the sandbox." },
+    { "record": "rewrite-01", "decision": "superseded", "rationale": "E1 preview inspected: pom.xml parent 2.7.18 and spring-cloud.version 2021.0.9 only. Applied unchanged as rewrite-02.", "reviewed_files": ["pom.xml"] },
+    { "record": "rewrite-02", "decision": "accepted", "rationale": "Every change maps to impact I1.", "reviewed_files": ["pom.xml"] },
+    { "record": "rewrite-03", "decision": "superseded", "rationale": "E2 preview inspected (7 files). Accepted: parent 3.0.13 + Cloud 2022.0.5, EmployeeAdvice HttpStatusCode signature, javax.ws.rs -> jakarta.ws.rs. Rejected: junit exclusion, jacoco 0.8.15, surefire 3.1.2, @Before -> @BeforeEach, and all of WebClientConfig (drop 'public'), EmployeeController (@RequestParam name removal), CucumberSteps (JUnit 5 assertions), EmployeeRepositoryTest (drop @RunWith). Applied as rewrite-04 with 4 file exclusions and hand reverts.", "reviewed_files": ["pom.xml", "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java", "src/main/java/com/aura/vihanga/employeeservice/config/WebClientConfig.java", "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java", "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java", "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java", "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"] },
+    { "record": "rewrite-04", "decision": "accepted", "rationale": "Accepted in part: 4 whole files excluded at apply, and the rejected hunks in pom.xml and CucumberConfig.java reverted by hand before round 3.", "reviewed_files": ["pom.xml", "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java", "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java"] },
+    { "record": "rewrite-05", "decision": "superseded", "rationale": "E3 preview inspected (6 files): the chained 3.x recipes re-proposed the same cleanups and pom upgrades rejected at E2. Accepted only parent 3.3.13 + Cloud 2023.0.6. Applied as rewrite-06 with 5 file exclusions and pom hunk reverts.", "reviewed_files": ["pom.xml", "src/main/java/com/aura/vihanga/employeeservice/config/WebClientConfig.java", "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java", "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java", "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java", "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"] },
+    { "record": "rewrite-06", "decision": "accepted", "rationale": "Accepted in part: parent and Cloud train kept; junit exclusion, jacoco and surefire hunks reverted by hand before round 5 (round 4 showed the exclusion breaks test compilation).", "reviewed_files": ["pom.xml"] },
+    { "record": "rewrite-07", "decision": "superseded", "rationale": "E4 preview inspected: parent 3.5.16, java.version 21, spring-cloud.version 2025.0.3, nothing else. Applied unchanged as rewrite-08.", "reviewed_files": ["pom.xml"] },
+    { "record": "rewrite-08", "decision": "accepted", "rationale": "Every change maps to impact I11.", "reviewed_files": ["pom.xml"] }
+  ],
+  "unresolved_constraints": [
+    { "constraint": "C2", "status": "resolved", "evidence": "Every edge version and train resolved: rounds 1, 3, 5, 6, 8." },
+    { "constraint": "C4", "status": "resolved", "evidence": "All 9 transformation records carry licence Apache-2.0; the commands name only rewrite-maven-plugin 5.46.1/6.46.1 and rewrite-spring 5.24.1; the POMs of every downloaded OpenRewrite artifact declare Apache-2.0." },
+    { "constraint": "C5", "status": "resolved", "evidence": "jacoco 0.8.7 broke the Java 21 package goal (round 7) and was moved to 0.8.11; poi-ooxml 5.0.0 and cucumber 7.11.0 compile and the 7 tests pass (round 8)." },
+    { "constraint": "C7", "status": "resolved", "evidence": "runtime/final.json: actuator and static endpoint inventories equal to baseline." }
+  ],
+  "blocking_conditions": [],
+  "provenance": {
+    "sources": ["references/spring-boot-2-to-3.md", "references/openrewrite/spring-boot-ladder.json", "https://raw.githubusercontent.com/jacoco/jacoco/master/org.jacoco.doc/docroot/doc/changes.html", "https://repo1.maven.org/maven2/org/jacoco/jacoco-maven-plugin/maven-metadata.xml"],
+    "notes": "Per-file recipe attribution is in transformations/rewrite-03.json and rewrite-05.json."
+  },
+  "out_of_scope_changes": [
+    { "change": "Recipes proposed removing 'public' from the @Bean method in WebClientConfig.", "why_separate": "Visibility cleanup, not required by Boot 3. Excluded at apply (rewrite-04, rewrite-06)." },
+    { "change": "Recipes proposed dropping the explicit names in @RequestParam(\"name\") / @RequestParam(value = \"department\", ...) in EmployeeController.", "why_separate": "Cleanup that makes the binding depend on -parameters; not required. Excluded at apply." },
+    { "change": "Recipes proposed JUnit 4 -> 5 changes in CucumberConfig, CucumberSteps and EmployeeRepositoryTest and excluding junit:junit from cucumber-junit.", "why_separate": "Test-framework migration, not required by the Boot jump; the exclusion broke compilation of the JUnit 4 Cucumber runner (round 4). Excluded or reverted." },
+    { "change": "Recipes proposed jacoco 0.8.15 (both declarations) and maven-surefire-plugin 3.1.2 in the inactive cucumberTest profile.", "why_separate": "Unrelated upgrades at the edges where they were proposed. Jacoco was later moved to 0.8.11 only for the plugin, and only once the Java 21 build demanded it." },
+    { "change": "Noticed, not changed: EmployeeSearchRepository builds a Mongo query by string concatenation of user input.", "why_separate": "A pre-existing injection risk, not caused by the version jump." }
+  ],
+  "manual_follow_ups": [
+    "Decide on trailing-slash URLs: if any client calls /api/v1/employee/{id}/ (with a trailing slash), add an explicit, reviewed configuration or fix the client; Boot 3 answers 404 there now.",
+    "Tell API clients that framework-generated 400 bodies (e.g. a missing required query parameter) are now RFC 7807 ProblemDetail JSON instead of empty.",
+    "Verify Config Server and Eureka registration in a real environment: both were disabled for the probes.",
+    "Move @MockBean to @MockitoBean before any Boot 4 move (deprecated for removal since 3.4).",
+    "Update the build and runtime images/pipelines to a Java 21 JDK.",
+    "The unused test-scope dependency on org.jacoco:jacoco-maven-plugin:0.8.7 was left as is; consider removing it separately."
+  ],
+  "residual_risk": [
+    "Only the 13 probed requests and 7 JUnit tests were exercised; the Cucumber scenarios never run.",
+    "The salary endpoint's successful path (WebClient + load-balanced Eureka lookup to department-service) was never observed, only its fallback.",
+    "The war was only run as an executable war (java -jar); deployment to an external Servlet 6 container is unverified."
+  ]
+}

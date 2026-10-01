@@ -133,7 +133,8 @@
       "Bumping to whatever 'latest' resolves to without checking the advisory's actual fixed-version boundary, or without checking it doesn't pull in unrelated breaking changes",
       "Editing a version only in a `<properties>` variable when a separate explicit `<version>` tag elsewhere in the same or a child module overrides it, so the resolved version never actually changes",
       "Suppressing or ignoring the finding (a dependency-check allowlist/ignore rule) instead of upgrading the library",
-      "Verifying only that the pom.xml text changed, without confirming the resolved dependency tree reflects the new version"
+      "Verifying only that the pom.xml text changed, without confirming the resolved dependency tree reflects the new version",
+      "Bumping a framework platform parent/BOM (e.g. spring-boot-starter-parent) across a major generation as if it were a single library version — a generation jump moves the platform's managed dependencies, APIs and often the Java level together; plan it as a version_migration (Fix Type VERSION_MIGRATION, routed to 04d-version-migration), not a dependency_upgrade"
     ],
     "references": [
       "https://cwe.mitre.org/data/definitions/1104.html",

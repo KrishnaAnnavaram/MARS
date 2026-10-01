@@ -1,0 +1,184 @@
+{
+  "schema": "migration-summary/1",
+  "run_id": "b1-employee-2x-20261001T024644Z",
+  "slug": "b1-employee-2x",
+  "generated_at": "2026-10-01T03:09:32.781Z",
+  "final_status": "IN_PROGRESS",
+  "status_reason": "stopped after BASELINE_BUILT — the migration has not been rendered; if the run ends here it is incomplete",
+  "state": "BASELINE_BUILT",
+  "states_reached": [
+    "BASELINE_DETECTED",
+    "WORKSPACE_PREPARED",
+    "BASELINE_BUILT"
+  ],
+  "metadata": {
+    "started_at": "2026-10-01T02:46:44.870Z",
+    "last_transition_at": "2026-10-01T02:49:17.000Z",
+    "duration_ms": 152130,
+    "input_location": "E:/mv/A/src/employee-service",
+    "source_commit": "5b8008b09db2b302a8d03477b519b6a656998d8a",
+    "working_branch": "HEAD",
+    "worktree": "E:/mv/A",
+    "output_location": "../evidence/roundB/ctx/version-migration/b1-employee-2x",
+    "selected_pack": "spring-boot-3-to-4",
+    "agent04_issue_id": null,
+    "approval_mode": "n/a — direct request, not routed by Agent 04"
+  },
+  "versions": {
+    "source_platform_name": "Spring Boot",
+    "source_platform": "2.7.12",
+    "target_platform_name": "Spring Boot",
+    "target_platform": "4.1.1",
+    "final_declared_platform": "2.7.12",
+    "source_java": "17",
+    "source_jdk": "17.0.20.1",
+    "target_java": "21",
+    "target_jdk": "21.0.11",
+    "final_declared_java": "17"
+  },
+  "trigger": {
+    "kind": "direct-request",
+    "note": "invoked directly, not by 04_fix-generator Stage 2"
+  },
+  "detection": [
+    {
+      "what": "build tool",
+      "value": "maven (wrapper) Apache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29)",
+      "where": "pom.xml"
+    },
+    {
+      "what": "declared Java",
+      "value": "17",
+      "where": "pom.xml (java.version / compiler release)"
+    },
+    {
+      "what": "source platform",
+      "value": "2.7.12",
+      "where": "org.springframework.boot:spring-boot-starter-parent (parent)"
+    },
+    {
+      "what": "requested target platform",
+      "value": "4.1.1",
+      "where": "request"
+    },
+    {
+      "what": "requested target Java",
+      "value": "21",
+      "where": "request"
+    },
+    {
+      "what": "JDKs available",
+      "value": "17 (17.0.20.1), 21 (21.0.11)",
+      "where": "local toolchain probe"
+    }
+  ],
+  "migration_path": {
+    "status": "SUPPORTED",
+    "source": "2.7.12",
+    "target": "4.1.1",
+    "required_path": null,
+    "missing_capability": [],
+    "pack_eligibility": [],
+    "warnings": [
+      "source org.springframework.boot:spring-boot-starter-parent 2.7.12 is not on the 3.5.x preparation line the pack expects — a planning input, not an automatic upgrade"
+    ],
+    "unresolved": [
+      "compatibility of org.springframework.cloud:spring-cloud-dependencies 2021.0.7 with Spring Boot 4.1.1 is not proven locally — The Spring Cloud release train must be one documented as compatible with the requested Boot 4 release. Check Spring Cloud's supported-versions table; unresolved until confirmed."
+    ]
+  },
+  "planned_transformations": null,
+  "openrewrite": [],
+  "actual_transformations": [],
+  "file_changes": [
+    {
+      "file": ".mvn/wrapper/maven-wrapper.jar",
+      "change": "added",
+      "tool": null,
+      "reason": null
+    }
+  ],
+  "dependency_changes": [],
+  "compile_history": [
+    {
+      "round": 0,
+      "baseline": true,
+      "label": "Pre-migration reference build",
+      "intent": "package",
+      "jdk": "17.0.20.1",
+      "outcome": "tests-failed",
+      "exit_code": 1,
+      "duration_ms": 139255,
+      "errors": 9,
+      "declared_platform": "2.7.12",
+      "diagnosis": null,
+      "repair": null
+    }
+  ],
+  "tests": {
+    "before": {
+      "round": 0,
+      "total": 7,
+      "failed": 0,
+      "errors": 2,
+      "skipped": 0,
+      "passed": 5
+    },
+    "after": null,
+    "new_failures": false
+  },
+  "runtime": {
+    "baseline_probed": false,
+    "final_probed": false,
+    "baseline_started": null,
+    "final_started": null,
+    "final_startup_seconds": null,
+    "readiness": null,
+    "probes": 0,
+    "failures": []
+  },
+  "behaviour": null,
+  "compiled_on_target": false,
+  "target_reached": false,
+  "validation": [
+    [
+      "Build rounds",
+      "1 (R0 tests-failed)"
+    ],
+    [
+      "Final round",
+      "R0 package on JDK 17.0.20.1 — tests-failed"
+    ],
+    [
+      "Target declared by final build",
+      "2.7.12 (requested 4.1.1)"
+    ],
+    [
+      "Tests before → after",
+      "not comparable"
+    ],
+    [
+      "Runtime probes",
+      "not compared"
+    ],
+    [
+      "Migration result",
+      "IN_PROGRESS — stopped after BASELINE_BUILT — the migration has not been rendered; if the run ends here it is incomplete"
+    ]
+  ],
+  "handoff": null,
+  "paths": {
+    "session": "../evidence/roundB/ctx/version-migration/b1-employee-2x",
+    "report_md": "E:\\mv\\evidence\\roundB\\reports\\migration_b1-employee-2x.md",
+    "report_md_exists": false,
+    "report_diff": "E:\\mv\\evidence\\roundB\\reports\\migration_b1-employee-2x.diff",
+    "report_diff_exists": false,
+    "summary_md": "E:\\mv\\evidence\\roundB\\reports\\migration-runs\\b1-employee-2x-20261001T024644Z\\MIGRATION_SUMMARY.md",
+    "summary_json": "E:\\mv\\evidence\\roundB\\reports\\migration-runs\\b1-employee-2x-20261001T024644Z\\migration-summary.json",
+    "evidence": [
+      "../evidence/roundB/ctx/version-migration/b1-employee-2x/baseline.json",
+      "../evidence/roundB/ctx/version-migration/b1-employee-2x/state.json",
+      "../evidence/roundB/ctx/version-migration/b1-employee-2x/rounds"
+    ]
+  },
+  "finalized_by": "finalize-run.js"
+}

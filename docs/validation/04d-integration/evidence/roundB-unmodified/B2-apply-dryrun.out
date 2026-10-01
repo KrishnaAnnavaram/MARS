@@ -1,0 +1,20 @@
+
+Migration "b2-golden"
+  Last round     3 — passed on JDK 21
+  Session state  RENDERED
+  Project        ../golden
+  Sandbox        ../evidence/roundB/ctx/version-migration/b2-golden/workspace
+  Files changed  6
+    M   Dockerfile
+    M   pom.xml
+    M   src/main/java/com/example/migrationdemo/config/JacksonConfig.java
+    M   src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java
+    M   src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java
+    M   src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java
+
+  Eligible to apply: YES
+
+  Dry run — nothing written. Pass --to-project to apply these changes to the project.
+  The same changes are also in docs/agent_output/04-remediation/migration_b2-golden.diff once the report is rendered.
+
+exit=0

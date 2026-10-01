@@ -1,0 +1,147 @@
+{
+  "slug": "v2-golden",
+  "history": [
+    {
+      "state": "BASELINE_DETECTED",
+      "at": "2026-10-01T12:59:06.611Z",
+      "by": "detect-baseline.js",
+      "detail": "project ../golden"
+    },
+    {
+      "state": "WORKSPACE_PREPARED",
+      "at": "2026-10-01T13:00:24.532Z",
+      "by": "prepare-workspace.js",
+      "detail": "baseline commit 7e9874b597"
+    },
+    {
+      "state": "BASELINE_BUILT",
+      "at": "2026-10-01T13:01:26.106Z",
+      "by": "run-migration-build.js",
+      "detail": "round 0 tests-failed"
+    },
+    {
+      "state": "BASELINE_PROBED",
+      "at": "2026-10-01T13:02:12.110Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 20 probe(s)"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T13:04:32.474Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-00: 1 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T13:05:25.500Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-01: 1 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:05:41.397Z",
+      "by": "run-migration-build.js",
+      "detail": "round 1 passed"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:06:18.261Z",
+      "by": "run-migration-build.js",
+      "detail": "round 2 passed"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T13:07:04.356Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-02: 5 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T13:08:04.811Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-03: 5 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:11:57.233Z",
+      "by": "run-migration-build.js",
+      "detail": "round 5 passed"
+    },
+    {
+      "state": "TARGET_TESTED",
+      "at": "2026-10-01T13:12:43.542Z",
+      "by": "run-migration-build.js",
+      "detail": "round 6 tests-failed"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T13:13:24.138Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-05: 1 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T13:13:52.607Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-06: 1 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:13:59.218Z",
+      "by": "run-migration-build.js",
+      "detail": "round 7 passed"
+    },
+    {
+      "state": "TARGET_TESTED",
+      "at": "2026-10-01T13:15:11.020Z",
+      "by": "run-migration-build.js",
+      "detail": "round 8 tests-failed"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:15:27.381Z",
+      "by": "run-migration-build.js",
+      "detail": "round 9 passed"
+    },
+    {
+      "state": "FINAL_PROBED",
+      "at": "2026-10-01T13:15:54.513Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 20 probe(s)"
+    },
+    {
+      "state": "TARGET_TESTED",
+      "at": "2026-10-01T13:18:15.171Z",
+      "by": "run-migration-build.js",
+      "detail": "round 10 tests-failed"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:18:30.475Z",
+      "by": "run-migration-build.js",
+      "detail": "round 11 passed"
+    },
+    {
+      "state": "FINAL_PROBED",
+      "at": "2026-10-01T13:18:48.676Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 20 probe(s)"
+    },
+    {
+      "state": "RENDERED",
+      "at": "2026-10-01T13:21:24.270Z",
+      "by": "render-migration-report.js",
+      "detail": "final round 11 passed"
+    },
+    {
+      "state": "RENDERED",
+      "at": "2026-10-01T13:21:54.589Z",
+      "by": "render-migration-report.js",
+      "detail": "final round 11 passed"
+    }
+  ],
+  "state": "RENDERED",
+  "updated_at": "2026-10-01T13:21:54.589Z",
+  "run_id": "v2-golden-20261001T125906Z",
+  "run_started_at": "2026-10-01T12:59:06.565Z"
+}

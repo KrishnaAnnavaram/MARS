@@ -83,6 +83,16 @@ function resolveFix(idOrPath) {
 }
 
 /** Gathers everything the Scribe needs to read, across the entire pipeline, all read-only. */
+/** The migration report and per-run summary a VERSION_MIGRATION fix report links, as repo-relative paths. */
+function migrationArtifactsFor(fixText) {
+  if (!fixText || !/\|\s*\*\*Fix Type\*\*\s*\|\s*`?VERSION_MIGRATION/.test(fixText)) return {};
+  const linked = (label) => {
+    const m = new RegExp(`\\|\\s*\\*\\*${label}\\*\\*\\s*\\|\\s*\\[[^\\]]*\\]\\((?:\\.\\.\\/)+([^)]+)\\)`).exec(fixText);
+    return m ? m[1].trim() : null;
+  };
+  return { migrationReport: linked('Migration Report'), migrationSummary: linked('Migration Summary') };
+}
+
 function chainOfCustodyFor(id) {
   // The register row, rendered back to markdown so the audit trail quotes the issue
   // exactly the way every upstream stage saw it.
@@ -95,6 +105,8 @@ function chainOfCustodyFor(id) {
     fixPlan: fileIfExists(path.join(PATHS.FIX_PLANS_DIR, `fix_plan_${id}.md`)),
     fix: fileIfExists(path.join(PATHS.FIXES_DIR, `fix_${id}.md`)),
     fixDiff: fileIfExists(path.join(PATHS.FIXES_DIR, `fix_${id}.diff`)),
+    // VERSION_MIGRATION only: the detailed migration report and the per-run summary 04D wrote.
+    ...migrationChainEntries(fileIfExists(path.join(PATHS.FIXES_DIR, `fix_${id}.md`))),
     rescan: fileIfExists(path.join(PATHS.VERIFY_DIR, `rescan_${id}.md`)),
     redteam: fileIfExists(path.join(PATHS.VERIFY_DIR, `redteam_${id}.md`)),
     behavior: fileIfExists(path.join(PATHS.VERIFY_DIR, `behavior_${id}.md`)),
@@ -102,6 +114,14 @@ function chainOfCustodyFor(id) {
     build: fileIfExists(path.join(PATHS.BUILD_DIR, `build_${id}.md`)),
     verdict: fileIfExists(path.join(PATHS.SHIP_DIR, `verdict_${id}.md`)),
   };
+}
+
+function migrationChainEntries(fix) {
+  const m = migrationArtifactsFor(fix && fix.text);
+  const out = {};
+  if (m.migrationReport) out.migrationReport = fileIfExists(path.join(REPO_ROOT, m.migrationReport));
+  if (m.migrationSummary) out.migrationSummary = fileIfExists(path.join(REPO_ROOT, m.migrationSummary));
+  return out;
 }
 
 function fileIfExists(abs) {

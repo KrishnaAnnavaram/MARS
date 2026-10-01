@@ -1,0 +1,9 @@
+# 04a1's optional local sentence-embedding ranking signal (scripts/embed.py).
+# Install into a dedicated venv, never system-wide -- see SKILL.md's Setup section.
+#   python -m venv .venv
+#   .venv/Scripts/pip install -r requirements.txt   (Windows)
+#   .venv/bin/pip install -r requirements.txt        (macOS/Linux)
+#
+# Entirely optional: if this venv doesn't exist, rankExamples() falls back to
+# keyword/synonym + TF-IDF scoring only (see scripts/lib/embeddings.js).
+sentence-transformers>=3.0.0

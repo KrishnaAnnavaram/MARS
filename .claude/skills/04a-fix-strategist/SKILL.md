@@ -103,6 +103,24 @@ the detected CWE has no catalog entry, that is a **catalog gap**: say so in `cat
 (`null`) and `open_questions`, and either point at the closest applicable existing entry with your
 reasoning, or state that a new catalog entry is needed — do not invent a pattern to fill the gap.
 
+**Catalog-gap fallbacks (04a1 → 04a2).** When **every** detected CWE is a gap (nothing catalogued to
+work from), you do not have to leave a hollow plan. The fallbacks run in order, each only when the
+level above it has nothing:
+
+1. [`04a1-remediation-intelligence`](../04a1-remediation-intelligence/SKILL.md) — searches a local,
+   version-controlled knowledge base, ranks historical fixes, and derives a grounded, **cited**
+   strategy into the same `<id>.strategy.json` this step would write — marked `confidence: Low`,
+   `catalog_reference.title: null`, and carrying a `derived_pattern` provenance block. It never
+   invents a pattern: a CWE missing from both the catalog and the KB is reported as a **KB gap**.
+2. [`04a2-remediation-research`](../04a2-remediation-research/SKILL.md) — runs only on that KB gap.
+   It performs a structured security investigation and writes a novel, Low-confidence strategy (or,
+   if the evidence is too thin, a Proposed evidence-gap plan) into the same `<id>.strategy.json`.
+
+Render either with `render-fix-plan.js` exactly as usual; the plan still lands at `Status: Proposed`
+for human approval, and `04b-fixer` (or `04c-dependency-upgrader` for `CWE-1104`) takes over after
+approval. Neither fallback ever writes a diff. Do **not** use them when any detected CWE is
+catalogued — that is the normal path above.
+
 ### Step 4 — Write the strategy (per issue)
 
 Write `.claude/.pipeline-context/fix-strategy/<issue_id>.strategy.json` following

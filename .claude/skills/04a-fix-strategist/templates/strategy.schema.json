@@ -80,7 +80,7 @@
     },
     "dependency_upgrade": {
       "type": "object",
-      "description": "Required only when cwe is CWE-1104 (or another dependency-version CWE added later). Turns 'bump the version' into machine-checkable facts that 04c-dependency-upgrader's verification script checks deterministically, instead of relying on prose alone.",
+      "description": "Required only when cwe is CWE-1104 (or another dependency-version CWE added later). Turns 'bump the version' into machine-checkable facts that 04c-dependency-upgrader's verification script checks deterministically, instead of relying on prose alone. Mutually exclusive with version_migration: a platform parent/BOM crossing a major generation is a version_migration.",
       "required": ["maven_coordinate", "current_version", "minimum_fixed_version"],
       "additionalProperties": false,
       "properties": {
@@ -89,6 +89,35 @@
         "minimum_fixed_version": { "type": "string", "description": "The lowest version that remediates the advisory, per its own affected/fixed range — not necessarily 'latest'." },
         "cve": { "type": "string", "description": "The CVE id, if one exists, e.g. CVE-2025-31672." },
         "advisory_url": { "type": "string", "description": "Link to the advisory used to determine minimum_fixed_version." }
+      }
+    },
+    "version_migration": {
+      "type": "object",
+      "description": "Present only when the remediation is a coordinated framework-generation and/or Java-level migration (Fix Type VERSION_MIGRATION, Stage 2 routes to 04d-version-migration) rather than a code fix or a single-coordinate bump. Record it when the platform parent/BOM must move to a new major generation, when the Java level must change, or when the issue explicitly asks for a framework migration. render-fix-plan.js verifies every field against the build descriptor on disk (scripts/lib/routing.js) and refuses a claim the evidence does not support. Mutually exclusive with dependency_upgrade.",
+      "required": ["project", "platform", "platform_coordinate", "source_version", "target_version"],
+      "additionalProperties": false,
+      "properties": {
+        "project": { "type": "string", "description": "Repo-relative directory holding the project's build descriptor, e.g. src/employee-service." },
+        "platform": { "type": "string", "description": "Human name of the platform, e.g. Spring Boot." },
+        "platform_coordinate": { "type": "string", "description": "groupId:artifactId whose declared version is the platform version, e.g. org.springframework.boot:spring-boot-starter-parent." },
+        "source_version": { "type": "string", "description": "The version the descriptor declares today — must match it exactly." },
+        "target_version": { "type": "string", "description": "The exact requested target version, e.g. 4.1.1. Never 'latest'." },
+        "source_java": { "type": "string", "description": "The Java level the descriptor declares today, e.g. 17." },
+        "target_java": { "type": "string", "description": "The Java level the migration must reach, e.g. 21." },
+        "reason": { "type": "string", "description": "Why a coordinated migration (and not a single bump) is required." }
+      }
+    },
+    "derived_pattern": {
+      "type": "object",
+      "description": "Present ONLY when this strategy was produced by the 04a1 remediation-intelligence fallback because the CWE had no catalog entry. Records where the derived pattern came from so a reviewer and the audit stage can trace it to a real, local source. Full shape: ../../04a1-remediation-intelligence/templates/derived_pattern.schema.json. A catalogued (04a) plan omits this field.",
+      "required": ["source_type", "sources", "kb_entry", "note"],
+      "additionalProperties": true,
+      "properties": {
+        "source_type": { "type": "string", "enum": ["expanded-catalog", "historical-fix", "external", "blend"] },
+        "sources": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "kb_entry": { "type": ["string", "null"] },
+        "ranked_examples": { "type": "array", "items": { "type": "object" } },
+        "note": { "type": "string" }
       }
     }
   }

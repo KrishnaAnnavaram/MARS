@@ -45,7 +45,7 @@ function main() {
   const approvedOnly = argv.includes('--approved');
 
   let items = listFixPlans()
-    .filter((p) => p.cwe === 'CWE-1104')
+    .filter((p) => p.cwe === 'CWE-1104' && p.fixType !== 'VERSION_MIGRATION')
     .map((p) => ({ ...p, ...stateOf(p) }));
   if (approvedOnly) items = items.filter((i) => i.status === 'Approved');
 
