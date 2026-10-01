@@ -1,0 +1,95 @@
+{
+  "base_url": "http://localhost:8094",
+  "readiness": {
+    "path": "/actuator/health",
+    "timeout_seconds": 120
+  },
+  "requests": [
+    {
+      "name": "endpoint inventory (actuator)",
+      "method": "GET",
+      "path": "/actuator/mappings",
+      "category": "endpoint-inventory"
+    },
+    {
+      "name": "GET /actuator/health",
+      "method": "GET",
+      "path": "/actuator/health",
+      "category": "actuator",
+      "handler": "src/main/resources/application.yml:33 (actuator health endpoint (framework))"
+    },
+    {
+      "name": "GET /actuator/info",
+      "method": "GET",
+      "path": "/actuator/info",
+      "category": "actuator",
+      "handler": "src/main/resources/application.yml:33 (actuator info endpoint (framework))"
+    },
+    {
+      "name": "GET /actuator/metrics",
+      "method": "GET",
+      "path": "/actuator/metrics",
+      "category": "actuator",
+      "handler": "src/main/resources/application.yml:33 (actuator metrics endpoint (framework))"
+    },
+    {
+      "name": "GET /api/v1/employees",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "category": "endpoint-inventory",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:31"
+    },
+    {
+      "name": "GET /h2-console",
+      "method": "GET",
+      "path": "/h2-console",
+      "category": "framework-endpoint",
+      "handler": "src/main/resources/application.yml:22 (H2 console (framework))"
+    },
+    {
+      "name": "unauthenticated is 401",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "no_auth": true,
+      "category": "security-boundary",
+      "expect_status": 401
+    },
+    {
+      "name": "search by department",
+      "method": "GET",
+      "path": "/api/v1/employees/search?department=Engineering",
+      "category": "business-api",
+      "expect_status": 200
+    },
+    {
+      "name": "high earners",
+      "method": "GET",
+      "path": "/api/v1/employees/high-earners?salary=50000",
+      "category": "serialization",
+      "expect_status": 200
+    }
+  ],
+  "auth": {
+    "type": "basic",
+    "username_env": "APP_USER",
+    "password_env": "APP_PASSWORD"
+  },
+  "not_probed": [
+    {
+      "endpoint": "POST /api/v1/employees",
+      "reason": "mutating — covered by EmployeeControllerTest; not replayed against the shared H2 data"
+    },
+    {
+      "endpoint": "PUT /api/v1/employees/{id}",
+      "reason": "mutating — covered by EmployeeControllerTest"
+    },
+    {
+      "endpoint": "DELETE /api/v1/employees/{id}",
+      "reason": "mutating — covered by EmployeeControllerTest"
+    },
+    {
+      "endpoint": "GET /api/v1/employees/{id}",
+      "reason": "ids depend on insertion order in the in-memory database; list probe covers the payload shape"
+    }
+  ]
+}

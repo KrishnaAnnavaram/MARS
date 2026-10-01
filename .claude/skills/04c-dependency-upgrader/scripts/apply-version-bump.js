@@ -205,6 +205,14 @@ function verifyOne(plan, args) {
       reason: `Fix plan Status is "${plan.status}", not "Approved". This skill will not verify or apply an unapproved plan — see ${plan.relativePlanFile}.`,
     };
   }
+  if (plan.fixType === 'VERSION_MIGRATION') {
+    return {
+      id: plan.id,
+      passed: false,
+      refused: true,
+      reason: 'Fix plan Fix Type is VERSION_MIGRATION — a platform-generation/Java jump, not a single-coordinate bump. Stage 2 routes it to 04d-version-migration.',
+    };
+  }
   if (plan.cwe !== 'CWE-1104') {
     return {
       id: plan.id,

@@ -1,0 +1,26 @@
+{
+  "base_url": "http://localhost:8080",
+  "auth": { "type": "basic", "username": "demo", "password": "demo123" },
+  "readiness": { "path": "/actuator/health", "timeout_seconds": 180 },
+  "requests": [
+    { "name": "actuator health anonymous", "method": "GET", "path": "/actuator/health", "no_auth": true, "category": "actuator", "expect_status": 200 },
+    { "name": "actuator info anonymous", "method": "GET", "path": "/actuator/info", "no_auth": true, "category": "actuator", "expect_status": 200 },
+    { "name": "actuator metrics anonymous", "method": "GET", "path": "/actuator/metrics", "no_auth": true, "category": "actuator", "expect_status": 200, "unordered_arrays": true },
+    { "name": "list employees unauthenticated is 401", "method": "GET", "path": "/api/v1/employees", "no_auth": true, "category": "security-boundary", "expect_status": 401, "capture_headers": ["WWW-Authenticate"] },
+    { "name": "list employees bad credentials is 401", "method": "GET", "path": "/api/v1/employees", "no_auth": true, "headers": { "Authorization": "Basic ZGVtbzp3cm9uZ3Bhc3M=" }, "category": "security-boundary", "expect_status": 401, "capture_headers": ["WWW-Authenticate"] },
+    { "name": "list employees authenticated", "method": "GET", "path": "/api/v1/employees", "category": "business-api", "expect_status": 200, "ignore_json_paths": ["[*].createdAt", "[*].updatedAt"] },
+    { "name": "get employee 1", "method": "GET", "path": "/api/v1/employees/1", "category": "serialization", "expect_status": 200, "ignore_json_paths": ["createdAt", "updatedAt"] },
+    { "name": "get employee not found is 404", "method": "GET", "path": "/api/v1/employees/99999", "category": "error-contract", "expect_status": 404, "ignore_json_paths": ["timestamp"] },
+    { "name": "search by department", "method": "GET", "path": "/api/v1/employees/search?department=technology", "category": "business-api", "expect_status": 200, "ignore_json_paths": ["[*].createdAt", "[*].updatedAt"] },
+    { "name": "high earners native query", "method": "GET", "path": "/api/v1/employees/high-earners?salary=80000", "category": "business-api", "expect_status": 200, "ignore_json_paths": ["[*].createdAt", "[*].updatedAt"] },
+    { "name": "create employee", "method": "POST", "path": "/api/v1/employees", "body": { "employeeNumber": "EMP900", "firstName": "Probe", "lastName": "User", "email": "probe.user@example.com", "department": "QA", "salary": 50000.00 }, "category": "serialization", "expect_status": 201, "ignore_json_paths": ["createdAt", "updatedAt"] },
+    { "name": "create employee without department omits null", "method": "POST", "path": "/api/v1/employees", "body": { "employeeNumber": "EMP901", "firstName": "No", "lastName": "Dept", "email": "no.dept@example.com" }, "category": "serialization", "expect_status": 201, "ignore_json_paths": ["createdAt", "updatedAt"] },
+    { "name": "create duplicate employee number is 409", "method": "POST", "path": "/api/v1/employees", "body": { "employeeNumber": "EMP001", "firstName": "Dup", "lastName": "Licate", "email": "dup@example.com", "department": "QA", "salary": 1 }, "category": "error-contract", "expect_status": 409, "ignore_json_paths": ["timestamp"] },
+    { "name": "create invalid is 400", "method": "POST", "path": "/api/v1/employees", "body": { "employeeNumber": "", "firstName": "Bad", "lastName": "Input", "email": "not-an-email" }, "category": "error-contract", "expect_status": 400, "ignore_json_paths": ["timestamp", "message"] },
+    { "name": "malformed json is 400", "method": "POST", "path": "/api/v1/employees", "headers": { "Content-Type": "application/json" }, "body": "{\"employeeNumber\": ", "category": "error-contract", "expect_status": 400 },
+    { "name": "update employee 2", "method": "PUT", "path": "/api/v1/employees/2", "body": { "department": "Treasury" }, "category": "business-api", "expect_status": 200, "ignore_json_paths": ["createdAt", "updatedAt"] },
+    { "name": "update missing employee is 404", "method": "PUT", "path": "/api/v1/employees/99999", "body": { "department": "X" }, "category": "error-contract", "expect_status": 404, "ignore_json_paths": ["timestamp"] },
+    { "name": "delete employee 5", "method": "DELETE", "path": "/api/v1/employees/5", "category": "business-api", "expect_status": 204 },
+    { "name": "get deleted employee is 404", "method": "GET", "path": "/api/v1/employees/5", "category": "error-contract", "expect_status": 404, "ignore_json_paths": ["timestamp"] }
+  ]
+}

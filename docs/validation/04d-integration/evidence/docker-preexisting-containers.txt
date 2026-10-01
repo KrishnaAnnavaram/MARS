@@ -1,0 +1,5 @@
+smdag-redis	redis:8.8.2	0.0.0.0:6380->6379/tcp	Up 4 seconds (health: starting)
+smdag-postgres	postgres:17-alpine	0.0.0.0:5432->5432/tcp	Up 4 seconds (health: starting)
+smdag-redis-insight	redis/redisinsight:latest	0.0.0.0:5540->5540/tcp	Up 4 seconds (health: starting)
+smdag-qdrant	qdrant/qdrant:latest	0.0.0.0:6333-6334->6333-6334/tcp	Up 4 seconds
+redis-server	redis:8.6.0	0.0.0.0:6379->6379/tcp	Up 4 seconds

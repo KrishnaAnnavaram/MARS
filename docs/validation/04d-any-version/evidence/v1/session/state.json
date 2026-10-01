@@ -1,0 +1,123 @@
+{
+  "slug": "v1-employee",
+  "history": [
+    {
+      "state": "BASELINE_DETECTED",
+      "at": "2026-10-01T12:59:25.052Z",
+      "by": "detect-baseline.js",
+      "detail": "project src/employee-service"
+    },
+    {
+      "state": "WORKSPACE_PREPARED",
+      "at": "2026-10-01T13:00:57.633Z",
+      "by": "prepare-workspace.js",
+      "detail": "baseline commit cdb0aeba6d"
+    },
+    {
+      "state": "BASELINE_BUILT",
+      "at": "2026-10-01T13:02:16.649Z",
+      "by": "run-migration-build.js",
+      "detail": "round 0 passed"
+    },
+    {
+      "state": "BASELINE_PROBED",
+      "at": "2026-10-01T13:04:24.381Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 13 probe(s)"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T13:08:15.117Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-01: 1 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T13:09:02.639Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-02: 1 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:09:17.621Z",
+      "by": "run-migration-build.js",
+      "detail": "round 1 passed"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T13:10:53.417Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-03: 7 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T13:12:33.599Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-04: 3 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:13:31.400Z",
+      "by": "run-migration-build.js",
+      "detail": "round 3 passed"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T13:14:42.753Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-05: 6 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T13:15:32.183Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-06: 1 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:16:26.041Z",
+      "by": "run-migration-build.js",
+      "detail": "round 5 passed"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T13:16:57.042Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-07: 1 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T13:17:27.122Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-08: 1 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T13:17:41.377Z",
+      "by": "run-migration-build.js",
+      "detail": "round 6 passed"
+    },
+    {
+      "state": "TARGET_TESTED",
+      "at": "2026-10-01T13:19:36.557Z",
+      "by": "run-migration-build.js",
+      "detail": "round 8 passed"
+    },
+    {
+      "state": "FINAL_PROBED",
+      "at": "2026-10-01T13:20:03.083Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 13 probe(s)"
+    },
+    {
+      "state": "RENDERED",
+      "at": "2026-10-01T13:22:34.068Z",
+      "by": "render-migration-report.js",
+      "detail": "final round 8 passed"
+    }
+  ],
+  "state": "RENDERED",
+  "updated_at": "2026-10-01T13:22:34.068Z",
+  "run_id": "v1-employee-20261001T125925Z",
+  "run_started_at": "2026-10-01T12:59:25.019Z"
+}

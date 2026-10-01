@@ -1,0 +1,143 @@
+{
+  "id": "rewrite-02",
+  "seq": 2,
+  "provider": "openrewrite",
+  "mode": "dry-run",
+  "applied": false,
+  "transformation": "edge-E2",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "env",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.edge.E2"
+  ],
+  "artifacts": [],
+  "config": null,
+  "config_sha": "5094ed6c57830252",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "4.0.8",
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1"
+  },
+  "started_at": "2026-10-01T13:36:58.286Z",
+  "finished_at": "2026-10-01T13:37:14.049Z",
+  "duration_ms": 15763,
+  "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:dryRunNoFork -Drewrite.activeRecipes=mars.migration.edge.E2 -Drewrite.configLocation=<session>\\transformations\\rewrite-02.rewrite.yml",
+  "exit_code": 0,
+  "status": "previewed",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": null,
+  "proposed_files": [
+    "pom.xml",
+    "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+    "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+    "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+    "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"
+  ],
+  "changed_files": [],
+  "excluded_files": [],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "mars.migration.oss.SpringBoot3To4"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.AddDependency: {groupId=org.springframework.boot, artifactId=spring-boot-starter-webmvc-test, version=4.0.8, scope=test, onlyIfUsing=org.springframework.boot.test.autoconfigure.web.servlet.*}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.AddDependency: {groupId=org.springframework.boot, artifactId=spring-boot-starter-data-jpa-test, version=4.0.8, scope=test, onlyIfUsing=org.springframework.boot.test.autoconfigure.orm.jpa.*}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.ChangeDependencyGroupIdAndArtifactId: {oldGroupId=org.springframework.boot, oldArtifactId=spring-boot-starter-web, newArtifactId=spring-boot-starter-webmvc}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.ChangeDependencyGroupIdAndArtifactId: {oldGroupId=org.springframework.security, oldArtifactId=spring-security-test, newGroupId=org.springframework.boot, newArtifactId=spring-boot-starter-security-test}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.xml.ChangeTagValue: {elementName=/project/parent/version, oldValue=3.5.16, newValue=4.0.8}"
+      }
+    ],
+    "src/main/java/com/example/migrationdemo/config/JacksonConfig.java": [
+      {
+        "depth": 0,
+        "recipe": "mars.migration.oss.SpringBoot3To4"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.ChangePackage: {oldPackageName=com.fasterxml.jackson.databind, newPackageName=tools.jackson.databind, recursive=true}"
+      }
+    ],
+    "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java": [
+      {
+        "depth": 0,
+        "recipe": "mars.migration.oss.SpringBoot3To4"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.ChangeType: {oldFullyQualifiedTypeName=org.springframework.boot.actuate.health.Health, newFullyQualifiedTypeName=org.springframework.boot.health.contributor.Health}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.ChangeType: {oldFullyQualifiedTypeName=org.springframework.boot.actuate.health.HealthIndicator, newFullyQualifiedTypeName=org.springframework.boot.health.contributor.HealthIndicator}"
+      }
+    ],
+    "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java": [
+      {
+        "depth": 0,
+        "recipe": "mars.migration.oss.SpringBoot3To4"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.ChangePackage: {oldPackageName=com.fasterxml.jackson.databind, newPackageName=tools.jackson.databind, recursive=true}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.ChangeType: {oldFullyQualifiedTypeName=org.springframework.boot.test.mock.mockito.MockBean, newFullyQualifiedTypeName=org.springframework.test.context.bean.override.mockito.MockitoBean}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.ChangeType: {oldFullyQualifiedTypeName=org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest, newFullyQualifiedTypeName=org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest}"
+      }
+    ],
+    "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java": [
+      {
+        "depth": 0,
+        "recipe": "mars.migration.oss.SpringBoot3To4"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.ChangeType: {oldFullyQualifiedTypeName=org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest, newFullyQualifiedTypeName=org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest}"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-02.patch",
+  "log": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-02.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-02-before",
+    "commit": "d36c499b4fb640aec2bb53debe54979eb8f2a3a4"
+  },
+  "scope_check": null,
+  "reconciliation": null,
+  "build_round": null,
+  "notes": [],
+  "edge": "E2",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-02.rewrite.yml",
+  "goal": "dryRunNoFork"
+}

@@ -1,0 +1,83 @@
+{
+  "id": "rewrite-02",
+  "seq": 2,
+  "provider": "openrewrite",
+  "mode": "apply",
+  "applied": true,
+  "transformation": "edge-E1",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "wrapper",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.edge.E1"
+  ],
+  "artifacts": [],
+  "config": null,
+  "config_sha": "aa5644dfa766223d",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "2.7.18",
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1"
+  },
+  "started_at": "2026-10-01T13:08:26.420Z",
+  "finished_at": "2026-10-01T13:09:02.637Z",
+  "duration_ms": 36217,
+  "command": "mvnw.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:runNoFork -Drewrite.activeRecipes=mars.migration.edge.E1 -Drewrite.configLocation=<session>\\transformations\\rewrite-02.rewrite.yml",
+  "exit_code": 0,
+  "status": "applied",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": "rewrite-01",
+  "proposed_files": [],
+  "changed_files": [
+    {
+      "state": "M",
+      "file": "pom.xml"
+    }
+  ],
+  "excluded_files": [],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.maven.ChangeParentPom: {oldGroupId=org.springframework.boot, oldArtifactId=spring-boot-starter-parent, newVersion=2.7.18, allowVersionDowngrades=true}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=spring-cloud.version, newValue=2021.0.9}"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-02.patch",
+  "log": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-02.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-02-before",
+    "commit": "64ff5bbc3b6971b94cc995ac8528b64557a40219"
+  },
+  "scope_check": {
+    "ok": true,
+    "out_of_preview": [],
+    "infrastructure_lines": []
+  },
+  "reconciliation": {
+    "requested_platform_version": "2.7.18",
+    "declared_after_apply": "2.7.18",
+    "recipe_target": "2.7.18",
+    "status": "matches-request"
+  },
+  "build_round": 1,
+  "notes": [],
+  "edge": "E1",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-02.rewrite.yml",
+  "goal": "runNoFork"
+}

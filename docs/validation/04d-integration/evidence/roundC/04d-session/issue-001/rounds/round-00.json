@@ -1,0 +1,155 @@
+{
+  "round": 0,
+  "label": "round 0: untouched project, Boot 3.5.0 on JDK 17",
+  "baseline": true,
+  "started_at": "2026-10-01T03:35:14.732Z",
+  "duration_ms": 39738,
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1",
+    "home": "E:/mv/tools/jdk-17.0.20.1+1",
+    "source": "MIGRATION_JDK_17"
+  },
+  "build": {
+    "tool": "maven",
+    "kind": "env",
+    "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B clean package",
+    "intent": "package",
+    "exit_code": 1,
+    "spawn_error": null
+  },
+  "outcome": "tests-failed",
+  "declared": {
+    "java": "17",
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "3.5.0"
+    },
+    "dependency_count": 12,
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "3.5.0",
+      "where": "parent"
+    }
+  },
+  "workspace": {
+    "changed_files": [],
+    "diff_stat": "no changes yet"
+  },
+  "error_summary": {
+    "total": 7,
+    "byCategory": [
+      {
+        "id": "test-failure",
+        "count": 6,
+        "label": "Test failure",
+        "hint": "The code compiled but behaviour or test wiring changed."
+      },
+      {
+        "id": "plugin-failure",
+        "count": 1,
+        "label": "Build plugin failed",
+        "hint": "A build plugin is too old for the new platform, or its configuration changed."
+      }
+    ],
+    "byFile": []
+  },
+  "errors": [
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Tests run: 9, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 8.645 s <<< FAILURE! -- in com.example.migrationdemo.controller.EmployeeControllerTest",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "com.example.migrationdemo.controller.EmployeeControllerTest.testActuatorHealth_Public -- Time elapsed: 0.090 s <<< FAILURE!",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "com.example.migrationdemo.controller.EmployeeControllerTest.testActuatorInfo_Public -- Time elapsed: 0.019 s <<< FAILURE!",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "EmployeeControllerTest.testActuatorHealth_Public:145 Status expected:<200> but was:<404>",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "EmployeeControllerTest.testActuatorInfo_Public:151 Status expected:<200> but was:<404>",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Tests run: 19, Failures: 2, Errors: 0, Skipped: 0",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project spring-boot-migration-demo: There are test failures.",
+      "detail": [],
+      "category": "plugin-failure"
+    }
+  ],
+  "errors_truncated": 0,
+  "log_tail": "…(truncated, showing last 8000 chars)…\nname,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        lower(e1_0.department)=lower(?) \r\n        and e1_0.active=true\r\nHibernate: \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        lower(e1_0.department)=lower(?) \r\n        and e1_0.active=true\r\n2026-09-30T22:35:52.654-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0\r\nHibernate: \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0\r\n2026-09-30T22:35:52.660-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\nHibernate: \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\n2026-09-30T22:35:52.676-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        e1_0.employee_number=?\r\nHibernate: \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        e1_0.employee_number=?\r\n2026-09-30T22:35:52.693-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0\r\nHibernate: \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0\r\n2026-09-30T22:35:52.697-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\nHibernate: \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\n2026-09-30T22:35:52.706-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\nHibernate: \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\n2026-09-30T22:35:52.712-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\nHibernate: \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?)\r\n2026-09-30T22:35:52.721-05:00 DEBUG 48160 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        upper(e1_0.department)=upper(?)\r\nHibernate: \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        upper(e1_0.department)=upper(?)\r\n[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.46 s -- in com.example.migrationdemo.integration.EmployeeRepositoryIntegrationTest\r\n[INFO] Running com.example.migrationdemo.mapper.EmployeeMapperTest\r\n[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.005 s -- in com.example.migrationdemo.mapper.EmployeeMapperTest\r\n[INFO] Running com.example.migrationdemo.service.EmployeeServiceTest\r\n[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.341 s -- in com.example.migrationdemo.service.EmployeeServiceTest\r\n[INFO] \r\n[INFO] Results:\r\n[INFO] \r\n[ERROR] Failures: \r\n[ERROR]   EmployeeControllerTest.testActuatorHealth_Public:145 Status expected:<200> but was:<404>\r\n[ERROR]   EmployeeControllerTest.testActuatorInfo_Public:151 Status expected:<200> but was:<404>\r\n[INFO] \r\n[ERROR] Tests run: 19, Failures: 2, Errors: 0, Skipped: 0\r\n[INFO] \r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  37.419 s\r\n[INFO] Finished at: 2026-09-30T22:35:54-05:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project spring-boot-migration-demo: There are test failures.\r\n[ERROR] \r\n[ERROR] See .\\target\\surefire-reports for the individual test results.\r\n[ERROR] See dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException\r\n\nOpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended\r\n",
+  "transformation": null,
+  "error_groups": [
+    {
+      "id": "G1",
+      "category": "test-failure",
+      "subject": "test EmployeeControllerTest",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 5,
+      "files": [],
+      "sample": "Tests run: 9, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 8.645 s <<< FAILURE! -- in com.example.migrationdemo.controller.EmployeeControllerTest"
+    },
+    {
+      "id": "G2",
+      "category": "plugin-failure",
+      "subject": "message Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:N.N.N:test (default-test) on p",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.5.3:test (default-test) on project spring-boot-migration-demo: There are test failures."
+    },
+    {
+      "id": "G3",
+      "category": "test-failure",
+      "subject": "message Tests run: N, Failures: N, Errors: N, Skipped: N",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Tests run: 19, Failures: 2, Errors: 0, Skipped: 0"
+    }
+  ],
+  "correlation": null
+}

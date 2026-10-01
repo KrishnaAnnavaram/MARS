@@ -28,7 +28,9 @@ const {
 } = require('./lib/migration');
 
 const BUILD_OUTPUT_PATTERNS = ['target/', 'build/', 'out/', '.gradle/', 'node_modules/', '*.class'];
-const EXCLUDED = ['.git', 'target', 'build', 'out', 'node_modules', '.idea', '.gradle', '.mvn/wrapper/maven-wrapper.jar'];
+// The Maven wrapper jar is copied like any other project file: excluding it made mvnw download it
+// into the sandbox, which then looked changed before anything had been migrated (validation run V1).
+const EXCLUDED = ['.git', 'target', 'build', 'out', 'node_modules', '.idea', '.gradle'];
 
 function parseArgs(argv) {
   const args = {};
@@ -102,6 +104,14 @@ function main() {
   const baseline = readJson(paths.baseline);
   if (!baseline) {
     console.error(`No baseline for "${args.slug}" at ${rel(paths.baseline)} — run detect-baseline.js first.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  // A blocked baseline (unsupported path, no eligible pack, a refused Stage 2 plan) never gets a sandbox.
+  const gate = baseline.migration_path && baseline.migration_path.status;
+  if (!baseline.project || (gate && gate !== 'SUPPORTED')) {
+    console.error(`Refused: the baseline for "${args.slug}" is not migratable — ${gate || 'Stage 2 refused'}: ${(baseline.migration_path && baseline.migration_path.reason) || (baseline.issue && baseline.issue.refused) || 'see baseline.json'}`);
     process.exitCode = 1;
     return;
   }
@@ -195,6 +205,6 @@ function main() {
   console.log(`  Next: node scripts/run-migration-build.js --slug ${args.slug} --baseline --jdk ${baseline.language.declared || '17'}\n`);
 }
 
-if (require.main === module) main();
+if (require.main === module) require('./lib/summary').runAndFinalize(main, 'prepare-workspace.js');
 
 module.exports = { copyTree, EXCLUDED };

@@ -41,8 +41,48 @@ const {
   listRounds, groupErrors, correlateGroups, redact, validateTemplate, recordState, declaredPlatformVersion,
   TEST_RUN_INTENTS, isSandboxRepo, inferState,
 } = require('./lib/migration');
-const { resolveReferencePack } = require('./lib/references');
-const { selectTransformation, executeTransformation, linkBuildRound, MODES } = require('./lib/openrewrite');
+const { resolveReferencePack, edgeTransformation, loadLadder } = require('./lib/references');
+const {
+  selectTransformation, executeTransformation, linkBuildRound, MODES, renderEdgeRecipe,
+} = require('./lib/openrewrite');
+
+/** The coordinates whose declared version is the platform: the pack's detect entries, else the ladder's. */
+function platformDetect(baseline, pack) {
+  if (pack) return pack.detect;
+  const mp = baseline.migration_path || {};
+  const ladder = mp.ladder ? loadLadder(path.basename(mp.ladder, '-ladder.json')) : null;
+  return ladder ? ladder.platform_coordinates : [];
+}
+
+/** What the generated edge recipe needs to pin: read from the sandbox as it stands now, not as it started. */
+function edgeRecipeContext(baseline, workspace, tool) {
+  const now = inventoryProject(workspace);
+  const props = now.properties || {};
+  const parent = now.parent && now.parent.groupId === 'org.springframework.boot' && now.parent.artifactId === 'spring-boot-starter-parent';
+  const bom = (now.dependencies || []).some((d) => d.scope === 'import' && d.groupId === 'org.springframework.boot' && d.artifactId === 'spring-boot-dependencies');
+  const cloud = (baseline.migration_path && baseline.migration_path.evidence && baseline.migration_path.evidence.cloud) || null;
+  return {
+    buildTool: tool ? tool.tool : 'maven',
+    parent: Boolean(parent),
+    bom,
+    javaProperties: ['java.version', 'maven.compiler.release', 'maven.compiler.source', 'maven.compiler.target'].filter((p) => props[p] !== undefined),
+    cloudProperty: cloud ? cloud.property : null,
+  };
+}
+
+/** An edge is complete when a build tagged with it compiled and the sandbox declares the edge's target. */
+function edgeComplete(slug, edge) {
+  return listRounds(slug).some((r) => r.edge === edge.id
+    && ['passed', 'tests-failed', 'build-failed'].includes(r.outcome)
+    && r.declared && ((r.declared.platform && r.declared.platform.version === edge.to) || (r.declared.parent && r.declared.parent.version === edge.to)));
+}
+
+/** A repair round carries the edge it repairs: the first unfinished edge whose target the sandbox already declares. */
+function openEdgeFor(slug, edges, platform) {
+  const version = platform && platform.version;
+  if (!version) return null;
+  return edges.slice().sort((a, b) => a.seq - b.seq).find((e) => e.to === version && !edgeComplete(slug, e)) || null;
+}
 
 const INTENTS = ['compile', 'test-compile', 'test', 'package', 'verify', 'package-skip-tests'];
 const MAX_RECORDED_ERRORS = 200;
@@ -68,6 +108,7 @@ function parseArgs(argv) {
     else if (a === '--rewrite-exclude') args.rewriteExcludes.push(...list(argv[++i]).map((f) => f.split('\\').join('/')));
     else if (a === '--rewrite-policy') args.rewritePolicy = argv[++i];
     else if (a === '--check-plan') args.checkPlan = true;
+    else if (a === '--edge' || a === '-e') args.edge = argv[++i];
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
@@ -98,6 +139,13 @@ Deterministic transformation (OpenRewrite, sandbox only — recipes must be name
   --rewrite-exclude <file>     apply only: a previewed file rejected as out of scope — restored after
                                the apply and recorded (repeatable or comma-separated; whole files only)
   --rewrite-policy optional|required  Override the pack's policy for an unavailable recipe
+
+Migration-path edges (sessions whose baseline planned a ladder path):
+  --edge <E1|E2|…>  With --rewrite: preview/apply the recipe 04D generates for that edge (upstream
+                    or open-source composite recipe + platform/Java/Spring Cloud pins). Edges run in
+                    order; each must be built green on its planned version before the next.
+                    Without --rewrite: tag a residual-repair build round with the edge; the JDK
+                    defaults to the edge's.
 
 Session check (runs no build):
   --check-plan    Validate migration-plan.json against its schema and print the session state`);
@@ -186,17 +234,45 @@ function transformationPhase(args, ctx) {
 
   const packRef = (baseline.reference_packs || [])[0];
   const pack = packRef ? resolveReferencePack(packRef.id) : null;
-  const selected = selectTransformation({
-    pack,
-    plan,
-    id: args.rewriteId,
-    overrides: {
-      recipes: args.rewriteRecipes,
-      artifacts: args.rewriteArtifacts,
-      pluginVersion: args.rewritePluginVersion,
-      policy: args.rewritePolicy,
-    },
-  });
+  const edges = (baseline.migration_path && baseline.migration_path.edges) || [];
+  let edge = null;
+  let configText = null;
+  let selected;
+  if (args.edge) {
+    // One rung of the planned path: the recipe is generated from the ladder, the plan must select it,
+    // and every earlier edge must already stand green on its planned version.
+    edge = edges.find((e) => e.id === args.edge);
+    if (!edge) return { proceed: false, error: fail(`Refused: no edge ${args.edge} in the planned path (edges: ${edges.map((e) => e.id).join(', ') || 'none — the session has no ladder path'}).`) };
+    const unfinished = edges.filter((e) => e.seq < edge.seq && !edgeComplete(args.slug, e));
+    if (unfinished.length) {
+      return { proceed: false, error: fail(`Refused: edges run in order, and ${unfinished.map((e) => e.id).join(', ')} ${unfinished.length === 1 ? 'is' : 'are'} not complete — apply each and build it green (a round tagged --edge) on its planned version first.`) };
+    }
+    if (!edge.recipe_source) return { proceed: false, error: fail(`Refused: edge ${edge.id} has no recipe the ${baseline.license_policy || 'open-source-only'} policy allows (${edge.notes.join('; ')}).`) };
+    const candidate = (plan.deterministic_candidates || []).find((c) => c.edge === edge.id || c.transformation === `edge:${edge.id}`);
+    if (!candidate) return { proceed: false, error: fail(`Refused: the migration plan does not select edge ${edge.id} — add a deterministic candidate { "id": "${edge.id}", "provider": "openrewrite", "transformation": "edge:${edge.id}", "edge": "${edge.id}", "covers": [...] }.`) };
+    selected = { transformation: edgeTransformation(edge), candidate };
+    try {
+      const narrowed = args.rewriteRecipes.length ? args.rewriteRecipes : (candidate.recipes || []);
+      const notInPlan = args.rewriteRecipes.filter((r) => !(candidate.recipes || []).includes(r));
+      if (notInPlan.length) return { proceed: false, error: fail(`Refused: recipe(s) not in the plan candidate for ${edge.id}: ${notInPlan.join(", ")}`) };
+      configText = renderEdgeRecipe(edge, { ...edgeRecipeContext(baseline, paths.workspace, tool), recipes: narrowed });
+      if (narrowed.length) selected.transformation.notes = `${selected.transformation.notes || ""} Narrowed by the plan to: ${narrowed.join(", ")}.`.trim();
+    } catch (error) {
+      return { proceed: false, error: fail(`Refused: ${error.message}`) };
+    }
+  } else {
+    selected = selectTransformation({
+      pack,
+      plan,
+      id: args.rewriteId,
+      overrides: {
+        recipes: args.rewriteRecipes,
+        artifacts: args.rewriteArtifacts,
+        pluginVersion: args.rewritePluginVersion,
+        policy: args.rewritePolicy,
+      },
+    });
+  }
   if (selected.error) return { proceed: false, error: fail(`Refused: ${selected.error}`) };
 
   let preview = null;
@@ -210,7 +286,7 @@ function transformationPhase(args, ctx) {
   console.log(`\nOpenRewrite ${args.rewrite} — ${t.id}${t.pack_transformation && t.pack_transformation !== t.id ? ` (pack: ${t.pack_transformation})` : ''}`);
   console.log(`  recipes   ${t.recipes.join(', ')}`);
   console.log(`  artifacts ${t.artifacts.join(', ') || '—'}`);
-  console.log(`  licence   ${t.license || 'not recorded'} · policy ${t.policy}`);
+  console.log(`  licence   ${t.license || 'not recorded'} · licence policy ${baseline.license_policy || 'open-source-only'} · if unavailable: ${t.policy}`);
   console.log(`  sandbox   ${rel(paths.workspace)} on JDK ${jdk.major}`);
   console.log('  running…');
 
@@ -221,14 +297,19 @@ function transformationPhase(args, ctx) {
     tool,
     jdk,
     preview,
-    vars: {
-      target_platform_version: baseline.target && baseline.target.platform ? baseline.target.platform.version : null,
-      target_language: (baseline.target && baseline.target.language && baseline.target.language.version) || baseline.language.target,
-    },
-    detect: pack ? pack.detect : [],
+    vars: edge
+      ? { target_platform_version: edge.to, target_language: edge.java }
+      : {
+        target_platform_version: baseline.target && baseline.target.platform ? baseline.target.platform.version : null,
+        target_language: (baseline.target && baseline.target.language && baseline.target.language.version) || baseline.language.target,
+      },
+    detect: platformDetect(baseline, pack),
     projectDir: baseline.project.dir,
     timeoutMs: args.timeout || 1800000,
     exclude: args.rewrite === 'apply' ? args.rewriteExcludes : [],
+    configText,
+    edge,
+    licensePolicy: baseline.license_policy || 'open-source-only',
   });
 
   console.log(`\n  Record    ${rel(path.join(paths.transformationsDir, `${record.id}.json`))}`);
@@ -250,7 +331,7 @@ function transformationPhase(args, ctx) {
     }
     return { proceed: false, record };
   }
-  if (['failed', 'rejected-config', 'rejected-no-preview', 'reverted'].includes(record.status)) {
+  if (['failed', 'rejected-config', 'rejected-no-preview', 'rejected-license', 'reverted'].includes(record.status)) {
     console.error(`\n  The transformation did not produce an accepted result (${record.status}). This is recorded, not hidden.`);
     if (record.status === 'reverted') {
       console.error(`  Out-of-preview files: ${(record.scope_check.out_of_preview || []).join(', ') || '—'}`);
@@ -305,7 +386,10 @@ function main() {
   if (!baseline || !meta) return fail(`Session "${args.slug}" is not set up — run detect-baseline.js then prepare-workspace.js.`);
   if (!isSandboxRepo(paths.workspace)) return fail(`Workspace missing (or not a sandbox repository) at ${rel(paths.workspace)} — run prepare-workspace.js.`);
 
-  const jdkMajor = args.jdk || baseline.language.declared;
+  const edgeDef = args.edge ? ((baseline.migration_path && baseline.migration_path.edges) || []).find((e) => e.id === args.edge) : null;
+  if (args.edge && !edgeDef) return fail(`No edge ${args.edge} in the planned path.`);
+  // An edge builds on the JDK its rung needs unless told otherwise; round 0 on the declared one.
+  const jdkMajor = args.jdk || (edgeDef && edgeDef.java) || baseline.language.declared;
   const jdk = resolveJdk(jdkMajor);
   if (!jdk) {
     return fail(`No JDK ${jdkMajor} found on this machine.`,
@@ -345,7 +429,7 @@ function main() {
 
   const round = args.baseline ? 0 : (args.round !== undefined ? args.round : nextRoundNumber(args.slug));
   const mvnArgs = buildArgs(tool.tool, args.intent);
-  const label = args.label || (transformation
+  const label = args.label || (edgeDef && !transformation ? `edge ${edgeDef.id} (${edgeDef.from} → ${edgeDef.to})` : null) || (transformation
     ? `OpenRewrite ${transformation.id} applied (${transformation.recipes.join(', ')})`
     : null);
   const started = Date.now();
@@ -394,7 +478,7 @@ function main() {
       java: declared.javaVersion,
       parent: declared.parent,
       dependency_count: (declared.dependencies || []).length,
-      platform: pack ? declaredPlatformVersion(declared, pack.detect) : null,
+      platform: declaredPlatformVersion(declared, platformDetect(baseline, pack)),
     },
     workspace: state,
     error_summary: summary,
@@ -403,9 +487,19 @@ function main() {
     log_tail: tail(stripRootFromText(log, paths.workspace), 8000),
     // v2 — additive
     transformation: transformation ? transformation.id : null,
+    // v3 — the migration-path edge this round builds (null outside a ladder path)
+    edge: args.edge || (transformation && transformation.edge) || null,
     error_groups: groups,
     correlation: plan && groups.length ? correlateGroups(groups, plan) : null,
   };
+
+  // A round run without --edge (a residual repair after an edge's apply) is tagged with the edge it repairs.
+  const ladderEdges = (baseline.migration_path && baseline.migration_path.edges) || [];
+  if (!record.baseline && !record.edge) {
+    const open = openEdgeFor(args.slug, ladderEdges, record.declared.platform);
+    if (open) { record.edge = open.id; record.edge_inferred = true; }
+  }
+  const roundEdge = edgeDef || (record.edge ? ladderEdges.find((e) => e.id === record.edge) : null);
 
   const file = writeJson(path.join(paths.roundsDir, `round-${String(round).padStart(2, '0')}.json`), record);
   fs.writeFileSync(path.join(paths.roundsDir, `round-${String(round).padStart(2, '0')}.log`), log);
@@ -413,13 +507,22 @@ function main() {
 
   if (record.baseline) {
     recordState(args.slug, 'BASELINE_BUILT', 'run-migration-build.js', `round 0 ${outcome}`);
-  } else if (outcome === 'passed' || outcome === 'tests-failed') {
+  } else if (outcome === 'passed' || outcome === 'tests-failed' || outcome === 'build-failed') {
     const round0 = existingRounds.find((r) => r.baseline || r.round === 0);
     const tested = TEST_RUN_INTENTS.includes(args.intent) && round0 && round0.build.intent === args.intent;
     recordState(args.slug, tested ? 'TARGET_TESTED' : 'TARGET_COMPILED', 'run-migration-build.js', `round ${round} ${outcome}`);
   }
 
   const mark = outcome === 'passed' ? 'PASSED' : outcome.toUpperCase();
+  if (record.edge && roundEdge) {
+    const edgeDef = roundEdge;
+    const landed = record.declared.platform && record.declared.platform.version === edgeDef.to;
+    const compiled = ['passed', 'tests-failed', 'build-failed'].includes(outcome);
+    const next = ladderEdges.find((e) => e.seq === edgeDef.seq + 1);
+    console.log(`
+  Edge ${edgeDef.id}${record.edge_inferred ? ' (inferred from the declared platform)' : ''} ${edgeDef.from} → ${edgeDef.to}: ${compiled && landed ? 'COMPLETE' : 'not complete'} (declared ${record.declared.platform ? record.declared.platform.version : '?'}, build ${outcome})`);
+    if (compiled && landed) console.log(next ? `  Next edge  ${next.id} ${next.from} → ${next.to} (${next.class}, ${next.recipe_source})` : '  This was the landing edge — run the final probe and render the report.');
+  }
   console.log(`\n  Outcome     ${mark}  (exit ${result.status}, ${(durationMs / 1000).toFixed(1)}s)`);
   console.log(`  Declared    Java ${declared.javaVersion || '?'}${declared.parent ? ` · ${declared.parent.artifactId} ${declared.parent.version}` : ''}`);
   console.log(`  Workspace   ${state.diff_stat}`);
@@ -448,7 +551,10 @@ function main() {
   console.log(`\n  Round record ${rel(file)}`);
   console.log(`  Full log     ${rel(file).replace(/\.json$/, '.log')}`);
   if (outcome === 'passed') {
-    console.log(`\n  Build is green on JDK ${jdk.major}. Next: probe the runtime, then render the report.`);
+    const transit = roundEdge && roundEdge.role !== 'landing';
+    console.log(transit
+      ? `\n  Build is green on JDK ${jdk.major}. This is a transit edge — move to the next edge; probe and render only after the landing edge.`
+      : `\n  Build is green on JDK ${jdk.major}. Next: probe the runtime, then render the report.`);
   } else {
     console.log(`\n  Read the grouped errors against the plan and the reference pack; prefer a deterministic recipe,`);
     console.log('  otherwise make the narrowest residual edit in the sandbox, then run the next round.');
@@ -457,6 +563,6 @@ function main() {
   return record;
 }
 
-if (require.main === module) main();
+if (require.main === module) require('./lib/summary').runAndFinalize(main, 'run-migration-build.js');
 
-module.exports = { parseArgs, workspaceState, checkPlan, INTENTS };
+module.exports = { parseArgs, workspaceState, checkPlan, openEdgeFor, INTENTS };

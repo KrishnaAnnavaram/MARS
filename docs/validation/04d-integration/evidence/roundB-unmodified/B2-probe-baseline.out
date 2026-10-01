@@ -1,0 +1,27 @@
+
+Runtime probe — phase baseline on JDK 17 (17.0.20.1)
+  workspace ../evidence/roundB/ctx/version-migration/b2-golden/workspace
+  packaging (tests skipped)…
+  artifact  target/spring-boot-migration-demo-1.0.0.jar
+  starting  http://localhost:8080/actuator/health (up to 180s)…
+
+  Started     yes (14.601s, readiness 200)
+
+  Probe                                  Status   Bytes
+  list all employees                     200      1236
+  employee by id                         200      243
+  employee not found is 404              404      150
+  search by department                   200      497
+  high earners (native query)            200      746
+  bad path variable type                 400      144
+  create invalid is 400                  400      202
+  create duplicate is 409                409      159
+  unauthenticated is 401                 401      108
+  bad credentials is 401                 401      108
+  health is public                       200      477
+  info is public                         200      2
+  metrics endpoint                       200      2948
+
+  Written ../evidence/roundB/ctx/version-migration/b2-golden/runtime/baseline.json
+
+exit=0

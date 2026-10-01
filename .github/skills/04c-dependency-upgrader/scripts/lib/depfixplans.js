@@ -88,6 +88,7 @@ function parseFixPlan(text) {
   const plainSummary = /^>\s*(.+)$/m.exec(text);
   const status = /\|\s*\*\*Status\*\*\s*\|\s*([^|]+)\|/.exec(text);
   const cwe = /\|\s*\*\*CWE\*\*\s*\|\s*`([^`]+)`/.exec(text);
+  const fixType = /\|\s*\*\*Fix Type\*\*\s*\|\s*`?([A-Z_]{4,})`?/.exec(text);
   const rootCauseLink = /\|\s*\*\*Root cause report\*\*\s*\|\s*\[[^\]]*\]\(\.\.\/\.\.\/([^)]+)\)/.exec(text);
   const blastRadiusLink = /\|\s*\*\*Blast radius report\*\*\s*\|\s*\[[^\]]*\]\(\.\.\/\.\.\/([^)]+)\)/.exec(text);
 
@@ -100,6 +101,7 @@ function parseFixPlan(text) {
     plainSummary: plainSummary ? plainSummary[1].trim() : null,
     status: status ? status[1].trim() : 'unknown',
     cwe: cwe ? cwe[1].trim() : null,
+    fixType: fixType ? fixType[1] : null,
     rootCauseReport: rootCauseLink ? rootCauseLink[1].trim() : null,
     blastRadiusReport: blastRadiusLink ? blastRadiusLink[1].trim() : null,
     approach,
@@ -134,7 +136,7 @@ function listFixPlans() {
 
 /** Approved AND CWE-1104 — this skill's actual workload. A plan for any other CWE belongs to 04b-fixer. */
 function listApprovedDependencyPlans() {
-  return listFixPlans().filter((p) => p.status === 'Approved' && p.cwe === 'CWE-1104');
+  return listFixPlans().filter((p) => p.status === 'Approved' && p.cwe === 'CWE-1104' && p.fixType !== 'VERSION_MIGRATION');
 }
 
 function resolveFixPlan(idOrPath) {

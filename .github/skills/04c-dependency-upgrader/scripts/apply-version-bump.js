@@ -44,6 +44,8 @@ const {
   patchPathFor, worktreePathFor, verificationJsonPathFor, verificationMdPathFor,
 } = require('./lib/depfixplans');
 
+// The Java services live under SOURCE_ROOT; a module is identified by its repo-relative path.
+const SOURCE_ROOT = 'src';
 const KNOWN_MODULES = [
   'configuaration-server', 'discovery-service', 'department-service',
   'employee-service', 'report-service', 'sheduler-service',
@@ -126,8 +128,8 @@ function changedFilesFromPatch(patchText) {
 function modulesFromFiles(files) {
   const modules = new Set();
   for (const f of files) {
-    const top = f.split('/')[0];
-    if (KNOWN_MODULES.includes(top)) modules.add(top);
+    const [root, top] = f.split('/');
+    if (root === SOURCE_ROOT && KNOWN_MODULES.includes(top)) modules.add(`${SOURCE_ROOT}/${top}`);
   }
   return [...modules];
 }
@@ -201,6 +203,14 @@ function verifyOne(plan, args) {
       passed: false,
       refused: true,
       reason: `Fix plan Status is "${plan.status}", not "Approved". This skill will not verify or apply an unapproved plan — see ${plan.relativePlanFile}.`,
+    };
+  }
+  if (plan.fixType === 'VERSION_MIGRATION') {
+    return {
+      id: plan.id,
+      passed: false,
+      refused: true,
+      reason: 'Fix plan Fix Type is VERSION_MIGRATION — a platform-generation/Java jump, not a single-coordinate bump. Stage 2 routes it to 04d-version-migration.',
     };
   }
   if (plan.cwe !== 'CWE-1104') {

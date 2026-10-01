@@ -1,0 +1,165 @@
+{
+  "slug": "v2b",
+  "phase": "baseline",
+  "generated_at": "2026-10-01T13:33:41.860Z",
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1",
+    "home": "E:/mv/tools/jdk-17.0.20.1+1"
+  },
+  "artifact": "target/spring-boot-migration-demo-1.0.0.jar",
+  "base_url": "http://localhost:8093",
+  "packaging": {
+    "ran": true,
+    "exit_code": 0,
+    "log_tail": "[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] ---------------< com.example:spring-boot-migration-demo >---------------\r\n[INFO] Building Spring Boot 3 to 4 Migration Demo 1.0.0\r\n[INFO]   from pom.xml\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- clean:3.4.1:clean (default-clean) @ spring-boot-migration-demo ---\r\n[INFO] Deleting E:\\mv\\evidence\\v3\\v2b\\ctx\\version-migration\\v2b\\workspace\\target\r\n[INFO] \r\n[INFO] --- resources:3.3.1:resources (default-resources) @ spring-boot-migration-demo ---\r\n[INFO] Copying 1 resource from src\\main\\resources to target\\classes\r\n[INFO] Copying 0 resource from src\\main\\resources to target\\classes\r\n[INFO] \r\n[INFO] --- compiler:3.14.0:compile (default-compile) @ spring-boot-migration-demo ---\r\n[INFO] Recompiling the module because of changed source code.\r\n[INFO] Compiling 17 source files with javac [debug parameters release 17] to target\\classes\r\n[INFO] \r\n[INFO] --- resources:3.3.1:testResources (default-testResources) @ spring-boot-migration-demo ---\r\n[INFO] Copying 1 resource from src\\test\\resources to target\\test-classes\r\n[INFO] \r\n[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ spring-boot-migration-demo ---\r\n[INFO] Recompiling the module because of changed dependency.\r\n[INFO] Compiling 5 source files with javac [debug parameters release 17] to target\\test-classes\r\n[WARNING] /E:/mv/evidence/v3/v2b/ctx/version-migration/v2b/workspace/src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java:[34,6] org.springframework.boot.test.mock.mockito.MockBean in org.springframework.boot.test.mock.mockito has been deprecated and marked for removal\r\n[INFO] \r\n[INFO] --- surefire:3.5.3:test (default-test) @ spring-boot-migration-demo ---\r\n[INFO] Tests are skipped.\r\n[INFO] \r\n[INFO] --- jar:3.4.2:jar (default-jar) @ spring-boot-migration-demo ---\r\n[INFO] Building jar: E:\\mv\\evidence\\v3\\v2b\\ctx\\version-migration\\v2b\\workspace\\target\\spring-boot-migration-demo-1.0.0.jar\r\n[INFO] \r\n[INFO] --- spring-boot:3.5.0:repackage (repackage) @ spring-boot-migration-demo ---\r\n[INFO] Replacing main artifact E:\\mv\\evidence\\v3\\v2b\\ctx\\version-migration\\v2b\\workspace\\target\\spring-boot-migration-demo-1.0.0.jar with repackaged archive, adding nested dependencies in BOOT-INF/.\r\n[INFO] The original artifact has been renamed to E:\\mv\\evidence\\v3\\v2b\\ctx\\version-migration\\v2b\\workspace\\target\\spring-boot-migration-demo-1.0.0.jar.original\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  4.754 s\r\n[INFO] Finished at: 2026-10-01T08:33:29-05:00\r\n[INFO] ------------------------------------------------------------------------\r\n\n"
+  },
+  "started": true,
+  "startup_seconds": 8.631,
+  "readiness": {
+    "path": "/actuator/health",
+    "status": 200,
+    "ready_after_ms": 10564
+  },
+  "probes": [
+    {
+      "name": "endpoint inventory (actuator)",
+      "method": "GET",
+      "path": "/actuator/mappings",
+      "authenticated": true,
+      "duration_ms": 82,
+      "category": "endpoint-inventory",
+      "ok": true,
+      "status": 404,
+      "content_type": "application/problem+json",
+      "body_length": 136,
+      "body_hash": "1a125556e64039f1",
+      "body_excerpt": "{\"type\":\"about:blank\",\"title\":\"Not Found\",\"status\":404,\"detail\":\"No static resource actuator/mappings.\",\"instance\":\"/actuator/mappings\"}",
+      "json_parseable": true,
+      "semantic_hash": "0505cd93072535c4",
+      "semantic_basis": "sorted keys"
+    },
+    {
+      "name": "GET /api/v1/employees",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "authenticated": true,
+      "duration_ms": 104,
+      "category": "endpoint-inventory",
+      "ok": true,
+      "status": 200,
+      "content_type": "application/json",
+      "body_length": 1238,
+      "body_hash": "eddaa115ff5a13a1",
+      "body_excerpt": "[{\"id\":1,\"employeeNumber\":\"EMP001\",\"firstName\":\"John\",\"lastName\":\"Smith\",\"email\":\"john.smith@example.com\",\"department\":\"Technology\",\"salary\":95000.00,\"active\":true,\"createdAt\":\"2026-10-01T08:33:39.273369\",\"updatedAt\":\"2026-10-01T08:33:39.273369\"},{\"id\":2,\"employeeNumber\":\"EMP002\",\"firstName\":\"Sarah\",\"lastName\":\"Johnson\",\"email\":\"sarah.johnson@example.com\",\"department\":\"Finance\",\"salary\":85000.00,\"active\":true,\"createdAt\":\"2026-10-01T08:33:39.330409\",\"updatedAt\":\"2026-10-01T08:33:39.330409\"},{\"id\":3,\"employeeNumber\":\"EMP003\",\"firstName\":\"Michael\",\"lastName\":\"Brown\",\"email\":\"michael.brown@example.com\",\"department\":\"Technology\",\"salary\":88000.00,\"active\":true,\"createdAt\":\"2026-10-01T08:33:39.338335\",\"updatedAt\":\"2026-10-01T08:33:39.338335\"},{\"id\":4,\"employeeNumber\":\"EMP004\",\"firstName\":\"Emily\",\"lastName\":\"Davis\",\"email\":\"emily.davis@example.com\",\"department\":\"Operations\",\"salary\":72000.00,\"active\":true,\"createdAt\":\"2026-10-01T08:33:39.339263\",\"updatedAt\":\"2026-10-01T08:33:39.339263\"},{\"id\":5,\"employeeNumber\":\"EMP005\",\"firstName\":\"James\",\"lastName\":\"Wilson\",\"email\":\"james.wilson@example.com\",\"department\":\"HR\",\"salary\":68000.00,\"active\":true,\"createdAt\":\"2026-10-01T08:33:39.339263\",\"updatedAt\":\"2026-10-01T08:33:39.339263\"}]",
+      "json_parseable": true,
+      "semantic_hash": "384c08de774bcc2d",
+      "semantic_basis": "sorted keys"
+    },
+    {
+      "name": "unauthenticated is 401",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "authenticated": false,
+      "duration_ms": 58,
+      "category": "security-boundary",
+      "expect_status": 401,
+      "ok": true,
+      "status": 401,
+      "content_type": "application/json",
+      "body_length": 108,
+      "body_hash": "9bb2bdadbc891d9d",
+      "body_excerpt": "{\"timestamp\":\"2026-10-01T13:33:40.642+00:00\",\"status\":401,\"error\":\"Unauthorized\",\"path\":\"/api/v1/employees\"}",
+      "json_parseable": true,
+      "semantic_hash": "fa3652c487306255",
+      "semantic_basis": "sorted keys",
+      "expect_status_met": true
+    },
+    {
+      "name": "search by department",
+      "method": "GET",
+      "path": "/api/v1/employees/search?department=Engineering",
+      "authenticated": true,
+      "duration_ms": 115,
+      "category": "business-api",
+      "expect_status": 200,
+      "ok": true,
+      "status": 200,
+      "content_type": "application/json",
+      "body_length": 2,
+      "body_hash": "4f53cda18c2baa0c",
+      "body_excerpt": "[]",
+      "json_parseable": true,
+      "semantic_hash": "4f53cda18c2baa0c",
+      "semantic_basis": "sorted keys",
+      "expect_status_met": true
+    }
+  ],
+  "app_log_tail": "…(truncated, showing last 6000 chars)…\nnull,\r\n        last_name varchar(100) not null,\r\n        salary numeric(10,2),\r\n        updated_at timestamp(6) not null,\r\n        primary key (id)\r\n    )\r\n2026-10-01T08:33:35.871-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    alter table if exists employees \r\n       drop constraint if exists UKj9xgmd0ya5jmus09o0b8pqrpb\r\n2026-10-01T08:33:35.873-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    alter table if exists employees \r\n       add constraint UKj9xgmd0ya5jmus09o0b8pqrpb unique (email)\r\n2026-10-01T08:33:35.876-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    alter table if exists employees \r\n       drop constraint if exists UK9aw59jtyajbpyr0q02h20ahql\r\n2026-10-01T08:33:35.877-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    alter table if exists employees \r\n       add constraint UK9aw59jtyajbpyr0q02h20ahql unique (employee_number)\r\n2026-10-01T08:33:35.880-05:00  INFO 25776 --- [spring-boot-migration-demo] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'\r\n2026-10-01T08:33:36.478-05:00  INFO 25776 --- [spring-boot-migration-demo] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.\r\n2026-10-01T08:33:37.963-05:00  INFO 25776 --- [spring-boot-migration-demo] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 3 endpoints beneath base path '/actuator'\r\n2026-10-01T08:33:38.193-05:00  INFO 25776 --- [spring-boot-migration-demo] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name userDetailsService\r\n2026-10-01T08:33:38.996-05:00  INFO 25776 --- [spring-boot-migration-demo] [           main] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:probedb'\r\n2026-10-01T08:33:39.110-05:00  INFO 25776 --- [spring-boot-migration-demo] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8093 (http) with context path '/'\r\n2026-10-01T08:33:39.134-05:00  INFO 25776 --- [spring-boot-migration-demo] [           main] c.e.m.MigrationDemoApplication           : Started MigrationDemoApplication in 8.631 seconds (process running for 9.238)\r\n2026-10-01T08:33:39.249-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    select\r\n        count(*) \r\n    from\r\n        employees e1_0\r\n2026-10-01T08:33:39.307-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at, id) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?, default)\r\n2026-10-01T08:33:39.336-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at, id) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?, default)\r\n2026-10-01T08:33:39.339-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at, id) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?, default)\r\n2026-10-01T08:33:39.339-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at, id) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?, default)\r\n2026-10-01T08:33:39.339-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [           main] org.hibernate.SQL                        : \r\n    insert \r\n    into\r\n        employees\r\n        (active, created_at, department, email, employee_number, first_name, last_name, salary, updated_at, id) \r\n    values\r\n        (?, ?, ?, ?, ?, ?, ?, ?, ?, default)\r\n2026-10-01T08:33:40.122-05:00  INFO 25776 --- [spring-boot-migration-demo] [nio-8093-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'\r\n2026-10-01T08:33:40.122-05:00  INFO 25776 --- [spring-boot-migration-demo] [nio-8093-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'\r\n2026-10-01T08:33:40.124-05:00  INFO 25776 --- [spring-boot-migration-demo] [nio-8093-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms\r\n2026-10-01T08:33:40.568-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [nio-8093-exec-5] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0\r\n2026-10-01T08:33:40.751-05:00 DEBUG 25776 --- [spring-boot-migration-demo] [nio-8093-exec-2] org.hibernate.SQL                        : \r\n    select\r\n        e1_0.id,\r\n        e1_0.active,\r\n        e1_0.created_at,\r\n        e1_0.department,\r\n        e1_0.email,\r\n        e1_0.employee_number,\r\n        e1_0.first_name,\r\n        e1_0.last_name,\r\n        e1_0.salary,\r\n        e1_0.updated_at \r\n    from\r\n        employees e1_0 \r\n    where\r\n        upper(e1_0.department)=upper(?)\r\n",
+  "probes_file": "../evidence/v3/v2b/ctx/version-migration/v2b/probes.json",
+  "probes_sha": "d09e568635731eaf",
+  "sandbox_side_effects": [],
+  "endpoint_inventory": {
+    "source": "actuator",
+    "available": false,
+    "status": 404,
+    "endpoints": []
+  },
+  "static_endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "handler": "getAllEmployees",
+      "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "line": 31
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/employees",
+      "handler": "createEmployee",
+      "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "line": 25
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/employees/{id}",
+      "handler": "deleteEmployee",
+      "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "line": 51
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/employees/{id}",
+      "handler": "getEmployeeById",
+      "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "line": 37
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v1/employees/{id}",
+      "handler": "updateEmployee",
+      "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "line": 43
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/employees/high-earners",
+      "handler": "getHighEarners",
+      "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "line": 64,
+      "required_params": [
+        "salary"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/employees/search",
+      "handler": "searchByDepartment",
+      "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "line": 57,
+      "required_params": [
+        "department"
+      ]
+    }
+  ]
+}

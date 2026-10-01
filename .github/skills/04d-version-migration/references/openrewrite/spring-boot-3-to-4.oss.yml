@@ -1,0 +1,84 @@
+# 04D open-source composite for the Spring Boot 3 -> 4 major boundary.
+#
+# Licence: authored for 04D; uses ONLY OpenRewrite's built-in Apache-2.0 recipes (rewrite-java,
+# rewrite-maven). It needs no recipe artifact, so it runs on the `core-apache-2.0` stack under the
+# default `open-source-only` licence policy, where the upstream UpgradeSpringBoot_4_0 (Moderne Source
+# Available License) is not allowed.
+#
+# Provenance: every mapping below is either a rule of references/spring-boot-3-to-4.md (authored from
+# Spring's own release notes and migration guide) or was observed in a recorded, build-verified 04D
+# migration of a real application (Round C, 3.5.0 -> 4.1.1). None is copied from a source-available
+# recipe. It is deliberately narrow: only moves that are mechanical and verified. Everything else in
+# the 3 -> 4 jump (Jackson 3 API changes beyond the package move, Security 7 DSL removals, Hibernate 7,
+# removed APIs) is left to 04D's compiler-driven residual repair, guided by the pack's symptom table.
+#
+# 04D renders {{edge_platform_version}} with the edge's target Boot version (validated as a plain
+# version string) and appends this file to the edge recipe it generates; the edge recipe adds the
+# parent/BOM pin, the Java level and the Spring Cloud train.
+---
+type: specs.openrewrite.org/v1beta/recipe
+name: mars.migration.oss.SpringBoot3To4
+displayName: Spring Boot 3 to 4 (04D open-source composite)
+description: >-
+  Mechanical, verified Boot 4 moves built only from Apache-2.0 OpenRewrite core recipes: Jackson 3
+  packages, the actuator health contributor relocation, the modular web and test starters, the
+  test-slice relocations and Spring's MockitoBean.
+recipeList:
+  # Test starters FIRST, keyed on the Boot 3 types the project uses today: they are still on the
+  # classpath when the recipe runs, so onlyIfUsing can see them. (Keyed on the Boot 4 types, which are
+  # not resolvable until the starter exists, it never fired — observed in validation run V2.)
+  - org.openrewrite.maven.AddDependency:
+      groupId: org.springframework.boot
+      artifactId: spring-boot-starter-webmvc-test
+      version: "{{edge_platform_version}}"
+      scope: test
+      onlyIfUsing: org.springframework.boot.test.autoconfigure.web.servlet.*
+  - org.openrewrite.maven.AddDependency:
+      groupId: org.springframework.boot
+      artifactId: spring-boot-starter-data-jpa-test
+      version: "{{edge_platform_version}}"
+      scope: test
+      onlyIfUsing: org.springframework.boot.test.autoconfigure.orm.jpa.*
+  # Jackson 3 (pack §2.1). The annotations package (com.fasterxml.jackson.annotation) keeps its name.
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: com.fasterxml.jackson.databind
+      newPackageName: tools.jackson.databind
+      recursive: true
+  - org.openrewrite.java.ChangePackage:
+      oldPackageName: com.fasterxml.jackson.core
+      newPackageName: tools.jackson.core
+      recursive: true
+  # Actuator health contributors (pack §3; observed in Round C).
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.actuate.health.Health
+      newFullyQualifiedTypeName: org.springframework.boot.health.contributor.Health
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.actuate.health.HealthIndicator
+      newFullyQualifiedTypeName: org.springframework.boot.health.contributor.HealthIndicator
+  # Spring's bean-override annotations replace Boot's removed ones (pack §4.1; observed in Round C).
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.mock.mockito.MockBean
+      newFullyQualifiedTypeName: org.springframework.test.context.bean.override.mockito.MockitoBean
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.mock.mockito.SpyBean
+      newFullyQualifiedTypeName: org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+  # Test slices moved module and package (pack §4.3; observed in Round C).
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+      newFullyQualifiedTypeName: org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+      newFullyQualifiedTypeName: org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+  - org.openrewrite.java.ChangeType:
+      oldFullyQualifiedTypeName: org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+      newFullyQualifiedTypeName: org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
+  # Modular starters (pack §1.3 / §4.3 / §4.4; observed in Round C).
+  - org.openrewrite.maven.ChangeDependencyGroupIdAndArtifactId:
+      oldGroupId: org.springframework.boot
+      oldArtifactId: spring-boot-starter-web
+      newArtifactId: spring-boot-starter-webmvc
+  - org.openrewrite.maven.ChangeDependencyGroupIdAndArtifactId:
+      oldGroupId: org.springframework.security
+      oldArtifactId: spring-security-test
+      newGroupId: org.springframework.boot
+      newArtifactId: spring-boot-starter-security-test

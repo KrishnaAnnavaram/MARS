@@ -18,7 +18,7 @@ const path = require('path');
 const {
   REPO_ROOT, WORK_DIR, WORKTREES_DIR,
   rel, resolveFix, listStep2Fixes, run, removeWorktreeIfPresent, wrapperFor, runWrapper,
-  changedFilesFromPatch, modulesFromFiles, tail,
+  changedFilesFromPatch, modulesFromFiles, tail, buildEnvFor,
   testPlanPathFor, testDiffPathFor, resultPathFor,
 } = require('./lib/qa');
 
@@ -80,7 +80,8 @@ function runOne(fix, args) {
   if (!fix.patchFile || !fs.existsSync(fixPatchAbs)) throw new Error(`Fix patch not found (looked for ${fix.patchFile || 'none'}).`);
 
   const worktreeDir = path.join(WORKTREES_DIR, fix.id);
-  const record = { generatedAt: new Date().toISOString(), id: fix.id, testFile: testPlan.test_file, className, worktree: rel(worktreeDir) };
+  const { env, jdk } = buildEnvFor(fix);
+  const record = { generatedAt: new Date().toISOString(), id: fix.id, testFile: testPlan.test_file, className, worktree: rel(worktreeDir), fixType: fix.fixType || null, jdk };
 
   fs.mkdirSync(WORKTREES_DIR, { recursive: true });
   removeWorktreeIfPresent(worktreeDir);
@@ -109,7 +110,7 @@ function runOne(fix, args) {
     for (const module of modules) {
       const moduleDir = path.join(worktreeDir, module);
       const wrapper = wrapperFor(moduleDir);
-      const newTest = runWrapper(wrapper, ['-q', 'test', `-Dtest=${className}`], { cwd: moduleDir });
+      const newTest = runWrapper(wrapper, ['-q', 'test', `-Dtest=${className}`], { cwd: moduleDir, env });
       record.steps.push({
         module, test: className, status: newTest.status === 0 ? 'PASS' : 'FAIL', exitCode: newTest.status,
         output: tail(newTest.stdout + newTest.stderr + (newTest.error ? `\n[spawn error] ${newTest.error}` : '')),
@@ -126,7 +127,7 @@ function runOne(fix, args) {
           if (marker) {
             record.steps.push({ module, test: args.existingTest, status: 'SKIPPED', exitCode: null, output: `Uses ${marker}, which needs a live dependency unavailable in this isolated sandbox (no embedded MongoDB). Not run — reported SKIPPED, not a fabricated pass.` });
           } else {
-            const existing = runWrapper(wrapper, ['-q', 'test', `-Dtest=${args.existingTest}`], { cwd: moduleDir });
+            const existing = runWrapper(wrapper, ['-q', 'test', `-Dtest=${args.existingTest}`], { cwd: moduleDir, env });
             record.steps.push({
               module, test: args.existingTest, status: existing.status === 0 ? 'PASS' : 'FAIL', exitCode: existing.status,
               output: tail(existing.stdout + existing.stderr),

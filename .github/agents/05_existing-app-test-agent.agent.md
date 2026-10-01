@@ -87,6 +87,24 @@ mistakes the report for a claim that the patch builds.
    `render-behavior.js --all`.
 5. Re-run `list-workload.js` and confirm every row shows `report written` under all three columns.
 
+## Version migrations (Fix Type `VERSION_MIGRATION`)
+
+A fix report whose **Fix Type** reads `VERSION_MIGRATION` was written by `04d-version-migration`: the
+patch moves the whole project to a new framework generation and/or Java level. It is eligible exactly
+like any other drafted fix, and you check it **just as seriously** — 04D's own Migration Status is
+evidence to verify, never a verdict to inherit. The collectors append a *Version migration context*
+section to each briefing naming the migration report, the project-relative migration diff and the
+per-run `MIGRATION_SUMMARY.md`; read the report's §0 (predicted impact), §2–§5 (rounds and every
+change) and §6 (behaviour before/after) alongside the patched source.
+
+- **Re-scan** — does the reported finding (e.g. the end-of-support platform version) still appear in
+  the patched build files? A declared version that does not match the target is `STILL_VULNERABLE`.
+- **Red-team** — what did the migration leave behind or widen? Security-boundary probes, auth filter
+  chains, error contracts, actuator exposure, any OpenRewrite hunk 04D rejected or reverted.
+- **Behavior guard** — every before/after probe difference, and every changed file, must be explained
+  by the plan's migration request or the reference pack; an unexplained or reclassified difference is
+  `BEHAVIOR_CHANGED` or `INCONCLUSIVE`, not preserved.
+
 ## Constraints
 
 - DO NOT create, edit, rename or delete anything in `docs/agent_output/04-remediation/`, `docs/agent_output/04-remediation/`,

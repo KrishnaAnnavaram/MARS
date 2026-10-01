@@ -67,6 +67,11 @@ replay_pid*
 
 ### Agentic harness (.claude/agents + .claude/skills) ###
 node_modules/
+# 04a1-remediation-intelligence's local Python venv for the optional sentence-embedding ranking
+# signal (scripts/embed.py). Machine-specific and large (~900MB with torch) — never committed.
+# Recreate with: python -m venv .venv && .venv/Scripts/pip install -r requirements.txt (Windows)
+# or .venv/bin/pip install -r requirements.txt (macOS/Linux). See SKILL.md's Setup section.
+.venv/
 # Everything under .claude/.pipeline-context/ is a regeneratable build output (scan results,
 # blast radius, rca, verify, graph-context) EXCEPT descriptions.json — that file is
 # authored interpretive content (agent-written or paid-API-generated), not cheap to
@@ -75,6 +80,14 @@ node_modules/
 !/.claude/.pipeline-context/context/
 /.claude/.pipeline-context/context/*
 !/.claude/.pipeline-context/context/descriptions.json
+# The .github harness keeps the same layout and the same single tracked file. Its 04d sessions
+# (version-migration/<slug>/workspace/) are full sandbox copies of the project with their own nested
+# .git — never source. The migration evidence that matters (migration_<slug>.md/.diff, the per-run
+# migration-runs/<run_id>/ summaries, fix_<id>.md) is written to docs/agent_output/04-remediation/.
+/.github/.pipeline-context/*
+!/.github/.pipeline-context/context/
+/.github/.pipeline-context/context/*
+!/.github/.pipeline-context/context/descriptions.json
 
 ### Previous MARS project (kept locally, not tracked) ###
 older-project/

@@ -1,0 +1,6 @@
+🟢 b2-golden — Passed after 4 round(s)
+   report ../evidence/roundB/reports/migration_b2-golden.md
+   patch  ../evidence/roundB/reports/migration_b2-golden.diff
+
+Index: ../evidence/roundB/reports/README.md
+exit=0
