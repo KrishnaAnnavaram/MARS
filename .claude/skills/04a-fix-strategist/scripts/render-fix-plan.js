@@ -26,7 +26,9 @@ const path = require('path');
 const {
   REPO_ROOT, OUT_DIR, OUT_README,
   rel, listRootCauseReports, loadCatalog, contextJsonPathFor, strategyPathFor, planPathFor, existingPlanStatus,
+  existingPlanApprover,
 } = require('./lib/plans');
+const { classifyFixType, migrationRequestComment } = require('./lib/routing');
 
 // ---------------------------------------------------------------------------
 // CLI
@@ -187,8 +189,9 @@ function renderResearchSections(strategy) {
 // Report
 // ---------------------------------------------------------------------------
 
-function render(context, strategy, previousStatus, catalog) {
+function render(context, strategy, previousStatus, catalog, routing, previousApprover = null) {
   const status = (previousStatus === 'Approved' || previousStatus === 'Rejected') ? previousStatus : 'Proposed';
+  const vm = strategy.version_migration;
   const catalogEntry = strategy.catalog_reference;
   const owasp = (catalog[strategy.cwe] && catalog[strategy.cwe].owasp) || null;
   const out = [];
@@ -218,11 +221,16 @@ function render(context, strategy, previousStatus, catalog) {
   out.push('| | |');
   out.push('|---|---|');
   out.push(`| **Status** | ${status} |`);
+  if (previousApprover && status !== 'Proposed') out.push(`| **Approved by** | ${previousApprover} |`);
+  out.push(`| **Fix Type** | \`${routing.fix_type}\` — Stage 2 routes to \`${routing.skill}\` |`);
   out.push(`| **CWE** | \`${strategy.cwe}\`${catalogEntry.title ? ` — ${catalogEntry.title}` : ' — **catalog gap, see Open Questions**'} |`);
   out.push(`| **OWASP** | ${owasp || 'n/a'} |`);
   if (strategy.dependency_upgrade) {
     const d = strategy.dependency_upgrade;
     out.push(`| **Dependency** | \`${d.maven_coordinate}\` ${d.current_version} → ≥${d.minimum_fixed_version}${d.cve ? ` (${d.cve})` : ''} |`);
+  }
+  if (vm) {
+    out.push(`| **Migration** | ${vm.platform} \`${vm.source_version}\` → \`${vm.target_version}\`${vm.target_java ? ` · Java \`${vm.source_java || '?'}\` → \`${vm.target_java}\`` : ''} · project \`${vm.project}\` |`);
   }
   out.push(`| **Affected files** | ${strategy.affected_files.length} |`);
   out.push(`| **Confidence** | ${strategy.confidence || 'not stated'} |`);
@@ -291,6 +299,21 @@ function render(context, strategy, previousStatus, catalog) {
   }
 
   renderResearchSections(strategy).forEach((l) => out.push(l));
+
+  out.push('## Routing decision');
+  out.push('');
+  out.push(`**Fix Type \`${routing.fix_type}\` → Stage 2 skill \`${routing.skill}\`.** Classified by \`scripts/lib/routing.js\` from the strategy and the build descriptor on disk:`);
+  out.push('');
+  routing.evidence.forEach((e) => out.push(`- ${e}`));
+  out.push('');
+  if (vm) {
+    out.push('Stage 2 hands this plan to the version-migration skill, which re-checks the Status cell and '
+      + 'migrates the project in a sandbox; its standard `fix_<id>.md` handoff links the detailed migration '
+      + 'report, diff and per-run summary.');
+    out.push('');
+    out.push(migrationRequestComment(context.id, vm));
+    out.push('');
+  }
 
   out.push('## Approval');
   out.push('');
@@ -461,14 +484,20 @@ function renderOne(id, catalog) {
     throw new Error(`Strategy is for ${strategy.issue_id} but the context bundle is for ${context.id}.`);
   }
 
+  const routing = classifyFixType(strategy, { repoRoot: REPO_ROOT });
+  if (routing.errors.length) {
+    throw new Error(`Strategy routing is not supported by the evidence:\n  - ${routing.errors.join('\n  - ')}`);
+  }
+
   const previousStatus = existingPlanStatus(context.id);
   const target = planPathFor(context.id);
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, render(context, strategy, previousStatus, catalog));
+  fs.writeFileSync(target, render(context, strategy, previousStatus, catalog, routing, existingPlanApprover(context.id)));
 
   return {
     id: context.id,
     cwe: strategy.cwe,
+    fixType: routing.fix_type,
     status: (previousStatus === 'Approved' || previousStatus === 'Rejected') ? previousStatus : 'Proposed',
     plan: rel(target),
   };
@@ -490,7 +519,7 @@ function main() {
       try {
         const result = renderOne(t.id, catalog);
         written.push(result);
-        console.log(`${result.id.padEnd(10)} ${result.cwe.padEnd(10)} status ${result.status.padEnd(10)} -> ${result.plan}`);
+        console.log(`${result.id.padEnd(10)} ${result.cwe.padEnd(10)} ${result.fixType.padEnd(19)} status ${result.status.padEnd(10)} -> ${result.plan}`);
       } catch (err) {
         skipped.push({ id: t.id, reason: err.message.split('\n')[0] });
         console.error(`${t.id.padEnd(10)} SKIPPED  ${err.message.split('\n')[0]}`);
@@ -514,6 +543,7 @@ function main() {
   console.log(`Fix Strategist — wrote ${result.plan}`);
   console.log(`  issue  : ${result.id}`);
   console.log(`  cwe    : ${result.cwe}`);
+  console.log(`  type   : ${result.fixType}`);
   console.log(`  status : ${result.status}`);
 }
 

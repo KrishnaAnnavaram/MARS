@@ -34,6 +34,8 @@ const {
   patchPathFor, worktreePathFor, verificationJsonPathFor, verificationMdPathFor,
 } = require('./lib/fixplans');
 
+// The Java services live under SOURCE_ROOT; a module is identified by its repo-relative path.
+const SOURCE_ROOT = 'src';
 const KNOWN_MODULES = [
   'configuaration-server', 'discovery-service', 'department-service',
   'employee-service', 'report-service', 'sheduler-service',
@@ -120,8 +122,8 @@ function changedFilesFromPatch(patchText) {
 function modulesFromFiles(files) {
   const modules = new Set();
   for (const f of files) {
-    const top = f.split('/')[0];
-    if (KNOWN_MODULES.includes(top)) modules.add(top);
+    const [root, top] = f.split('/');
+    if (root === SOURCE_ROOT && KNOWN_MODULES.includes(top)) modules.add(`${SOURCE_ROOT}/${top}`);
   }
   return [...modules];
 }
@@ -156,6 +158,14 @@ function runWrapper(wrapper, mvnArgs, options) {
 // ---------------------------------------------------------------------------
 
 function verifyOne(plan, args) {
+  if (plan.fixType === 'VERSION_MIGRATION') {
+    return {
+      id: plan.id,
+      passed: false,
+      refused: true,
+      reason: 'Fix plan Fix Type is VERSION_MIGRATION. A coordinated framework/Java migration is implemented by 04d-version-migration (detect-baseline.js --issue), not by a hand-written diff here.',
+    };
+  }
   if (plan.status !== 'Approved') {
     return {
       id: plan.id,

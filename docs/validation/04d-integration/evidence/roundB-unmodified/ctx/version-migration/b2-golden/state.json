@@ -1,0 +1,73 @@
+{
+  "slug": "b2-golden",
+  "history": [
+    {
+      "state": "BASELINE_DETECTED",
+      "at": "2026-10-01T02:51:04.944Z",
+      "by": "detect-baseline.js",
+      "detail": "project ../golden"
+    },
+    {
+      "state": "WORKSPACE_PREPARED",
+      "at": "2026-10-01T02:52:14.243Z",
+      "by": "prepare-workspace.js",
+      "detail": "baseline commit ab9d312e2b"
+    },
+    {
+      "state": "BASELINE_BUILT",
+      "at": "2026-10-01T02:53:31.313Z",
+      "by": "run-migration-build.js",
+      "detail": "round 0 tests-failed"
+    },
+    {
+      "state": "BASELINE_PROBED",
+      "at": "2026-10-01T02:54:31.165Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 13 probe(s)"
+    },
+    {
+      "state": "TRANSFORMATION_PREVIEWED",
+      "at": "2026-10-01T02:57:11.095Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-00: 7 file(s) proposed"
+    },
+    {
+      "state": "TRANSFORMATION_APPLIED",
+      "at": "2026-10-01T02:59:19.616Z",
+      "by": "run-migration-build.js",
+      "detail": "rewrite-01: 6 file(s)"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T02:59:32.842Z",
+      "by": "run-migration-build.js",
+      "detail": "round 1 passed"
+    },
+    {
+      "state": "TARGET_TESTED",
+      "at": "2026-10-01T03:00:50.333Z",
+      "by": "run-migration-build.js",
+      "detail": "round 2 tests-failed"
+    },
+    {
+      "state": "TARGET_COMPILED",
+      "at": "2026-10-01T03:01:42.733Z",
+      "by": "run-migration-build.js",
+      "detail": "round 3 passed"
+    },
+    {
+      "state": "FINAL_PROBED",
+      "at": "2026-10-01T03:02:17.342Z",
+      "by": "probe-runtime.js",
+      "detail": "started; 13 probe(s)"
+    },
+    {
+      "state": "RENDERED",
+      "at": "2026-10-01T03:05:31.411Z",
+      "by": "render-migration-report.js",
+      "detail": "final round 3 passed"
+    }
+  ],
+  "state": "RENDERED",
+  "updated_at": "2026-10-01T03:05:31.411Z"
+}

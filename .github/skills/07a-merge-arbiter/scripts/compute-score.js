@@ -47,6 +47,12 @@ function scoreOne(fix, scoring) {
   if (scoring.hard_gates.rescan_still_vulnerable_blocks && upstream.rescan.verdict === 'STILL_VULNERABLE') {
     gates.push({ gate: 're-scanner', reason: 'Re-scan verdict is STILL_VULNERABLE — the original finding still triggers.' });
   }
+  // A VERSION_MIGRATION is never cleared on 04D's word — it must pass the same independent checks
+  // as any fix — but a migration 04D itself could not complete can never be cleared either.
+  if (scoring.hard_gates.migration_not_passed_blocks && fix.fixType === 'VERSION_MIGRATION'
+    && !['PASS', 'PARTIAL PASS'].includes(fix.migrationStatus)) {
+    gates.push({ gate: 'version-migration', reason: `04D Migration Status is ${fix.migrationStatus || 'missing'} — the migration did not complete on the requested target.` });
+  }
   if (scoring.hard_gates.build_failed_blocks && upstream.build.verdict === 'Failed') {
     gates.push({ gate: 'build-gatekeeper', reason: 'Build gate Status is Failed — the patch does not build cleanly.' });
   }
@@ -67,6 +73,8 @@ function scoreOne(fix, scoring) {
     id: fix.id,
     title: fix.title,
     cwe: fix.cwe,
+    fixType: fix.fixType || null,
+    migrationStatus: fix.migrationStatus || null,
     severity,
     threshold,
     upstream,

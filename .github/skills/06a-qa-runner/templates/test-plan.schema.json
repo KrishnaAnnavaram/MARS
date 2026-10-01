@@ -9,7 +9,7 @@
     "issue_id": { "type": "string" },
     "test_file": {
       "type": "string",
-      "description": "Repo-relative path of the new test file added by new-test.diff, e.g. employee-service/src/test/java/.../EmployeeSearchRepositoryTest.java. The class name (filename minus .java) is what the gate script runs."
+      "description": "Repo-relative path of the new test file added by new-test.diff, e.g. src/employee-service/src/test/java/.../EmployeeSearchRepositoryTest.java. The class name (filename minus .java) is what the gate script runs."
     },
     "what_it_proves": {
       "type": "string",

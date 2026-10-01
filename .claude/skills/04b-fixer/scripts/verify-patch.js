@@ -158,6 +158,14 @@ function runWrapper(wrapper, mvnArgs, options) {
 // ---------------------------------------------------------------------------
 
 function verifyOne(plan, args) {
+  if (plan.fixType === 'VERSION_MIGRATION') {
+    return {
+      id: plan.id,
+      passed: false,
+      refused: true,
+      reason: 'Fix plan Fix Type is VERSION_MIGRATION. A coordinated framework/Java migration is implemented by 04d-version-migration (detect-baseline.js --issue), not by a hand-written diff here.',
+    };
+  }
   if (plan.status !== 'Approved') {
     return {
       id: plan.id,

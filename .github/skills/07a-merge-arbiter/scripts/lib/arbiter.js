@@ -40,10 +40,14 @@ function parseFixReport(text) {
   const title = /^##\s+(?!\d)(.+)$/m.exec(text);
   const status = /\|\s*\*\*Status\*\*\s*\|\s*([^|]+)\|/.exec(text);
   const cwe = /\|\s*\*\*CWE\*\*\s*\|\s*`([^`]+)`/.exec(text);
+  const fixType = /\|\s*\*\*Fix Type\*\*\s*\|\s*`?([A-Z_]{4,})`?/.exec(text);
+  const migrationStatus = /\|\s*\*\*Migration Status\*\*\s*\|\s*([^|]+)\|/.exec(text);
   return {
     title: title ? title[1].trim() : '(untitled)',
     status: status ? status[1].trim() : 'unknown',
     cwe: cwe ? cwe[1].trim() : null,
+    fixType: fixType ? fixType[1] : null,
+    migrationStatus: migrationStatus ? migrationStatus[1].trim() : null,
   };
 }
 

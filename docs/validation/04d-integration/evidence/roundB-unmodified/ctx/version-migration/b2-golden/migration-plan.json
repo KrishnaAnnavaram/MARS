@@ -1,0 +1,112 @@
+{
+  "slug": "b2-golden",
+  "created_at": "2026-10-01",
+  "reference_pack": "references/spring-boot-3-to-4.md",
+  "source": {
+    "platform": { "name": "Spring Boot", "version": "3.5.0", "source": "baseline.json" },
+    "language": { "name": "Java", "version": "17", "source": "baseline.json" }
+  },
+  "target": {
+    "platform": { "name": "Spring Boot", "version": "4.1.1", "source": "request" },
+    "language": { "name": "Java", "version": "21", "source": "request" }
+  },
+  "path": {
+    "hops": [{ "from": "3.5.0", "to": "4.1.1", "note": "Single hop: baseline.json migration_path.on_preparation_line is true (3.5.x)." }],
+    "preparation": "Source is on the 3.5.x preparation line, so the pack's boot35-preparation transformation is not selected (the pack says it proposes only modernisations on a 3.5.x project). boot4-composite is not selected either: it targets 4.0.x and carries unrelated ecosystem upgrades."
+  },
+  "constraints": [
+    { "id": "C1", "statement": "A JDK 21 is available to build and run the target", "status": "satisfied", "evidence": "baseline.json toolchain: 21.0.11 via MIGRATION_JDK_21" },
+    { "id": "C2", "statement": "Spring Boot 4.1.1 (spring-boot-starter-parent) resolves from the configured repositories", "status": "unresolved", "evidence": "Proven only by the first target round resolving the parent", "blocking": true },
+    { "id": "C3", "statement": "Spring Boot 4.1.1's minimum Java level is satisfied by Java 21", "status": "unresolved", "evidence": "Pack target_constraints language_min 17 / language_target 21; proven by a green round on JDK 21", "blocking": true },
+    { "id": "C4", "statement": "Spring Framework 7 / Security 7 / Hibernate 7 are the versions the 4.1.1 BOM manages", "status": "unresolved", "evidence": "Verify with dependency:tree on a target round (pack section 14)" },
+    { "id": "C5", "statement": "Pinned Testcontainers 1.20.1 (testcontainers, postgresql, junit-jupiter) still works with the Boot 4.1.1 test stack", "status": "unresolved", "evidence": "baseline.json observations.pinned_dependencies; verified by a package round running EmployeeRepositoryIntegrationTest (Docker is up: it passed 5/5 in round 0)" },
+    { "id": "C6", "statement": "No Spring Cloud or other ecosystem platform BOM needs a compatible release train", "status": "not-applicable", "evidence": "baseline.json migration_path.ecosystem_boms_present is empty; observations.platform_boms lists only the Boot parent" },
+    { "id": "C7", "statement": "springdoc-openapi is not used, so no unmanaged springdoc version must move", "status": "not-applicable", "evidence": "pom.xml declares no springdoc dependency" },
+    { "id": "C8", "statement": "The rewrite-spring 6.37.1 recipe artifact licence (Moderne Source Available License) is acceptable for this use", "status": "unresolved", "evidence": "Recorded by 04D, judged by a human; affects only how the sandbox change was produced, not the resulting diff" },
+    { "id": "C9", "statement": "A Docker daemon is available so the Testcontainers tests run on both sides", "status": "satisfied", "evidence": "Round 0 log: Testcontainers connected to Docker, EmployeeRepositoryIntegrationTest 5 run, 0 failed" }
+  ],
+  "surfaces": [
+    { "area": "JSON", "files": ["src/main/java/com/example/migrationdemo/config/JacksonConfig.java", "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java"], "basis": "machine-detected", "note": "Hand-built Jackson 2 ObjectMapper bean (JavaTimeModule, WRITE_DATES_AS_TIMESTAMPS off, NON_NULL, INDENT_OUTPUT off); test injects ObjectMapper" },
+    { "area": "Actuator", "files": ["src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java"], "basis": "machine-detected" },
+    { "area": "Security", "files": ["src/main/java/com/example/migrationdemo/config/SecurityConfig.java"], "basis": "agent-judgement", "note": "Lambda DSL, HTTP Basic, in-memory demo user; expected to compile unchanged on Security 7" },
+    { "area": "Persistence", "files": ["src/main/java/com/example/migrationdemo/entity/Employee.java", "src/main/java/com/example/migrationdemo/repository/EmployeeRepository.java"], "basis": "machine-detected", "note": "IDENTITY ids, one JPQL @Query and one native @Query; no Hibernate API use" },
+    { "area": "Error contract", "files": ["src/main/java/com/example/migrationdemo/exception/ErrorResponse.java", "src/main/java/com/example/migrationdemo/exception/GlobalExceptionHandler.java"], "basis": "agent-judgement", "note": "@JsonFormat(pattern yyyy-MM-dd'T'HH:mm:ss) on the error timestamp is part of the API contract and must not change" },
+    { "area": "Test layer", "files": ["src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java", "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"], "basis": "machine-detected", "note": "@WebMvcTest + @MockBean + @WithMockUser + ObjectMapper; @DataJpaTest + Testcontainers" },
+    { "area": "Runtime image", "files": ["Dockerfile"], "basis": "machine-detected", "note": "FROM eclipse-temurin:17-jre" }
+  ],
+  "impact": [
+    { "id": "I1", "file": "pom.xml", "area": "Platform parent", "evidence": "spring-boot-starter-parent 3.5.0", "reference_rule": "section 1.1", "risk": "low", "verification": "first target round resolves 4.1.1; final declared version equals the request", "handled_by": "deterministic", "expected_symptoms": ["spring-boot-starter-parent"] },
+    { "id": "I2", "file": "pom.xml", "area": "Language level", "evidence": "java.version 17 and maven-compiler-plugin <source>17</source><target>17</target>", "reference_rule": "section 1.2", "risk": "medium", "verification": "target rounds compile on JDK 21 at release 21 (class file version 65)", "handled_by": "either", "expected_symptoms": ["invalid target release", "release version 21 not supported", "class file has wrong version"] },
+    { "id": "I3", "file": "pom.xml", "area": "Starter rename", "evidence": "spring-boot-starter-web", "reference_rule": "section 1.3", "risk": "medium", "verification": "dependency resolution in the first target round", "handled_by": "deterministic", "expected_symptoms": ["spring-boot-starter-web"] },
+    { "id": "I4", "file": "pom.xml", "area": "Test starters", "evidence": "single spring-boot-starter-test; tests use @WebMvcTest and @DataJpaTest", "reference_rule": "section 4.3", "risk": "medium", "verification": "test-compile round green", "handled_by": "deterministic", "expected_symptoms": ["org.springframework.boot.test.autoconfigure.web.servlet", "org.springframework.boot.test.autoconfigure.orm.jpa"] },
+    { "id": "I5", "file": "pom.xml", "area": "Security test starter", "evidence": "org.springframework.security:spring-security-test declared directly; 6 tests use @WithMockUser", "reference_rule": "section 4.4", "risk": "high", "verification": "package round: @WithMockUser tests still pass (no 401s); failure set identical to round 0", "handled_by": "deterministic", "expected_symptoms": ["expected:<200> but was:<401>", "expected:<201> but was:<401>"] },
+    { "id": "I6", "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java", "area": "JSON handling", "evidence": "hand-built com.fasterxml.jackson.databind.ObjectMapper bean with JavaTimeModule, SerializationFeature, setDefaultPropertyInclusion", "reference_rule": "section 2.1, 2.2", "risk": "high", "verification": "compile; serialization probes (employee by id, list all) byte-identical", "handled_by": "either", "expected_symptoms": ["com.fasterxml.jackson.databind", "com.fasterxml.jackson.datatype.jsr310", "ObjectMapper", "WRITE_DATES_AS_TIMESTAMPS", "setDefaultPropertyInclusion"] },
+    { "id": "I7", "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java", "area": "Actuator health", "evidence": "imports org.springframework.boot.actuate.health.Health / HealthIndicator", "reference_rule": "section 3", "risk": "medium", "verification": "compile; health probe still shows the database component UP", "handled_by": "deterministic", "expected_symptoms": ["org.springframework.boot.actuate.health"] },
+    { "id": "I8", "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java", "area": "Test layer (MVC slice)", "evidence": "@WebMvcTest import, @MockBean, injected ObjectMapper", "reference_rule": "section 4.1, 4.2, 4.3", "risk": "high", "verification": "test-compile green; package round with the same 9 tests and the same 2 pre-existing failures", "handled_by": "either", "expected_symptoms": ["org.springframework.boot.test.mock.mockito", "org.springframework.boot.test.autoconfigure.web.servlet", "ObjectMapper", "MockBean"] },
+    { "id": "I9", "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java", "area": "Test layer (JPA slice + Testcontainers)", "evidence": "@DataJpaTest import from org.springframework.boot.test.autoconfigure.orm.jpa; Testcontainers 1.20.1 PostgreSQLContainer", "reference_rule": "section 4.3, section 12 round 0", "risk": "medium", "verification": "test-compile green; package round runs the 5 integration tests against PostgreSQL 16 as round 0 did", "handled_by": "either", "expected_symptoms": ["org.springframework.boot.test.autoconfigure.orm.jpa", "DataJpaTest"] },
+    { "id": "I10", "file": "Dockerfile", "area": "Runtime image", "evidence": "FROM eclipse-temurin:17-jre", "reference_rule": "section 8", "risk": "medium", "verification": "file review (the image is not built in this session)", "handled_by": "residual" },
+    { "id": "I11", "file": "src/main/resources/application.yml", "area": "Configuration properties", "evidence": "management.endpoints/endpoint.health.show-details, spring.jpa.*, spring.jackson.default-property-inclusion, spring.h2.console.*", "reference_rule": "section 7", "risk": "medium", "verification": "runtime probes: health details, metrics exposure, NON_NULL serialization unchanged", "handled_by": "deterministic" },
+    { "id": "I12", "file": "src/main/java/com/example/migrationdemo/repository/EmployeeRepository.java", "area": "Persistence (Hibernate 7)", "evidence": "JPQL @Query and native @Query", "reference_rule": "section 6", "risk": "medium", "verification": "integration tests on PostgreSQL 16; probes search by department and high earners (native query) on H2", "handled_by": "residual" },
+    { "id": "I13", "file": "src/main/java/com/example/migrationdemo/config/SecurityConfig.java", "area": "Security 7", "evidence": "lambda DSL SecurityFilterChain, httpBasic", "reference_rule": "section 5", "risk": "low", "verification": "compile; security-boundary probes (unauthenticated 401, bad credentials 401, authenticated 200)", "handled_by": "residual", "expected_symptoms": ["method and()", "authorizeRequests"] }
+  ],
+  "characterization": [
+    { "probe": "list all employees", "protects": ["I1", "I6", "I12"], "category": "business-api" },
+    { "probe": "employee by id", "protects": ["I6"], "category": "serialization" },
+    { "probe": "search by department", "protects": ["I12"], "category": "business-api" },
+    { "probe": "high earners (native query)", "protects": ["I12"], "category": "business-api" },
+    { "probe": "employee not found is 404", "protects": ["I6"], "category": "error-contract" },
+    { "probe": "create invalid is 400", "protects": ["I6"], "category": "error-contract" },
+    { "probe": "create duplicate is 409", "protects": ["I6"], "category": "error-contract" },
+    { "probe": "bad path variable type", "protects": ["I1"], "category": "error-contract" },
+    { "probe": "unauthenticated is 401", "protects": ["I13"], "category": "security-boundary" },
+    { "probe": "bad credentials is 401", "protects": ["I13"], "category": "security-boundary" },
+    { "probe": "health is public", "protects": ["I7", "I11", "I13"], "category": "actuator" },
+    { "probe": "info is public", "protects": ["I11", "I13"], "category": "actuator" },
+    { "probe": "metrics endpoint", "protects": ["I11"], "category": "actuator" },
+    { "probe": null, "protects": ["I4", "I5", "I8", "I9"], "category": "test-suite", "reason": "Test-layer impact is observed by the project's own suite: a package round compared with round 0 (19 run, 2 failed)" },
+    { "probe": null, "protects": ["I10"], "category": "other", "reason": "The container image is not built or run in this session" },
+    { "probe": null, "protects": ["I12"], "category": "persistence", "reason": "PostgreSQL behaviour is observed only through EmployeeRepositoryIntegrationTest (Testcontainers); the running app uses its default H2 file datasource because the PostgreSQL driver is test-scoped" }
+  ],
+  "deterministic_candidates": [
+    {
+      "id": "boot4-curated",
+      "provider": "openrewrite",
+      "transformation": "boot4-curated",
+      "recipes": ["mars.migration.SpringBoot3To4Curated"],
+      "artifacts": ["org.openrewrite.recipe:rewrite-spring:6.37.1"],
+      "plugin_version": "6.46.1",
+      "policy": "optional",
+      "license": "Moderne Source Available License",
+      "source_repository": "Maven Central",
+      "covers": ["I1", "I2", "I3", "I4", "I5", "I6", "I7", "I8", "I9", "I11"],
+      "notes": "Pinned to the requested 4.1.1 / Java 21. Preview first; reject anything outside the impact list, in particular removal of @JsonFormat from ErrorResponse (pack notes: changes the serialized error timestamp), Testcontainers version changes, and any change under .github/ or docs/."
+    }
+  ],
+  "residual_candidates": [
+    { "impact": "I10", "why_not_deterministic": "No recipe in the pack changes a Dockerfile base image (section 15)." },
+    { "impact": "I2", "why_not_deterministic": "UpgradeJavaVersion may not normalise the explicit maven-compiler-plugin <source>/<target>; fixed by hand only if the preview or a round shows it stayed at 17." },
+    { "impact": "I6", "why_not_deterministic": "A hand-built mapper bean whose configuration API changed shape may be beyond the recipe (section 15); fixed only if a round names it." },
+    { "impact": "I12", "why_not_deterministic": "Hibernate 7 query parsing issues surface only in tests or at runtime; nothing to change unless they fail." },
+    { "impact": "I13", "why_not_deterministic": "Lambda DSL expected to compile unchanged; only a Security 7 compile error would justify an edit." }
+  ],
+  "out_of_scope": [
+    "Fixing the two pre-existing EmployeeControllerTest actuator slice failures (404 in @WebMvcTest)",
+    "Testcontainers 2 migration or any Testcontainers version change",
+    "Removing @JsonFormat from ErrorResponse (would change the error-contract timestamp format)",
+    "Business bug: EmployeeService checks duplicate email via findByEmployeeNumber(request.getEmail())",
+    "Changing the PostgreSQL driver scope or the default datasource",
+    "H2 console / frame-options security rules, formatting, import reordering, refactors",
+    "Widening @WebMvcTest to @SpringBootTest unless a build proves the slice cannot work"
+  ],
+  "stop_conditions": [
+    "Spring Boot 4.1.1 cannot be resolved (C2)",
+    "Round on JDK 21 cannot compile at release 21 for a reason outside the pack (C3)",
+    "A business or security-boundary probe changes status and the cause is not within the migration's scope",
+    "A package round shows a new test failure that cannot be traced to a pack rule",
+    "The only available transformation output would require accepting out-of-scope changes"
+  ],
+  "unresolved_questions": [
+    "Whether the curated recipe rewrites the hand-built Jackson 2 ObjectMapper bean into a Jackson 3 form that keeps the exact serialization (ISO LocalDateTime, NON_NULL)",
+    "Whether H2 in the Boot 4.1.1 BOM can open the H2 2.3.232 file database the baseline run created in the sandbox"
+  ]
+}

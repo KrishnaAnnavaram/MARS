@@ -422,7 +422,7 @@ async function main() {
 }
 
 if (require.main === module) {
-  main().catch((error) => {
+  require('./lib/summary').runAndFinalize(main, 'probe-runtime.js').catch((error) => {
     console.error(error.stack || error.message);
     process.exitCode = 1;
   });

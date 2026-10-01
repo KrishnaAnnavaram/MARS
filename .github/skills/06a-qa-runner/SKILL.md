@@ -18,7 +18,7 @@ different result without changing the test itself.**
 ## Why mocked, not database-backed
 
 This repo has no embedded-MongoDB or Testcontainers dependency, so a `@DataMongoTest`-style test
-cannot even start its Spring context here — see `employee-service/src/test/.../EmployeeRepositoryTest.java`
+cannot even start its Spring context here — see `src/employee-service/src/test/.../EmployeeRepositoryTest.java`
 for the existing (DB-dependent, not runnable in this sandbox) pattern. Your new test must mock the
 relevant Spring Data type instead (e.g. Mockito-mock `MongoTemplate`, capture the `Query`/`Criteria`
 argument with an `ArgumentCaptor`, assert on its shape) — that is what makes the test both meaningful

@@ -56,6 +56,10 @@ function render(score, arbitration) {
   out.push(`| **Threshold** | ${score.threshold}${score.severity ? ` (${score.severity} severity)` : ''} |`);
   out.push(`| **CWE** | ${score.cwe ? `\`${score.cwe}\`` : 'n/a'} |`);
   out.push(`| **Hard gates triggered** | ${score.gates.length ? score.gates.map((g) => g.gate).join(', ') : 'none'} |`);
+  if (score.fixType === 'VERSION_MIGRATION') {
+    out.push('| **Fix Type** | `VERSION_MIGRATION` (04d-version-migration) |');
+    out.push(`| **Migration Status (04D)** | ${score.migrationStatus || 'missing'} — evidence, not a verdict; scored on the independent checks below |`);
+  }
   out.push('');
 
   out.push('## 1. Score breakdown');
@@ -71,6 +75,9 @@ function render(score, arbitration) {
   out.push('|---|---|');
   out.push(`| Re-scanner still-vulnerable blocks merge | ${score.upstream.rescan.verdict === 'STILL_VULNERABLE' ? '**TRIGGERED**' : 'clear'} |`);
   out.push(`| Build failure blocks merge | ${score.upstream.build.verdict === 'Failed' ? '**TRIGGERED**' : 'clear'} |`);
+  if (score.fixType === 'VERSION_MIGRATION') {
+    out.push(`| Migration not completed (04D Migration Status not PASS/PARTIAL PASS) blocks merge | ${score.gates.some((g) => g.gate === 'version-migration') ? '**TRIGGERED**' : 'clear'} |`);
+  }
   out.push('');
 
   out.push('## 2. Upstream reports');

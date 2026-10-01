@@ -247,6 +247,18 @@ function existingPlanStatus(id) {
   return status ? status[1].trim() : null;
 }
 
+/**
+ * Who approved an existing plan, when the plan records it in an **Approved by** cell (a controlled,
+ * non-human approval mode does; a human editing the Status cell does not have to). Preserved with
+ * the Status on re-render so the provenance of an approval is never lost.
+ */
+function existingPlanApprover(id) {
+  const file = planPathFor(id);
+  if (!fs.existsSync(file)) return null;
+  const m = /\|\s*\*\*Approved by\*\*\s*\|\s*([^|]+)\|/.exec(fs.readFileSync(file, 'utf8'));
+  return m ? m[1].trim() : null;
+}
+
 // ---------------------------------------------------------------------------
 // Fix-strategy path helpers
 // ---------------------------------------------------------------------------
@@ -271,6 +283,7 @@ module.exports = {
   loadCatalog,
   detectCweMentions,
   existingPlanStatus,
+  existingPlanApprover,
   contextJsonPathFor,
   contextBriefingPathFor,
   strategyPathFor,

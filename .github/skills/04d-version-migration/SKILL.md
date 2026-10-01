@@ -11,6 +11,47 @@ an approved fix for a diagnosed defect, this skill handles a different kind of c
 whole project moving to a newer language level and/or framework generation, where nothing is broken
 to begin with and the goal is to arrive on the other side with identical behaviour.
 
+## Two ways in, one procedure
+
+- **Routed by Agent 04 (Stage 2).** A fix plan whose **Fix Type** row reads `VERSION_MIGRATION`
+  (classified by `04a-fix-strategist/scripts/lib/routing.js` against the build descriptor) is
+  Stage 2 workload for this skill. Start with `node scripts/detect-baseline.js --issue <ID>`: it
+  refuses unless the plan reads `Status: Approved` and `Fix Type: VERSION_MIGRATION`, and takes the
+  project, exact target version and target Java from the plan's machine-readable migration request
+  — never from the caller. The slug is the id, lowercased. When the migration is rendered (or
+  blocked), the standard Agent 04 handoff `fix_<id>.md` + `fix_<id>.diff` is written next to the plan
+  for agents 05–07, linking this skill's report, diff and per-run summary.
+- **A direct request** ("upgrade this to Spring Boot 4.1.1"), exactly as before: `--project`,
+  `--to-version`, `--to-java`. No handoff is written; nothing downstream consumes it.
+
+## Pack eligibility and the migration path
+
+A pack's `detect:` entries only *nominate* it. A pack is **eligible** only when the project's
+declared platform version — read from a version-bearing coordinate (the parent, an imported BOM, a
+plugin; `platform_coordinates` in the pack, else its versioned detect entries) — sits in the pack's
+`from` generation. An unversioned dependency (a starter) never makes a pack eligible. Each pack covers
+one generation step; `detect-baseline.js` computes the chain of steps from the source to the requested
+target and records `migration_path.status`:
+
+| Status | Meaning | What happens |
+|---|---|---|
+| `SUPPORTED` | one eligible pack covers the whole jump | continue |
+| `UNSUPPORTED_MIGRATION_PATH` | a step has no pack (e.g. Boot 2.7 → 4.x needs `spring-boot-2-to-3`) | BLOCKED; `required_path` and `missing_capability` recorded |
+| `MULTI_STEP_REQUIRED` | every step has a pack but there are several | BLOCKED; run one session per step |
+| `NO_ELIGIBLE_PACK` / `NO_MATCHING_PACK` | nothing applies | BLOCKED |
+
+A blocked baseline never gets a sandbox (`prepare-workspace.js` refuses), and a generation is never
+jumped over silently.
+
+## The per-run summary (automatic)
+
+Every script ends by regenerating `MIGRATION_SUMMARY.md` and `migration-summary.json` under
+`<report dir>/migration-runs/<run_id>/` from the session's evidence files — in a `finally`, so a run
+that fails or stops halfway still has one. Its status is `PASS`, `PARTIAL PASS`, `FAIL`, `BLOCKED`,
+or `IN_PROGRESS` (naming the last state the evidence proves). Never hand-edit it;
+`node scripts/finalize-run.js --slug <slug>` (or `--issue <ID>`) regenerates it, e.g. after agents
+05–07 have run so its pipeline-handoff answers are current.
+
 [`ARCHITECTURE.md`](./ARCHITECTURE.md) explains how this skill is put together and why. This file is
 the procedure.
 
@@ -144,8 +185,14 @@ Session files live in `.github/.pipeline-context/version-migration/<slug>/` (git
 
 ```powershell
 cd .github/skills/04d-version-migration
-node scripts/detect-baseline.js --project <path-to-project> --to-java 21 --to-version <exact target, e.g. 4.1.1>
+node scripts/detect-baseline.js --project <path-to-project> --slug <slug> --to-java 21 --to-version <exact target, e.g. 4.1.1>
+# or, when 04_fix-generator Stage 2 routed an Approved VERSION_MIGRATION plan here:
+node scripts/detect-baseline.js --issue <ID>
 ```
+
+Pass `--slug` explicitly (without it the slug is the project folder's name), and use the same slug
+for every later step. A non-zero exit means the session is BLOCKED or refused — read the printed
+migration-path gate and stop.
 
 Zero dependencies — nothing to `npm install`. Records the declared language level, build tool,
 platform coordinates, every dependency and plugin, container and CI files, every local JDK, and the
@@ -382,7 +429,9 @@ verdict. Link to the report; do not paste it, the diff, or logs into chat.
 
 Stop and report instead of continuing when:
 
-- no reference pack matches, or the requested target is not exact;
+- no reference pack is eligible, the migration path is not `SUPPORTED`, or the requested target is
+  not exact;
+- `--issue` was refused (the plan is not Approved, or its Fix Type is not `VERSION_MIGRATION`);
 - round 0 does not compile;
 - a `required` transformation is unavailable (the session is BLOCKED — resolve access, then re-run);
 - a plan stop condition is met, or a blocking constraint turns out `violated`;
@@ -448,9 +497,14 @@ Stop and report instead of continuing when:
 - `scripts/lib/migration.js`: paths, JDK and build-tool discovery, project inventory, build-output
   classification and grouping, redaction, sandbox checkpoints, schema validation, session state and
   probe comparison. `scripts/lib/references.js`: reference-pack parsing. `scripts/lib/openrewrite.js`:
-  the OpenRewrite provider. None imports from another skill.
+  the OpenRewrite provider; pack eligibility and the required migration path.
+  `scripts/lib/handoff.js`: reading an Agent 04 plan back and writing the standard `fix_<id>.md`
+  handoff. `scripts/lib/summary.js`: the per-run summary and the finalize-in-`finally` hook. None
+  imports from another skill — the plan is read as the rendered Markdown contract.
 - Error categories classify by message shape only; they never name a library or propose a fix.
 - Adding a migration = adding `references/<id>.md` (and, optionally, a recipe config under
   `references/openrewrite/`) per [`references/README.md`](./references/README.md). No script changes.
-- Everything written by this skill lands in `.github/.pipeline-context/version-migration/*` or
-  `docs/agent_output/04-remediation/migration_*` and that folder's index block.
+- Everything written by this skill lands in `.github/.pipeline-context/version-migration/*`,
+  `docs/agent_output/04-remediation/migration_*`, `docs/agent_output/04-remediation/migration-runs/*`
+  and that folder's index block — plus, for an Agent 04 issue only, the standard
+  `docs/agent_output/04-remediation/fix_<id>.{md,diff}` handoff.

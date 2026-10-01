@@ -1,0 +1,226 @@
+{
+  "round": 0,
+  "label": "Pre-migration reference build",
+  "baseline": true,
+  "started_at": "2026-10-01T02:46:57.519Z",
+  "duration_ms": 139255,
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1",
+    "home": "E:/mv/tools/jdk-17.0.20.1+1",
+    "source": "MIGRATION_JDK_17"
+  },
+  "build": {
+    "tool": "maven",
+    "kind": "wrapper",
+    "command": "mvnw.cmd -B clean package",
+    "intent": "package",
+    "exit_code": 1,
+    "spawn_error": null
+  },
+  "outcome": "tests-failed",
+  "declared": {
+    "java": "17",
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "2.7.12"
+    },
+    "dependency_count": 16,
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "2.7.12",
+      "where": "parent"
+    }
+  },
+  "workspace": {
+    "changed_files": [
+      {
+        "state": "A",
+        "file": ".mvn/wrapper/maven-wrapper.jar"
+      }
+    ],
+    "diff_stat": "1 file changed, 0 insertions(+), 0 deletions(-)"
+  },
+  "error_summary": {
+    "total": 9,
+    "byCategory": [
+      {
+        "id": "test-failure",
+        "count": 6,
+        "label": "Test failure",
+        "hint": "The code compiled but behaviour or test wiring changed."
+      },
+      {
+        "id": "other",
+        "count": 2,
+        "label": "Uncategorised",
+        "hint": "Read the raw log — this shape was not recognised."
+      },
+      {
+        "id": "plugin-failure",
+        "count": 1,
+        "label": "Build plugin failed",
+        "hint": "A build plugin is too old for the new platform, or its configuration changed."
+      }
+    ],
+    "byFile": []
+  },
+  "errors": [
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 61.548 s <<< FAILURE! - in com.aura.vihanga.employeeservice.repository.EmployeeRepositoryTest",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "employeeSaveMethodTest  Time elapsed: 30.204 s  <<< ERROR!",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "getEmployeeById  Time elapsed: 30.058 s  <<< ERROR!",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "EmployeeRepositoryTest.employeeSaveMethodTest:43 � DataAccessResourceFailure T...",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "EmployeeRepositoryTest.getEmployeeById:53 � DataAccessResourceFailure Timed ou...",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Tests run: 7, Failures: 0, Errors: 2, Skipped: 0",
+      "detail": [],
+      "category": "test-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.22.2:test (default-test) on project employee-service: There are test failures.",
+      "detail": [],
+      "category": "plugin-failure"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Please refer to E:\\mv\\evidence\\roundB\\ctx\\version-migration\\b1-employee-2x\\workspace\\target\\surefire-reports for the individual test results.",
+      "detail": [],
+      "category": "other"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.",
+      "detail": [],
+      "category": "other"
+    }
+  ],
+  "errors_truncated": 0,
+  "log_tail": "…(truncated, showing last 8000 chars)…\nleHttpClient.java:56)\r\n\tat org.springframework.http.client.HttpComponentsClientHttpRequest.executeInternal(HttpComponentsClientHttpRequest.java:87)\r\n\tat org.springframework.http.client.AbstractBufferingClientHttpRequest.executeInternal(AbstractBufferingClientHttpRequest.java:48)\r\n\tat org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)\r\n\tat org.springframework.web.client.RestTemplate.doExecute(RestTemplate.java:782)\r\n\t... 39 more\r\nCaused by: java.net.ConnectException: Connection refused: connect\r\n\tat java.base/sun.nio.ch.Net.connect0(Native Method)\r\n\tat java.base/sun.nio.ch.Net.connect(Net.java:591)\r\n\tat java.base/sun.nio.ch.Net.connect(Net.java:580)\r\n\tat java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:593)\r\n\tat java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)\r\n\tat java.base/java.net.Socket.connect(Socket.java:633)\r\n\tat org.apache.http.conn.socket.PlainConnectionSocketFactory.connectSocket(PlainConnectionSocketFactory.java:75)\r\n\tat org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:142)\r\n\t... 52 more\r\n\r\n2026-09-30 21:49:15.962  WARN 59836 --- [ionShutdownHook] c.n.d.s.t.d.RetryableEurekaHttpClient    : Request execution failed with message: I/O error on DELETE request for \"http://localhost:8761/eureka/apps/EMPLOYEE/KrishnaA.lan:employee\": Connect to localhost:8761 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused: connect; nested exception is org.apache.http.conn.HttpHostConnectException: Connect to localhost:8761 [localhost/127.0.0.1, localhost/0:0:0:0:0:0:0:1] failed: Connection refused: connect\r\n2026-09-30 21:49:15.962 ERROR 59836 --- [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_EMPLOYEE/KrishnaA.lan:employee - de-registration failedCannot execute request on any known server\r\n\r\ncom.netflix.discovery.shared.transport.TransportException: Cannot execute request on any known server\r\n\tat com.netflix.discovery.shared.transport.decorator.RetryableEurekaHttpClient.execute(RetryableEurekaHttpClient.java:112) ~[eureka-client-1.10.17.jar:1.10.17]\r\n\tat com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.cancel(EurekaHttpClientDecorator.java:71) ~[eureka-client-1.10.17.jar:1.10.17]\r\n\tat com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator$2.execute(EurekaHttpClientDecorator.java:74) ~[eureka-client-1.10.17.jar:1.10.17]\r\n\tat com.netflix.discovery.shared.transport.decorator.SessionedEurekaHttpClient.execute(SessionedEurekaHttpClient.java:77) ~[eureka-client-1.10.17.jar:1.10.17]\r\n\tat com.netflix.discovery.shared.transport.decorator.EurekaHttpClientDecorator.cancel(EurekaHttpClientDecorator.java:71) ~[eureka-client-1.10.17.jar:1.10.17]\r\n\tat com.netflix.discovery.DiscoveryClient.unregister(DiscoveryClient.java:972) ~[eureka-client-1.10.17.jar:1.10.17]\r\n\tat com.netflix.discovery.DiscoveryClient.shutdown(DiscoveryClient.java:948) ~[eureka-client-1.10.17.jar:1.10.17]\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]\r\n\tat java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]\r\n\tat java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]\r\n\tat java.base/java.lang.reflect.Method.invoke(Method.java:569) ~[na:na]\r\n\tat org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement.invoke(InitDestroyAnnotationBeanPostProcessor.java:389) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMetadata.invokeDestroyMethods(InitDestroyAnnotationBeanPostProcessor.java:347) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeDestruction(InitDestroyAnnotationBeanPostProcessor.java:177) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.support.DisposableBeanAdapter.destroy(DisposableBeanAdapter.java:197) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.support.DisposableBeanAdapter.run(DisposableBeanAdapter.java:190) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.cloud.context.scope.GenericScope$BeanLifecycleWrapper.destroy(GenericScope.java:390) ~[spring-cloud-context-3.1.6.jar:3.1.6]\r\n\tat org.springframework.cloud.context.scope.GenericScope.destroy(GenericScope.java:136) ~[spring-cloud-context-3.1.6.jar:3.1.6]\r\n\tat org.springframework.beans.factory.support.DisposableBeanAdapter.destroy(DisposableBeanAdapter.java:213) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroyBean(DefaultSingletonBeanRegistry.java:587) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingleton(DefaultSingletonBeanRegistry.java:559) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingleton(DefaultListableBeanFactory.java:1163) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.destroySingletons(DefaultSingletonBeanRegistry.java:520) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.destroySingletons(DefaultListableBeanFactory.java:1156) ~[spring-beans-5.3.27.jar:5.3.27]\r\n\tat org.springframework.context.support.AbstractApplicationContext.destroyBeans(AbstractApplicationContext.java:1108) ~[spring-context-5.3.27.jar:5.3.27]\r\n\tat org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1077) ~[spring-context-5.3.27.jar:5.3.27]\r\n\tat org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1023) ~[spring-context-5.3.27.jar:5.3.27]\r\n\tat org.springframework.boot.SpringApplicationShutdownHook.closeAndWait(SpringApplicationShutdownHook.java:145) ~[spring-boot-2.7.12.jar:2.7.12]\r\n\tat java.base/java.lang.Iterable.forEach(Iterable.java:75) ~[na:na]\r\n\tat org.springframework.boot.SpringApplicationShutdownHook.run(SpringApplicationShutdownHook.java:114) ~[spring-boot-2.7.12.jar:2.7.12]\r\n\tat java.base/java.lang.Thread.run(Thread.java:840) ~[na:na]\r\n\r\n2026-09-30 21:49:15.971  INFO 59836 --- [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Completed shut down of DiscoveryClient\r\n[INFO] \r\n[INFO] Results:\r\n[INFO] \r\n[ERROR] Errors: \r\n[ERROR]   EmployeeRepositoryTest.employeeSaveMethodTest:43 � DataAccessResourceFailure T...\r\n[ERROR]   EmployeeRepositoryTest.getEmployeeById:53 � DataAccessResourceFailure Timed ou...\r\n[INFO] \r\n[ERROR] Tests run: 7, Failures: 0, Errors: 2, Skipped: 0\r\n[INFO] \r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  02:14 min\r\n[INFO] Finished at: 2026-09-30T21:49:16-05:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.22.2:test (default-test) on project employee-service: There are test failures.\r\n[ERROR] \r\n[ERROR] Please refer to .\\target\\surefire-reports for the individual test results.\r\n[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException\r\n\n",
+  "transformation": null,
+  "error_groups": [
+    {
+      "id": "G1",
+      "category": "test-failure",
+      "subject": "test EmployeeRepositoryTest",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 3,
+      "files": [],
+      "sample": "Tests run: 2, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 61.548 s <<< FAILURE! - in com.aura.vihanga.employeeservice.repository.EmployeeRepositoryTest"
+    },
+    {
+      "id": "G2",
+      "category": "test-failure",
+      "subject": "message employeeSaveMethodTest  Time elapsed: N.N s  <<< ERROR!",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "employeeSaveMethodTest  Time elapsed: 30.204 s  <<< ERROR!"
+    },
+    {
+      "id": "G3",
+      "category": "plugin-failure",
+      "subject": "message Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:N.N.N:test (default-test) on p",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.22.2:test (default-test) on project employee-service: There are test failures."
+    },
+    {
+      "id": "G4",
+      "category": "test-failure",
+      "subject": "message getEmployeeById  Time elapsed: N.N s  <<< ERROR!",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "getEmployeeById  Time elapsed: 30.058 s  <<< ERROR!"
+    },
+    {
+      "id": "G5",
+      "category": "other",
+      "subject": "message Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream."
+    },
+    {
+      "id": "G6",
+      "category": "other",
+      "subject": "message Please refer to E:\\mv\\evidence\\roundB\\ctx\\version-migration\\bN-employee-Nx\\workspace\\target\\surefire",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Please refer to E:\\mv\\evidence\\roundB\\ctx\\version-migration\\b1-employee-2x\\workspace\\target\\surefire-reports for the individual test results."
+    },
+    {
+      "id": "G7",
+      "category": "test-failure",
+      "subject": "message Tests run: N, Failures: N, Errors: N, Skipped: N",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Tests run: 7, Failures: 0, Errors: 2, Skipped: 0"
+    }
+  ],
+  "correlation": null
+}

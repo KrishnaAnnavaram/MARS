@@ -17,6 +17,7 @@ const path = require('path');
 const {
   REPO_ROOT, WORK_DIR, rel, listStep1Fixes, resolveFix, upstreamChainFor, loadCatalogEntry,
   materializePatchedFiles, factsPathFor, briefingPathFor,
+  appendMigrationContext,
 } = require('./lib/verify');
 
 function parseArgs(argv) {
@@ -131,6 +132,7 @@ function collectForFix(fix) {
   fs.mkdirSync(WORK_DIR, { recursive: true });
   fs.writeFileSync(factsPathFor(fix.id, 'redteam'), JSON.stringify(facts, null, 2));
   fs.writeFileSync(briefingPathFor(fix.id, 'redteam'), renderBriefing(facts));
+  appendMigrationContext(fix, 'redteam');
 
   return {
     id: fix.id, worktreeOk: worktree.applied, hasCatalogEntry: Boolean(catalogEntry), briefing: rel(briefingPathFor(fix.id, 'redteam')),

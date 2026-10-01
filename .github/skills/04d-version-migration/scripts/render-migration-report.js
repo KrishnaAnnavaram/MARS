@@ -23,6 +23,7 @@
  */
 const fs = require('fs');
 const path = require('path');
+const { finalizeRun } = require('./lib/summary');
 const {
   OUT_DIR, OUT_README, sessionPaths, listSessions, listRounds, readJson, rel, run,
   categoryMeta, classifyMessage, summariseErrors, isLogNoise,
@@ -1806,6 +1807,8 @@ function main() {
       failures += 1;
       console.error(`✗ ${slug} — ${error.message}`);
     }
+    // finally: the per-run summary (and, for an Agent 04 issue, the standard fix handoff) from the evidence just rendered
+    finalizeRun(slug, 'render-migration-report.js');
   }
   rewriteIndex();
   console.log(`\nIndex: ${rel(OUT_README)}`);

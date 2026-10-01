@@ -1,0 +1,16 @@
+
+Round 3 — maven -B clean package -DskipTests on JDK 21 (21.0.11)
+  workspace ../evidence/roundB/ctx/version-migration/b2-golden/workspace
+  change    Packaging gate: runnable jar on JDK 21 (no source change)
+  building…
+
+  Outcome     PASSED  (exit 0, 18.3s)
+  Declared    Java 21 · spring-boot-starter-parent 4.1.1
+  Workspace   6 files changed, 34 insertions(+), 34 deletions(-)
+
+  Round record ../evidence/roundB/ctx/version-migration/b2-golden/rounds/round-03.json
+  Full log     ../evidence/roundB/ctx/version-migration/b2-golden/rounds/round-03.log
+
+  Build is green on JDK 21. Next: probe the runtime, then render the report.
+
+exit=0

@@ -22,17 +22,27 @@
  *   node scripts/detect-baseline.js --project ../../../../spring-boot-3-to-4-migration-demo-master
  *   node scripts/detect-baseline.js --project <path> --slug spring-boot-3-to-4 --to-java 21
  *   node scripts/detect-baseline.js --project <path> --slug spring-boot-3-to-4 --to-java 21 --to-version 4.1.1
+ *   node scripts/detect-baseline.js --issue ISSUE-005     # Stage 2 of 04_fix-generator: request read from the Approved plan
+ *
+ * A reference pack is used only when it is *eligible*: a detect entry nominates it, and the
+ * project's declared platform version proves the source sits in the pack's `from` generation. When
+ * no eligible pack covers the jump — a Boot 2.x source facing a 3→4 pack, say — the session is
+ * recorded BLOCKED with the required path and the missing capability (UNSUPPORTED_MIGRATION_PATH),
+ * and nothing downstream runs. Every invocation ends by writing the per-run summary.
  */
 const fs = require('fs');
 const path = require('path');
 const {
-  REPO_ROOT, sessionPaths, slugify, rel, writeJson,
+  REPO_ROOT, sessionPaths, slugify, rel, writeJson, readJson,
   inventoryProject, findAncillaryFiles, resolveBuildTool, installedJdks, resolveJdk, runTool, envForJdk,
   declaredPlatformVersion, recordState,
 } = require('./lib/migration');
 const {
-  listReferencePacks, matchReferencePacks, resolveReferencePack, transformationProblems,
+  listReferencePacks, resolveReferencePack, transformationProblems,
+  assessReferencePacks, packEligibility, requiredMigrationPath,
 } = require('./lib/references');
+const { readMigrationPlan, gateMigrationPlan, approvalMode } = require('./lib/handoff');
+const { noteSession, newRunId, runAndFinalize } = require('./lib/summary');
 
 function parseArgs(argv) {
   const args = {};
@@ -44,6 +54,7 @@ function parseArgs(argv) {
     else if (a === '--from-java') args.fromJava = argv[++i];
     else if (a === '--to-java') args.toJava = argv[++i];
     else if (a === '--to-version') args.toVersion = argv[++i];
+    else if (a === '--issue' || a === '-i') args.issue = argv[++i];
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
@@ -63,6 +74,9 @@ Options:
   --to-java        Record the target Java version this migration is aiming at.
   --to-version     Record the exact platform version requested (e.g. 4.1.1). Never inferred:
                    without it the target is recorded as unresolved.
+  --issue, -i      Stage 2 of 04_fix-generator: read the project, target version and target Java
+                   from docs/agent_output/04-remediation/fix_plan_<ID>.md. Refused unless that plan
+                   reads Status: Approved and Fix Type: VERSION_MIGRATION. The slug defaults to the id.
   --help, -h       Show this message`);
 }
 
@@ -319,6 +333,35 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help) return usage();
 
+  // Stage 2 of 04_fix-generator: the request comes from the Approved plan, never from the caller.
+  let issue = null;
+  if (args.issue) {
+    const plan = readMigrationPlan(args.issue);
+    const refusal = gateMigrationPlan(plan);
+    const issueSlug = slugify(args.slug || args.issue);
+    noteSession(issueSlug);
+    if (refusal) {
+      writeJson(sessionPaths(issueSlug).baseline, {
+        slug: issueSlug, generated_at: new Date().toISOString(), run_id: newRunId(issueSlug), project: null,
+        issue: { id: args.issue, plan: plan ? plan.relativeFile : null, fix_type: plan ? plan.fixType : null, refused: refusal },
+      });
+      startRun(issueSlug, 'BLOCKED', `Stage 2 refused for ${args.issue}: ${refusal}`);
+      console.error(`Refused — ${args.issue}: ${refusal}`);
+      process.exitCode = 1;
+      return;
+    }
+    const request = plan.request;
+    issue = {
+      id: plan.id, plan: plan.relativeFile, fix_type: plan.fixType, cwe: plan.cwe, status: plan.status,
+      approval_mode: approvalMode(plan), routing_evidence: plan.routingEvidence, request,
+    };
+    args.project = path.join(REPO_ROOT, request.project);
+    args.toVersion = request.target_version;
+    if (request.target_java) args.toJava = String(request.target_java);
+    args.slug = issueSlug;
+    console.log(`[04D] Routed by Agent 04 for ${plan.id} (Fix Type ${plan.fixType}, plan Status ${plan.status}, approval: ${issue.approval_mode})`);
+  }
+
   let projectDir = args.project ? path.resolve(args.project) : null;
   if (!projectDir) {
     const found = autoDetectProject();
@@ -344,18 +387,31 @@ function main() {
   }
 
   const slug = slugify(args.slug || path.basename(projectDir));
+  noteSession(slug);
   const buildTool = resolveBuildTool(projectDir);
   const jdks = installedJdks();
   const declaredJava = args.fromJava || inventory.javaVersion || null;
 
-  const packs = args.reference
-    ? [resolveReferencePack(args.reference)].filter(Boolean)
-    : matchReferencePacks(inventory);
-  if (args.reference && !packs.length) {
-    console.error(`No reference pack with id "${args.reference}" in ${rel(path.join(__dirname, '..', 'references'))}.`);
-    process.exitCode = 1;
-    return;
+  // A detect entry only nominates a pack; the declared source version decides eligibility — even
+  // for a pack forced with --reference.
+  let packs;
+  let eligibility;
+  if (args.reference) {
+    const forced = resolveReferencePack(args.reference);
+    if (!forced) {
+      console.error(`No reference pack with id "${args.reference}" in ${rel(path.join(__dirname, '..', 'references'))}.`);
+      process.exitCode = 1;
+      return;
+    }
+    const e = packEligibility(forced, inventory);
+    eligibility = [e];
+    packs = e.eligible || e.relation === 'unchecked' ? [{ ...forced, matched: e.matched_on, eligibility: e }] : [];
+  } else {
+    const assessed = assessReferencePacks(inventory);
+    packs = assessed.eligible;
+    eligibility = [...assessed.eligible.map((p) => p.eligibility), ...assessed.ineligible];
   }
+  const pathGate = migrationPathGate(packs, eligibility, args.toVersion);
 
   const targetJava = args.toJava || (packs[0] && packs[0].language_to) || null;
   const fromJdk = declaredJava ? resolveJdk(declaredJava) : null;
@@ -370,6 +426,7 @@ function main() {
   const baseline = {
     slug,
     generated_at: new Date().toISOString(),
+    run_id: newRunId(slug),
     project: {
       dir: projectDir.split(path.sep).join('/'),
       relative_to_repo: rel(projectDir),
@@ -399,13 +456,17 @@ function main() {
       language_from: p.language_from, language_to: p.language_to,
       file: `references/${p.file}`, matched_on: p.matched || [],
     })),
+    // Every pack a detect entry nominated, eligible or not, and why — the source version decides.
+    reference_pack_eligibility: eligibility,
+    ...(issue ? { issue } : {}),
   };
 
   // --- v2 additions. Every field above keeps its v1 name and shape; everything below is new. ---
   const pack = packs[0] || null;
+  const nominated = eligibility.find((e) => e.relation === 'behind') || eligibility.find((e) => e.nominated) || null;
   baseline.target = {
     platform: {
-      name: pack ? pack.stack : null,
+      name: pack ? pack.stack : (nominated ? nominated.stack : null),
       version: args.toVersion || null,
       source: args.toVersion ? 'request' : 'unresolved',
     },
@@ -416,13 +477,26 @@ function main() {
     },
     constraints: pack ? pack.target_constraints : null,
   };
-  baseline.migration_path = migrationPath(pack, inventory, { platformVersion: args.toVersion, language: targetJava });
+  baseline.migration_path = pack
+    ? { ...migrationPath(pack, inventory, { platformVersion: args.toVersion, language: targetJava }), ...pathGate }
+    : {
+      pack: null,
+      stack: nominated ? nominated.stack : null,
+      platform: nominated ? nominated.source_platform : null,
+      source: nominated && nominated.source_platform ? nominated.source_platform.version : null,
+      requested_target: args.toVersion || null,
+      warnings: [],
+      unresolved: [],
+      ...pathGate,
+    };
   baseline.observations = collectObservations(projectDir, inventory, baseline.project.ancillary_files, pack);
   baseline.capabilities = capabilities(pack, buildTool);
   baseline.reference_provenance = pack ? pack.provenance : null;
 
   const out = writeJson(sessionPaths(slug).baseline, baseline);
-  recordState(slug, 'BASELINE_DETECTED', 'detect-baseline.js', `project ${baseline.project.relative_to_repo}`);
+  const blocked = pathGate.status !== 'SUPPORTED';
+  if (blocked) startRun(slug, 'BLOCKED', `${pathGate.status}: ${pathGate.reason}`);
+  else startRun(slug, 'BASELINE_DETECTED', `project ${baseline.project.relative_to_repo}`);
 
   const line = (label, value) => console.log(`  ${label.padEnd(20)} ${value}`);
   console.log(`\nBaseline — ${baseline.project.name}`);
@@ -437,16 +511,17 @@ function main() {
   line('Sources', `${baseline.project.sources.main} main / ${baseline.project.sources.test} test`);
   line('Ancillary', baseline.project.ancillary_files.join(', ') || 'none');
   line('JDKs available', jdks.map((j) => `${j.major} (${j.version})`).join(', ') || 'none found');
-  console.log(`\n  Reference packs matched:`);
+  console.log(`\n  Reference packs eligible (a detect entry nominates; the declared source version decides):`);
+  for (const e of eligibility.filter((x) => !x.eligible)) console.log(`    ✗ ${e.pack} — NOT ELIGIBLE: ${e.reason}`);
   if (!baseline.reference_packs.length) {
     const all = listReferencePacks();
-    console.log('    none — no pack in references/ recognises this project.');
+    console.log('    none — no pack in references/ is eligible for this project.');
     console.log(`    Available: ${all.map((p) => p.id).join(', ') || '(none)'}`);
     console.log('    Write a pack for this jump before migrating; do not migrate from memory.');
   } else {
     for (const p of baseline.reference_packs) {
       console.log(`    ${p.id} — ${p.title}`);
-      console.log(`      ${p.file}  (matched on ${p.matched_on.join(', ')})`);
+      console.log(`      ${p.file}  (matched on ${p.matched_on.join(', ')}; ${packs.find((x) => x.id === p.id).eligibility.reason})`);
     }
   }
   if (declaredJava && !baseline.language.from_jdk) console.log(`\n  ! No JDK ${declaredJava} found locally — the baseline build cannot run on the declared version.`);
@@ -474,11 +549,69 @@ function main() {
       for (const p of t.configuration_problems) console.log(`      ! ${p}`);
     }
   }
+  console.log(`\n  Migration path gate: ${pathGate.status}`);
+  for (const st of (pathGate.required_path && pathGate.required_path.steps) || []) {
+    console.log(`    ${st.from} → ${st.to}   ${st.capability}   ${st.available ? 'available' : 'MISSING'}`);
+  }
   console.log(`\n  Written: ${rel(out)}`);
+  if (blocked) {
+    console.log(`\n  BLOCKED — ${pathGate.reason}`);
+    if ((pathGate.missing_capability || []).length) console.log(`  Missing capability: ${pathGate.missing_capability.join(', ')}`);
+    console.log('  Nothing downstream may run for this session. Add the missing reference pack(s) first; never migrate across a generation from memory.\n');
+    process.exitCode = 2;
+    return;
+  }
   console.log(`  Next:    node scripts/prepare-workspace.js --slug ${slug}\n`);
 }
 
-if (require.main === module) main();
+/** Records the session's first state for this run and stamps the run id the per-run summary is filed under. */
+function startRun(slug, state, detail) {
+  const paths = sessionPaths(slug);
+  const baseline = readJson(paths.baseline) || {};
+  const current = recordState(slug, state, 'detect-baseline.js', detail);
+  current.run_id = baseline.run_id || newRunId(slug);
+  current.run_started_at = baseline.generated_at || new Date().toISOString();
+  writeJson(paths.state, current);
+}
+
+/**
+ * Can one session make the requested jump? A pack covers exactly one generation step; a jump that
+ * needs a step no pack covers is UNSUPPORTED_MIGRATION_PATH, and a jump across several covered
+ * steps is MULTI_STEP_REQUIRED (one session per step). Either way nothing is silently skipped.
+ */
+function migrationPathGate(packs, eligibility, toVersion) {
+  const pack = packs[0];
+  const describe = (p) => p.steps.map((st) => `${st.from} → ${st.to} (${st.capability}${st.available ? '' : ': MISSING'})`).join(', ');
+  if (pack) {
+    const src = pack.eligibility && pack.eligibility.source_platform ? pack.eligibility.source_platform.version : null;
+    const reqPath = src && toVersion ? requiredMigrationPath(pack.stack, src, toVersion, pack.id) : null;
+    if (!reqPath || reqPath.steps.length <= 1) {
+      return { status: 'SUPPORTED', reason: `${pack.id} is eligible${src && toVersion ? ` for ${src} → ${toVersion}` : ''}`, required_path: reqPath, missing_capability: [] };
+    }
+    if (reqPath.missing_capability.length) {
+      return { status: 'UNSUPPORTED_MIGRATION_PATH', reason: `${src} → ${toVersion} needs ${describe(reqPath)}`, required_path: reqPath, missing_capability: reqPath.missing_capability };
+    }
+    return { status: 'MULTI_STEP_REQUIRED', reason: `${src} → ${toVersion} spans ${reqPath.steps.length} generations — run one session per step: ${describe(reqPath)}`, required_path: reqPath, missing_capability: [] };
+  }
+  const behind = eligibility.find((e) => e.relation === 'behind');
+  if (behind) {
+    const src = behind.source_platform.version;
+    const target = toVersion || `${behind.pack_to}.x`;
+    const reqPath = requiredMigrationPath(behind.stack, src, target, behind.pack);
+    const missing = reqPath ? reqPath.missing_capability : [];
+    return {
+      status: missing.length ? 'UNSUPPORTED_MIGRATION_PATH' : 'MULTI_STEP_REQUIRED',
+      reason: `${behind.reason}; reaching ${target} requires ${reqPath ? describe(reqPath) : 'an unknown path'}`,
+      required_path: reqPath,
+      missing_capability: missing,
+    };
+  }
+  const other = eligibility.find((e) => e.nominated);
+  if (other) return { status: 'NO_ELIGIBLE_PACK', reason: other.reason, required_path: null, missing_capability: [] };
+  return { status: 'NO_MATCHING_PACK', reason: 'no reference pack recognises this project — write one for the jump first', required_path: null, missing_capability: [] };
+}
+
+if (require.main === module) runAndFinalize(main, 'detect-baseline.js');
 
 module.exports = {
   parseArgs, listSourceFiles, scanSurfaces, entryPoints, configFiles, containerRuntime, ciJavaReferences,
