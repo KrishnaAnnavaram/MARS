@@ -218,8 +218,13 @@ Nothing else can move until this does: the parent manages the version of every
 + <java.version>21</java.version>
 ```
 
-If the project also pins `maven-compiler-plugin` `<source>`/`<target>` explicitly, change those too —
-a stale `<source>17</source>` overrides the property and the build silently keeps compiling at 17:
+If the project also pins `maven-compiler-plugin` `<source>`/`<target>` explicitly, check what javac
+actually used before changing them. With `spring-boot-starter-parent`, the parent's
+`maven.compiler.release` (set from `java.version`) **wins** over a stale `<source>/<target>17` —
+observed in a recorded 3.5.0 → 4.1.1 run: the log showed `javac [debug parameters release 21]` and the
+classes were major version 65. Without the Boot parent a stale `<source>17</source>` does keep the
+build at 17. Verify with `javap -v <class> | grep major` (65 = Java 21) and change only what the
+evidence shows is stale:
 
 ```diff
 - <source>17</source>
@@ -523,6 +528,24 @@ they fail, or silently do nothing, at startup.
 - Re-check anything under `management.*`, `spring.jpa.*`, `spring.mvc.*` and logging configuration.
 - A property that no longer exists is inert, so the symptom is behavioural: an endpoint that is
   suddenly exposed or hidden, a format that changed, a log level that stopped applying.
+
+### 7.1 Auto-configuration that moved to its own module
+
+Boot 4 splits auto-configuration into modules; a feature whose module is not on the classpath simply
+switches off — no compile error, no startup error. Observed in a recorded 3.5.0 → 4.1.1 run:
+
+| Feature | Boot 3 | Boot 4 | Symptom |
+|---|---|---|---|
+| H2 web console (`spring.h2.console.enabled=true`) | `H2ConsoleAutoConfiguration` in `spring-boot-autoconfigure` | module `org.springframework.boot:spring-boot-h2console` (add it, runtime scope) | `/h2-console` answers **404** after the migration — the endpoint-preservation check reports it missing |
+
+Verify any feature the property files enable against the Boot 4 jars before assuming it still runs:
+`unzip -l ~/.m2/repository/org/springframework/boot/<module>/<version>/<module>-<version>.jar | grep AutoConfiguration`.
+
+### 7.2 Fully executable jar
+
+The Boot 4 Maven plugin no longer writes the launch script that `<executable>true</executable>`
+produced. The build stays green and `java -jar` still works; only running the jar as `./app.jar` (an
+init.d / systemd service) breaks. Record it as a manual follow-up — there is no in-scope replacement.
 
 ---
 

@@ -1,0 +1,451 @@
+{
+  "id": "rewrite-06",
+  "seq": 6,
+  "provider": "openrewrite",
+  "mode": "apply",
+  "applied": true,
+  "transformation": "edge-E3",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "wrapper",
+  "plugin_version": "5.46.1",
+  "recipes": [
+    "mars.migration.edge.E3"
+  ],
+  "artifacts": [
+    "org.openrewrite.recipe:rewrite-spring:5.24.1"
+  ],
+  "config": null,
+  "config_sha": "7ccec97a98773f55",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "3.3.13",
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1"
+  },
+  "started_at": "2026-10-01T13:14:52.095Z",
+  "finished_at": "2026-10-01T13:15:32.181Z",
+  "duration_ms": 40087,
+  "command": "mvnw.cmd -B org.openrewrite.maven:rewrite-maven-plugin:5.46.1:runNoFork -Drewrite.activeRecipes=mars.migration.edge.E3 -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-spring:5.24.1 -Drewrite.configLocation=<session>\\transformations\\rewrite-06.rewrite.yml",
+  "exit_code": 0,
+  "status": "applied",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": "rewrite-05",
+  "proposed_files": [],
+  "changed_files": [
+    {
+      "state": "M",
+      "file": "pom.xml"
+    }
+  ],
+  "excluded_files": [
+    "src/main/java/com/aura/vihanga/employeeservice/config/WebClientConfig.java",
+    "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+    "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+    "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java",
+    "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"
+  ],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7"
+      },
+      {
+        "depth": 5,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_6"
+      },
+      {
+        "depth": 6,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_5"
+      },
+      {
+        "depth": 7,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_4"
+      },
+      {
+        "depth": 8,
+        "recipe": "org.openrewrite.java.spring.boot2.SpringBoot2JUnit4to5Migration"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.testing.junit5.JUnit4to5Migration"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.maven.ExcludeDependency: {groupId=junit, artifactId=junit}"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.maven.UpgradePluginVersion: {groupId=org.apache.maven.plugins, artifactId=maven-surefire-plugin, newVersion=3.1.x}"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.migrate.UpgradeToJava17"
+      },
+      {
+        "depth": 5,
+        "recipe": "org.openrewrite.java.migrate.Java8toJava11"
+      },
+      {
+        "depth": 6,
+        "recipe": "org.openrewrite.java.migrate.UpgradeToJava8"
+      },
+      {
+        "depth": 7,
+        "recipe": "org.openrewrite.java.migrate.UpgradeToJava7"
+      },
+      {
+        "depth": 8,
+        "recipe": "org.openrewrite.java.migrate.UpgradeToJava6"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.migrate.JREWrapperInterface"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.java.migrate.jacoco.UpgradeJaCoCo"
+      },
+      {
+        "depth": 11,
+        "recipe": "org.openrewrite.java.dependencies.UpgradeDependencyVersion: {groupId=org.jacoco, artifactId=*, newVersion=0.8.x}"
+      },
+      {
+        "depth": 11,
+        "recipe": "org.openrewrite.maven.UpgradePluginVersion: {groupId=org.jacoco, artifactId=jacoco-maven-plugin, newVersion=0.8.x}"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.maven.UpgradeParentVersion: {groupId=org.springframework.boot, artifactId=spring-boot-starter-parent, newVersion=3.1.x}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.maven.UpgradeParentVersion: {groupId=org.springframework.boot, artifactId=spring-boot-starter-parent, newVersion=3.2.x}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.cloud2023.UpgradeSpringCloud_2023"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.cloud2023.DependencyUpgrades"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.dependencies.UpgradeDependencyVersion: {groupId=org.springframework.cloud, artifactId=spring-cloud-dependencies, newVersion=2023.0.x, overrideManagedVersion=false}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.UpgradeParentVersion: {groupId=org.springframework.boot, artifactId=spring-boot-starter-parent, newVersion=3.3.x}"
+      }
+    ],
+    "src/main/java/com/aura/vihanga/employeeservice/config/WebClientConfig.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7"
+      },
+      {
+        "depth": 5,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_6"
+      },
+      {
+        "depth": 6,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_5"
+      },
+      {
+        "depth": 7,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_4"
+      },
+      {
+        "depth": 8,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_3"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_2"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_1"
+      },
+      {
+        "depth": 11,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_0"
+      },
+      {
+        "depth": 12,
+        "recipe": "org.openrewrite.java.spring.boot2.SpringBoot2BestPractices"
+      },
+      {
+        "depth": 13,
+        "recipe": "org.openrewrite.java.spring.framework.BeanMethodsNotPublic"
+      }
+    ],
+    "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7"
+      },
+      {
+        "depth": 5,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_6"
+      },
+      {
+        "depth": 6,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_5"
+      },
+      {
+        "depth": 7,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_4"
+      },
+      {
+        "depth": 8,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_3"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_2"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_1"
+      },
+      {
+        "depth": 11,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_0"
+      },
+      {
+        "depth": 12,
+        "recipe": "org.openrewrite.java.spring.boot2.SpringBoot2BestPractices"
+      },
+      {
+        "depth": 13,
+        "recipe": "org.openrewrite.java.spring.ImplicitWebAnnotationNames"
+      }
+    ],
+    "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7"
+      },
+      {
+        "depth": 5,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_6"
+      },
+      {
+        "depth": 6,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_5"
+      },
+      {
+        "depth": 7,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_4"
+      },
+      {
+        "depth": 8,
+        "recipe": "org.openrewrite.java.spring.boot2.SpringBoot2JUnit4to5Migration"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.testing.junit5.JUnit4to5Migration"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.java.testing.junit5.UpdateBeforeAfterAnnotations"
+      }
+    ],
+    "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7"
+      },
+      {
+        "depth": 5,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_6"
+      },
+      {
+        "depth": 6,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_5"
+      },
+      {
+        "depth": 7,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_4"
+      },
+      {
+        "depth": 8,
+        "recipe": "org.openrewrite.java.spring.boot2.SpringBoot2JUnit4to5Migration"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.testing.junit5.JUnit4to5Migration"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.java.testing.junit5.AssertToAssertions"
+      }
+    ],
+    "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7"
+      },
+      {
+        "depth": 5,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_6"
+      },
+      {
+        "depth": 6,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_5"
+      },
+      {
+        "depth": 7,
+        "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_4"
+      },
+      {
+        "depth": 8,
+        "recipe": "org.openrewrite.java.spring.boot2.SpringBoot2JUnit4to5Migration"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.spring.boot2.UnnecessarySpringRunWith"
+      },
+      {
+        "depth": 10,
+        "recipe": "org.openrewrite.java.testing.junit5.RunnerToExtension: {runners=[org.springframework.test.context.junit4.SpringRunner, org.springframework.test.context.junit4.SpringJUnit4ClassRunner], extension=org.springframework.test.context.junit.jupiter.SpringExtension}"
+      },
+      {
+        "depth": 9,
+        "recipe": "org.openrewrite.java.spring.boot2.UnnecessarySpringExtension"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-06.patch",
+  "log": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-06.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-06-before",
+    "commit": "80156a072db427ceb8bea7e32881664506474cdc"
+  },
+  "scope_check": {
+    "ok": true,
+    "out_of_preview": [],
+    "infrastructure_lines": []
+  },
+  "reconciliation": {
+    "requested_platform_version": "3.3.13",
+    "declared_after_apply": "3.3.13",
+    "recipe_target": "3.3.13",
+    "status": "matches-request"
+  },
+  "build_round": 4,
+  "notes": [
+    "restored 5 out-of-scope file(s) from the checkpoint: src/main/java/com/aura/vihanga/employeeservice/config/WebClientConfig.java, src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java, src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java, src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java, src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"
+  ],
+  "edge": "E3",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-06.rewrite.yml",
+  "goal": "runNoFork"
+}

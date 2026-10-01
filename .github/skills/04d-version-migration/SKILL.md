@@ -24,9 +24,76 @@ to begin with and the goal is to arrive on the other side with identical behavio
 - **A direct request** ("upgrade this to Spring Boot 4.1.1"), exactly as before: `--project`,
   `--to-version`, `--to-java`. No handoff is written; nothing downstream consumes it.
 
-## Pack eligibility and the migration path
+## Any version to any version: the migration ladder
 
-A pack's `detect:` entries only *nominate* it. A pack is **eligible** only when the project's
+For Spring Boot, 04D plans the migration from **any published line to any later one** — 1.5 → 2.x,
+2.x → 3.x, 3.x → 4.x, or several at once — with OpenRewrite at the centre. The knowledge is data:
+[`references/openrewrite/spring-boot-ladder.json`](./references/openrewrite/spring-boot-ladder.json)
+lists every line as a rung, the OpenRewrite upgrade recipe for that rung, its Java floor, its Spring
+Cloud train, and which **recipe stack** provides the recipe, with the licence read from each
+artifact's own POM.
+
+`detect-baseline.js` reads the published lines and Cloud trains live from Maven Central (or the
+ladder's recorded values under `MIGRATION_OFFLINE=1`) and plans **edges**, each one a step the project
+is built green on before the next:
+
+| Edge class | Meaning | Recipe |
+|---|---|---|
+| `PATCH` | to the latest patch of the current line (e.g. 2.7.12 → 2.7.18) | pin only — a patch carries no framework migration |
+| `MINOR` | to a later line in the same major | the rung's upstream `UpgradeSpringBoot_X_Y` when the licence policy allows it; otherwise a pin-only edge and compiler-driven repair |
+| `MAJOR_BOUNDARY` | into the first line of the next major — **mandatory, never skipped** | the upstream recipe, or 04D's open-source composite (`openrewrite/spring-boot-3-to-4.oss.yml`) |
+
+With the default `boundary` granularity a path stops on the last line of the source major, then on the
+first and last line of each major it crosses, then on the target — plus one *licence-frontier* stop:
+the highest line whose recipe the policy allows, so allowed upstream recipes still run before a
+pin-only edge. `--path-granularity minor` stops on every line.
+
+**Licence policy** (`--license-policy`, default `open-source-only`): Spring's OpenRewrite upgrade
+recipes are open source only up to **Boot 3.3** — `rewrite-spring` 5.24.1 (2024-11-28) is its last
+Apache-2.0 release; everything after it, including `UpgradeSpringBoot_3_4`/`3_5`/`4_0`, is under the
+Moderne Source Available License (free for internal use on your own code, but not OSI open source and
+not to be offered as a service). Under `open-source-only` 04D runs only Apache-2.0 stacks — the
+5.24.1 recipes up to 3.3, and beyond that its own composites built from OpenRewrite's built-in
+Apache-2.0 recipes plus compiler-driven repair. `source-available` is an explicit, recorded opt-in.
+`lib/openrewrite.js` refuses (status `rejected-license`) any recipe the session's policy does not
+allow, pack transformations included.
+
+Each edge runs a recipe 04D **generates** (`mars.migration.edge.E<n>`): the rung's upstream recipe or
+composite, then the pins that make the edge land exactly where the plan says — the parent's
+`<version>` (a plain XML `ChangeTagValue`; `ChangeParentPom` would also delete explicit versions the
+new parent manages, such as pinned Testcontainers) or the BOM to the edge's version, every explicitly
+versioned `org.springframework.boot` artifact to the same version (`UpgradeDependencyVersion`, which
+leaves managed dependencies alone and drops a tag once it equals the managed version), the Java
+property to the edge's Java level, and the Spring Cloud train property to the train verified for that
+line. All pins are Apache-2.0 core recipes. In a dry-run patch, `~~(…)~~>` comments are OpenRewrite's
+search markers (e.g. "No version provided" while the model still resolves the old parent); `apply`
+does not write them.
+
+An edge is **complete** when a build tagged with it compiles and the sandbox declares the edge's
+target. A residual-repair round run without `--edge` is tagged with the open edge whose target the
+sandbox already declares, so the edge completes and the next edge is offered.
+
+**Spring Cloud.** When the project imports `spring-cloud-dependencies`, every edge gets the train
+that line needs, confirmed against the train's own `spring-cloud-starter-parent` POM. A line with no
+GA train blocks the path (`BLOCKED_ECOSYSTEM`) and the baseline names the closest supportable target.
+
+**Endpoints.** The baseline records every endpoint the source maps (`observations.endpoints`, a static
+scan of controller mappings) plus the framework endpoints its default-profile configuration switches on
+(`source: "config"` — the H2 console, exposed actuator endpoints on the application port), because no
+controller maps those and a major upgrade can drop them (Boot 4 moved the H2 console into its own
+module); every probe run records the running application's mappings (`/actuator/mappings` when exposed)
+and the sandbox's static mappings. A migration that loses an endpoint is `FAIL`, and the apply gate
+refuses it. `probe-runtime.js --discover` drafts safe probes for every endpoint and lists the rest
+with the reason they need a hand-written request.
+
+**Rules packs** still matter: a `MAJOR_BOUNDARY` edge carries the pack for that boundary
+(`spring-boot-2-to-3`, `spring-boot-3-to-4`) — the symptom tables residual repair reads when the build
+still fails after the recipe.
+
+## Pack eligibility and the migration path (pack mode)
+
+When no ladder applies (or a pack is forced with `--reference`), a session is a single pack. A
+pack's `detect:` entries only *nominate* it. A pack is **eligible** only when the project's
 declared platform version — read from a version-bearing coordinate (the parent, an imported BOM, a
 plugin; `platform_coordinates` in the pack, else its versioned detect entries) — sits in the pack's
 `from` generation. An unversioned dependency (a starter) never makes a pack eligible. Each pack covers
@@ -37,8 +104,10 @@ target and records `migration_path.status`:
 |---|---|---|
 | `SUPPORTED` | one eligible pack covers the whole jump | continue |
 | `UNSUPPORTED_MIGRATION_PATH` | a step has no pack (e.g. Boot 2.7 → 4.x needs `spring-boot-2-to-3`) | BLOCKED; `required_path` and `missing_capability` recorded |
-| `MULTI_STEP_REQUIRED` | every step has a pack but there are several | BLOCKED; run one session per step |
+| `MULTI_STEP_REQUIRED` | every step has a pack but there are several | BLOCKED; run one session per step (or use the ladder) |
 | `NO_ELIGIBLE_PACK` / `NO_MATCHING_PACK` | nothing applies | BLOCKED |
+| `BLOCKED_ECOSYSTEM` (ladder) | the app uses Spring Cloud and a line on the path has no GA train | BLOCKED; `closest_supported_target` recorded |
+| `UNSUPPORTED_MIGRATION_PATH` (ladder) | a rung is missing, or no recipe the licence policy allows covers a major boundary | BLOCKED; `missing_capability` names it |
 
 A blocked baseline never gets a sandbox (`prepare-workspace.js` refuses), and a generation is never
 jumped over silently.
@@ -185,10 +254,16 @@ Session files live in `.github/.pipeline-context/version-migration/<slug>/` (git
 
 ```powershell
 cd .github/skills/04d-version-migration
-node scripts/detect-baseline.js --project <path-to-project> --slug <slug> --to-java 21 --to-version <exact target, e.g. 4.1.1>
+node scripts/detect-baseline.js --project <path-to-project> --slug <slug> --to-java 21 --to-version <exact target, e.g. 4.1.1, or a line, e.g. 3.5>
+#   [--license-policy open-source-only|source-available] [--path-granularity boundary|minor]
 # or, when 04_fix-generator Stage 2 routed an Approved VERSION_MIGRATION plan here:
 node scripts/detect-baseline.js --issue <ID>
 ```
+
+For Spring Boot this prints the **planned path**: one line per edge with its class, recipe, licence,
+JDK, Spring Cloud train and rules pack, plus any note (pin-only rung, missing JDK, missing rules pack).
+Read it before anything else — it is the plan the session follows. `baseline.json`
+`migration_path.edges` holds it.
 
 Pass `--slug` explicitly (without it the slug is the project folder's name), and use the same slug
 for every later step. A non-zero exit means the session is BLOCKED or refused — read the printed
@@ -216,6 +291,12 @@ Confirm the pack, then **read it end to end**, including its §14–§15. Note t
 Read the files the observations point at, and beyond them: the entry point, controllers, security
 configuration and credentials, persistence, configuration, tests. You are answering *what does this
 application do*, *what will this jump touch*, and *how will I know it still does it*.
+
+Start from `node scripts/probe-runtime.js --slug <slug> --discover`: it drafts
+`<session>/probes.discovered.json` from the endpoint inventory — a safe GET probe for every endpoint
+that needs no data, `/actuator/mappings`, and a `not_probed` list (path variables, mutating methods)
+with the reason each needs a request you write from the source. **Every endpoint ends up probed or
+explicitly unobserved** — that is what "save the endpoints" means here.
 
 Write the probes to `<session>/probes.json`. Characterisation is **impact-driven**:
 
@@ -283,7 +364,12 @@ Write `<session>/migration-plan.json` per
 - **characterization** — which probe protects which impact; `probe: null` with a reason for what
   cannot be observed
 - **deterministic_candidates** — the pack transformations you select (and any narrowing of their
-  recipes); **residual_candidates** — what you expect to fix by hand, and why no recipe does it
+  recipes); in a ladder session, **one candidate per edge**:
+  `{ "id": "E2", "provider": "openrewrite", "transformation": "edge:E2", "edge": "E2", "covers": [...] }`
+  — an edge you leave out cannot run; **residual_candidates** — what you expect to fix by hand, and why
+  no recipe does it
+- **impact per edge** — in a multi-edge path, predict impact for each boundary edge separately
+  (the 2→3 boundary's Jakarta/Security 6 impact is not the 3→4 boundary's Jackson 3 impact)
 - **out_of_scope** and **stop_conditions**
 
 Validate it (no build runs):
@@ -293,6 +379,23 @@ node scripts/run-migration-build.js --slug <slug> --check-plan
 ```
 
 ### Step 6 — Deterministic transformations (when the plan selects one)
+
+**Ladder sessions walk the edges in order.** For each edge E1, E2, …:
+
+```powershell
+node scripts/run-migration-build.js --slug <slug> --edge E2 --rewrite dry-run            # preview the generated edge recipe (JDK = the edge's)
+node scripts/run-migration-build.js --slug <slug> --edge E2 --rewrite apply --rewrite-preview rewrite-NN --intent test-compile
+node scripts/run-migration-build.js --slug <slug> --edge E2 --intent test-compile --label "…"   # residual-repair rounds, tagged with the edge
+```
+
+An edge is **complete** when a round tagged with it compiles and the sandbox declares the edge's
+target version; the next edge is refused until then. Inspect every edge's preview exactly as below —
+an upstream recipe chains many sub-recipes and can propose modernisations the jump does not need.
+Repair each edge's residual failures (Step 8) *before* moving on: a boundary's failures have one
+cause, the next boundary's another, and mixing them is what this design avoids. Run the same-goal
+test round (Step 8) on the landing edge.
+
+For a single-pack session (or a pack transformation inside a ladder session):
 
 ```powershell
 node scripts/run-migration-build.js --slug <slug> --jdk 21 --rewrite dry-run --rewrite-id <candidate>
@@ -449,6 +552,11 @@ Stop and report instead of continuing when:
 - DO NOT apply an OpenRewrite recipe you have not previewed and inspected, run one the plan does not
   name, or accept a preview's out-of-scope changes. DO NOT run OpenRewrite outside the sandbox, and
   DO NOT add rewrite plugins to the project's build to run it.
+- DO NOT skip an edge, run edges out of order, or move to the next edge before the current one is
+  built green on its planned version. DO NOT collapse a MAJOR_BOUNDARY into a longer jump.
+- DO NOT switch to `--license-policy source-available` on your own: it is the user's decision, and
+  every report records it. Under `open-source-only`, never work around a `rejected-license` record.
+- DO NOT accept a migration that loses an endpoint; find out why it is gone and restore it, or stop.
 - DO NOT describe an unavailable, failed or reverted transformation as having run.
 - DO NOT substitute "latest" or a recipe's intermediate target for the requested version.
 - DO NOT guess a package, class or coordinate. Resolve it against the dependency tree or the jar.
@@ -461,7 +569,10 @@ Stop and report instead of continuing when:
 - DO NOT hand-edit a rendered report or the exported diff; DO NOT delete or rewrite a round or
   transformation record to make the history look cleaner.
 - DO NOT write credentials into any file. Recorded commands and logs are redacted; do not put tokens
-  into probe files, plans or judgement files either.
+  into probe files, plans or judgement files either. Probe authentication uses
+  `"auth": { "type": "basic", "username_env": "APP_USER", "password_env": "APP_PASSWORD" }` with the
+  values exported in the shell; a literal `username`/`password` is acceptable only for a demo or test
+  user the application's own source already commits.
 - DO NOT call any external AI service from this skill — reasoning is the harness's job.
 
 ## Known caveats

@@ -137,7 +137,8 @@
         "properties": {
           "id": { "type": "string" },
           "provider": { "type": "string", "enum": ["openrewrite", "reference-rule"] },
-          "transformation": { "type": "string", "description": "The reference pack's transformations[].id this candidate uses." },
+          "transformation": { "type": "string", "description": "The reference pack's transformations[].id this candidate uses, or \"edge:<id>\" for a migration-path edge (the recipe 04D generates for that rung of the ladder)." },
+          "edge": { "type": "string", "description": "Migration-path edge id (E1, E2, ...) this candidate runs. Edges run in path order, each built green before the next." },
           "recipes": { "type": "array", "items": { "type": "string" } },
           "artifacts": { "type": "array", "items": { "type": "string" } },
           "plugin_version": { "type": "string" },

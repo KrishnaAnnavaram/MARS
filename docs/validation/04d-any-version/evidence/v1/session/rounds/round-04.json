@@ -1,0 +1,348 @@
+{
+  "round": 4,
+  "label": "OpenRewrite rewrite-06 applied (mars.migration.edge.E3)",
+  "baseline": false,
+  "started_at": "2026-10-01T13:15:32.184Z",
+  "duration_ms": 29455,
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1",
+    "home": "E:/mv/tools/jdk-17.0.20.1+1",
+    "source": "MIGRATION_JDK_17"
+  },
+  "build": {
+    "tool": "maven",
+    "kind": "wrapper",
+    "command": "mvnw.cmd -B clean test-compile",
+    "intent": "test-compile",
+    "exit_code": 1,
+    "spawn_error": null
+  },
+  "outcome": "compile-failed",
+  "declared": {
+    "java": "17",
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "3.3.13"
+    },
+    "dependency_count": 16,
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "3.3.13",
+      "where": "parent"
+    }
+  },
+  "workspace": {
+    "changed_files": [
+      {
+        "state": "A",
+        "file": ".mvn/wrapper/maven-wrapper.jar"
+      },
+      {
+        "state": "M",
+        "file": "pom.xml"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java"
+      },
+      {
+        "state": "M",
+        "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java"
+      }
+    ],
+    "diff_stat": "5 files changed, 14 insertions(+), 9 deletions(-)"
+  },
+  "error_summary": {
+    "total": 14,
+    "byCategory": [
+      {
+        "id": "missing-symbol",
+        "count": 10,
+        "label": "Cannot find symbol",
+        "hint": "A class, method or field was renamed or removed. Look for a replacement API in the reference pack."
+      },
+      {
+        "id": "missing-package",
+        "count": 2,
+        "label": "Package does not exist",
+        "hint": "A type moved to a new package or module. Look for a relocation entry in the reference pack."
+      },
+      {
+        "id": "other",
+        "count": 1,
+        "label": "Uncategorised",
+        "hint": "Read the raw log — this shape was not recognised."
+      },
+      {
+        "id": "plugin-failure",
+        "count": 1,
+        "label": "Build plugin failed",
+        "hint": "A build plugin is too old for the new platform, or its configuration changed."
+      }
+    ],
+    "byFile": [
+      {
+        "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+        "count": 4
+      },
+      {
+        "file": "src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java",
+        "count": 3
+      },
+      {
+        "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java",
+        "count": 3
+      },
+      {
+        "file": "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java",
+        "count": 3
+      }
+    ]
+  },
+  "errors": [
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java",
+      "line": 6,
+      "column": 24,
+      "message": "package org.junit.runner does not exist",
+      "detail": [],
+      "category": "missing-package"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java",
+      "line": 8,
+      "column": 6,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+      "line": 4,
+      "column": 17,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java",
+      "line": 18,
+      "column": 24,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java",
+      "line": 18,
+      "column": 1,
+      "message": "static import only from classes and interfaces",
+      "detail": [],
+      "category": "other"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java",
+      "line": 9,
+      "column": 24,
+      "message": "package org.junit.runner does not exist",
+      "detail": [],
+      "category": "missing-package"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java",
+      "line": 18,
+      "column": 2,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+      "line": 29,
+      "column": 6,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:testCompile (default-testCompile) on project employee-service: Compilation failure: Compilation failure:",
+      "detail": [],
+      "category": "plugin-failure"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java",
+      "line": 8,
+      "column": 6,
+      "message": "cannot find symbol — class RunWith",
+      "detail": [
+        "symbol: class RunWith"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+      "line": 4,
+      "column": 17,
+      "message": "cannot find symbol — class Before",
+      "detail": [
+        "symbol: class Before",
+        "location: package org.junit"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java",
+      "line": 18,
+      "column": 24,
+      "message": "cannot find symbol — class Assert",
+      "detail": [
+        "symbol: class Assert",
+        "location: package org.junit"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java",
+      "line": 18,
+      "column": 2,
+      "message": "cannot find symbol — class RunWith",
+      "detail": [
+        "symbol: class RunWith"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+      "line": 29,
+      "column": 6,
+      "message": "cannot find symbol — class Before",
+      "detail": [
+        "symbol: class Before",
+        "location: class com.aura.vihanga.employeeservice.cucumberglue.CucumberConfig"
+      ],
+      "category": "missing-symbol"
+    }
+  ],
+  "errors_truncated": 0,
+  "log_tail": "…(truncated, showing last 8000 chars)…\nmockito-core-5.11.0.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/jupiter/junit-jupiter-api/5.10.5/junit-jupiter-api-5.10.5.jar (211 kB at 97 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.19/byte-buddy-agent-1.14.19.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/jupiter/junit-jupiter-params/5.10.5/junit-jupiter-params-5.10.5.jar (586 kB at 266 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/mockito/mockito-junit-jupiter/5.11.0/mockito-junit-jupiter-5.11.0.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/jupiter/junit-jupiter-engine/5.10.5/junit-jupiter-engine-5.10.5.jar (245 kB at 111 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-core/6.1.21/spring-core-6.1.21.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/junit/platform/junit-platform-engine/1.10.5/junit-platform-engine-1.10.5.jar (213 kB at 97 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-jcl/6.1.21/spring-jcl-6.1.21.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/net/bytebuddy/byte-buddy-agent/1.14.19/byte-buddy-agent-1.14.19.jar (263 kB at 116 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/mockito/mockito-core/5.11.0/mockito-core-5.11.0.jar (704 kB at 311 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/spring-test/6.1.21/spring-test-6.1.21.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/slf4j/jcl-over-slf4j/2.0.17/jcl-over-slf4j-2.0.17.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-jcl/6.1.21/spring-jcl-6.1.21.jar (25 kB at 11 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-core/6.1.21/spring-core-6.1.21.jar (1.9 MB at 822 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/mockito/mockito-junit-jupiter/5.11.0/mockito-junit-jupiter-5.11.0.jar (8.9 kB at 3.8 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/slf4j/jcl-over-slf4j/2.0.17/jcl-over-slf4j-2.0.17.jar (18 kB at 7.9 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/spring-test/6.1.21/spring-test-6.1.21.jar (858 kB at 365 kB/s)\r\n[INFO] \r\n[INFO] --- maven-clean-plugin:3.3.2:clean (default-clean) @ employee-service ---\r\n[INFO] Deleting .\\target\r\n[INFO] \r\n[INFO] --- jacoco-maven-plugin:0.8.15:prepare-agent (default) @ employee-service ---\r\n[INFO] argLine set to -javaagent:C:\\\\Users\\\\annav\\\\.m2\\\\repository\\\\org\\\\jacoco\\\\org.jacoco.agent\\\\0.8.15\\\\org.jacoco.agent-0.8.15-runtime.jar=destfile=E:\\\\mv\\\\evidence\\\\v3\\\\v1\\\\ctx\\\\version-migration\\\\v1-employee\\\\workspace\\\\target\\\\jacoco.exec,excludes=com/aura/vihanga/employeeservice/dto/**:com/aura/vihanga/employeeservice/model/**:com/aura/vihanga/employeeservice/util/**:com/aura/vihanga/employeeservice/config/**:com/aura/vihanga/employeeservice/utill/**\r\n[INFO] \r\n[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ employee-service ---\r\n[INFO] Copying 1 resource from src\\main\\resources to target\\classes\r\n[INFO] Copying 1 resource from src\\main\\resources to target\\classes\r\n[INFO] \r\n[INFO] --- maven-compiler-plugin:3.13.0:compile (default-compile) @ employee-service ---\r\n[INFO] Recompiling the module because of changed dependency.\r\n[INFO] Compiling 18 source files with javac [debug parameters release 17] to target\\classes\r\n[INFO] \r\n[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ employee-service ---\r\n[INFO] Copying 1 resource from src\\test\\resources to target\\test-classes\r\n[INFO] \r\n[INFO] --- maven-compiler-plugin:3.13.0:testCompile (default-testCompile) @ employee-service ---\r\n[INFO] Recompiling the module because of changed dependency.\r\n[INFO] Compiling 7 source files with javac [debug parameters release 17] to target\\test-classes\r\n[INFO] -------------------------------------------------------------\r\n[ERROR] COMPILATION ERROR : \r\n[INFO] -------------------------------------------------------------\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java:[6,24] package org.junit.runner does not exist\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java:[8,6] cannot find symbol\n  symbol: class RunWith\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java:[4,17] cannot find symbol\n  symbol:   class Before\n  location: package org.junit\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java:[18,24] cannot find symbol\n  symbol:   class Assert\n  location: package org.junit\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java:[18,1] static import only from classes and interfaces\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java:[9,24] package org.junit.runner does not exist\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java:[18,2] cannot find symbol\n  symbol: class RunWith\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java:[29,6] cannot find symbol\n  symbol:   class Before\n  location: class com.aura.vihanga.employeeservice.cucumberglue.CucumberConfig\r\n[INFO] 8 errors \r\n[INFO] -------------------------------------------------------------\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  28.058 s\r\n[INFO] Finished at: 2026-10-01T08:16:01-05:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:testCompile (default-testCompile) on project employee-service: Compilation failure: Compilation failure: \r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java:[6,24] package org.junit.runner does not exist\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java:[8,6] cannot find symbol\r\n[ERROR]   symbol: class RunWith\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java:[4,17] cannot find symbol\r\n[ERROR]   symbol:   class Before\r\n[ERROR]   location: package org.junit\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java:[18,24] cannot find symbol\r\n[ERROR]   symbol:   class Assert\r\n[ERROR]   location: package org.junit\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java:[18,1] static import only from classes and interfaces\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java:[9,24] package org.junit.runner does not exist\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java:[18,2] cannot find symbol\r\n[ERROR]   symbol: class RunWith\r\n[ERROR] ./src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java:[29,6] cannot find symbol\r\n[ERROR]   symbol:   class Before\r\n[ERROR]   location: class com.aura.vihanga.employeeservice.cucumberglue.CucumberConfig\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException\r\n\n",
+  "transformation": "rewrite-06",
+  "edge": "E3",
+  "error_groups": [
+    {
+      "id": "G1",
+      "category": "missing-symbol",
+      "subject": "message cannot find symbol",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 5,
+      "files": [
+        "src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java",
+        "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+        "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java",
+        "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"
+      ],
+      "sample": "cannot find symbol"
+    },
+    {
+      "id": "G2",
+      "category": "missing-symbol",
+      "subject": "class Before",
+      "package": "org.junit",
+      "package_family": "org.junit",
+      "basis": "parser + source-import",
+      "count": 2,
+      "files": [
+        "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java"
+      ],
+      "sample": "cannot find symbol — class Before"
+    },
+    {
+      "id": "G3",
+      "category": "missing-symbol",
+      "subject": "class RunWith",
+      "package": "org.junit.runner",
+      "package_family": "org.junit.runner",
+      "basis": "parser + source-import",
+      "count": 2,
+      "files": [
+        "src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java",
+        "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"
+      ],
+      "sample": "cannot find symbol — class RunWith"
+    },
+    {
+      "id": "G4",
+      "category": "missing-package",
+      "subject": "package org.junit.runner",
+      "package": "org.junit.runner",
+      "package_family": "org.junit.runner",
+      "basis": "parser",
+      "count": 2,
+      "files": [
+        "src/test/java/com/aura/vihanga/employeeservice/CucumberIntegrationTest.java",
+        "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"
+      ],
+      "sample": "package org.junit.runner does not exist"
+    },
+    {
+      "id": "G5",
+      "category": "missing-symbol",
+      "subject": "class Assert",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [
+        "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java"
+      ],
+      "sample": "cannot find symbol — class Assert"
+    },
+    {
+      "id": "G6",
+      "category": "plugin-failure",
+      "subject": "message Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:N.N.N:testCompile (default-tes",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:testCompile (default-testCompile) on project employee-service: Compilation failure: Compilation failure:"
+    },
+    {
+      "id": "G7",
+      "category": "other",
+      "subject": "message static import only from classes and interfaces",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [
+        "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java"
+      ],
+      "sample": "static import only from classes and interfaces"
+    }
+  ],
+  "correlation": {
+    "basis": "plan-text-match (heuristic: expected_symptoms substring match, not compiler truth)",
+    "matches": [],
+    "unmatched_groups": [
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6",
+      "G7"
+    ]
+  }
+}

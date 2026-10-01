@@ -1,0 +1,102 @@
+{
+  "slug": "v1-employee",
+  "created_at": "2026-10-01",
+  "reference_pack": "references/spring-boot-2-to-3.md",
+  "source": {
+    "platform": { "name": "Spring Boot", "version": "2.7.12", "source": "baseline.json" },
+    "language": { "name": "Java", "version": "17", "source": "baseline.json" }
+  },
+  "target": {
+    "platform": { "name": "Spring Boot", "version": "3.5.16", "source": "request (line 3.5 resolved by detect-baseline to its latest GA patch via maven-metadata)" },
+    "language": { "name": "Java", "version": "21", "source": "request" }
+  },
+  "path": {
+    "hops": [
+      { "from": "2.7.12", "to": "2.7.18", "note": "E1 PATCH, pin-only (core-apache-2.0), JDK 17, Spring Cloud 2021.0.9" },
+      { "from": "2.7.18", "to": "3.0.13", "note": "E2 MAJOR_BOUNDARY, upstream UpgradeSpringBoot_3_0 (rewrite-spring 5.24.1, Apache-2.0), JDK 17, Spring Cloud 2022.0.5, rules pack spring-boot-2-to-3" },
+      { "from": "3.0.13", "to": "3.3.13", "note": "E3 MINOR, upstream UpgradeSpringBoot_3_3 (rewrite-spring 5.24.1, Apache-2.0) - licence-frontier stop, JDK 17, Spring Cloud 2023.0.6" },
+      { "from": "3.3.13", "to": "3.5.16", "note": "E4 MINOR landing edge, pin-only (no Apache-2.0 recipe for 3.4/3.5 under open-source-only), JDK 21, Spring Cloud 2025.0.3; java.version 17 -> 21" }
+    ],
+    "preparation": "The pack's preparation line is 2.7; the source is 2.7.12, so E1 moves it to the latest 2.7 patch (2.7.18) before the 3.0 boundary, as the pack's section 0 asks. No separate deprecation clean-up is planned: the build will name anything that matters."
+  },
+  "constraints": [
+    { "id": "C1", "statement": "JDK 17 (E1-E3) and JDK 21 (E4) are available", "status": "satisfied", "evidence": "baseline.json toolchain: 17.0.20.1 and 21.0.11" },
+    { "id": "C2", "statement": "Spring Boot 3.5.16 and every intermediate edge version resolve from Maven Central", "status": "unresolved", "evidence": "proven by each edge's first build round", "blocking": true },
+    { "id": "C3", "statement": "A GA Spring Cloud train exists for every Boot line on the path (2021.0.9, 2022.0.5, 2023.0.6, 2025.0.3)", "status": "satisfied", "evidence": "baseline.json migration_path.edges[].cloud_evidence: each train's spring-cloud-starter-parent POM was read at detect time" },
+    { "id": "C4", "statement": "Only Apache-2.0 recipe stacks run (licence policy open-source-only)", "status": "satisfied", "evidence": "baseline.json license_policy open-source-only; every edge licence Apache-2.0", "blocking": true },
+    { "id": "C5", "statement": "Pinned third-party versions (poi-ooxml 5.0.0, cucumber 7.11.0, jacoco-maven-plugin 0.8.7) still work on Boot 3.5 / Java 21", "status": "unresolved", "evidence": "jacoco 0.8.7 predates Java 21 class-file support; verified by the E4 package round" },
+    { "id": "C6", "statement": "The application starts without Config Server and Eureka (both disabled by probe arguments, identical before and after)", "status": "satisfied", "evidence": "runtime/baseline.json started=true" },
+    { "id": "C7", "statement": "No endpoint in the static or actuator inventory is lost", "status": "unresolved", "evidence": "checked by the final probe's endpoint inventory", "blocking": true }
+  ],
+  "surfaces": [
+    { "area": "Platform and ecosystem BOMs", "files": ["pom.xml"], "basis": "machine-detected", "note": "spring-boot-starter-parent 2.7.12, spring-cloud-dependencies 2021.0.7 via spring-cloud.version, packaging war" },
+    { "area": "Spring Cloud / Eureka", "files": ["src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"], "basis": "machine-detected", "note": "@EnableEurekaClient (pack section 8)" },
+    { "area": "Web error handling", "files": ["src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java"], "basis": "agent-judgement", "note": "overrides ResponseEntityExceptionHandler.handleHttpRequestMethodNotSupported(..., HttpStatus, ...) - the Framework 6 signature takes HttpStatusCode (pack section 5.2)" },
+    { "area": "Web API", "files": ["src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java"], "basis": "machine-detected", "note": "five routes; trailing-slash matching (pack section 5.1)" },
+    { "area": "Test glue on javax / HttpClient 4", "files": ["src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java", "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java"], "basis": "agent-judgement", "note": "javax.ws.rs.core.Application (from Eureka 1.x Jersey) and HttpComponentsClientHttpRequestFactory; the JUnit4 Cucumber runner is not executed by surefire today" },
+    { "area": "Tests", "files": ["src/test/java/com/aura/vihanga/employeeservice/controller/EmployeeControllerTest.java", "src/test/java/com/aura/vihanga/employeeservice/service/EmployeeServiceTest.java", "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java"], "basis": "agent-judgement", "note": "@MockBean (deprecated from Boot 3.4, still present in 3.5), getStatusCodeValue (deprecated in Framework 6), @DataMongoTest against the local MongoDB" },
+    { "area": "Configuration", "files": ["src/main/resources/application.properties", "src/main/resources/bootstrap.properties"], "basis": "agent-judgement", "note": "bootstrap.properties is read through spring-cloud-starter-bootstrap (pack section 8)" }
+  ],
+  "impact": [
+    { "id": "I1", "file": "pom.xml", "area": "[E1] Platform patch + Cloud train", "evidence": "spring-boot-starter-parent 2.7.12; spring-cloud.version 2021.0.7", "reference_rule": "section 0 / section 1", "risk": "low", "verification": "E1 round compiles on 2.7.18", "handled_by": "deterministic", "expected_symptoms": ["spring-boot-starter-parent"] },
+    { "id": "I2", "file": "pom.xml", "area": "[E2] Boot 3.0 parent + Cloud 2022.0", "evidence": "parent and spring-cloud.version move to 3.0.13 / 2022.0.5", "reference_rule": "section 1", "risk": "medium", "verification": "E2 round resolves 3.0.13 and compiles", "handled_by": "deterministic", "expected_symptoms": ["spring-cloud-dependencies", "Could not resolve"] },
+    { "id": "I3", "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java", "area": "[E2] Spring Cloud 2022.0", "evidence": "import org.springframework.cloud.netflix.eureka.EnableEurekaClient; @EnableEurekaClient", "reference_rule": "section 8", "risk": "medium", "verification": "E2 compile; startup (Eureka disabled in probes)", "handled_by": "either", "expected_symptoms": ["EnableEurekaClient", "org.springframework.cloud.netflix.eureka"] },
+    { "id": "I4", "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java", "area": "[E2] Spring Framework 6 MVC error handling", "evidence": "@Override handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException, HttpHeaders, HttpStatus, WebRequest)", "reference_rule": "section 5.2", "risk": "high", "verification": "E2 compile; probe 'unsupported method handled by advice' keeps 400 {code:405}", "handled_by": "either", "expected_symptoms": ["method does not override", "HttpStatusCode", "handleHttpRequestMethodNotSupported"] },
+    { "id": "I5", "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java", "area": "[E2] javax -> jakarta (test glue)", "evidence": "import javax.ws.rs.core.Application; used as @ContextConfiguration class - comes from Eureka 1.x's Jersey 1 dependency", "reference_rule": "section 2", "risk": "medium", "verification": "E2 test-compile", "handled_by": "either", "expected_symptoms": ["javax.ws.rs", "jakarta.ws.rs", "Application"] },
+    { "id": "I6", "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberSteps.java", "area": "[E2] RestTemplate on HttpClient", "evidence": "new HttpComponentsClientHttpRequestFactory() - Framework 6 needs HttpClient 5", "reference_rule": "section 7.2", "risk": "low", "verification": "E2 test-compile (the Cucumber runner is not executed by surefire)", "handled_by": "residual", "expected_symptoms": ["org.apache.hc", "org.apache.http", "HttpComponentsClientHttpRequestFactory"] },
+    { "id": "I7", "file": "src/test/java/com/aura/vihanga/employeeservice/controller/EmployeeControllerTest.java", "area": "[E2] ResponseEntity status API", "evidence": "createdEmployee.getStatusCodeValue() (deprecated in Framework 6, still compiles)", "reference_rule": "section 5.2", "risk": "low", "verification": "test round on E4: same 7 tests pass", "handled_by": "either", "expected_symptoms": ["getStatusCodeValue"] },
+    { "id": "I8", "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java", "area": "[E2] Trailing-slash matching off", "evidence": "@GetMapping(\"employee/{id}\") answered GET /api/v1/employee/V1PROBE01/ with 200 at baseline", "reference_rule": "section 5.1", "risk": "medium", "verification": "probe 'get employee trailing slash' (expected to become 404); recorded as a behaviour change, not re-enabled silently", "handled_by": "residual" },
+    { "id": "I9", "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java", "area": "[E2] Default error bodies (ResponseEntityExceptionHandler)", "evidence": "search without the required name parameter answered 400 with an empty body at baseline; Framework 6's handler may write a ProblemDetail body", "reference_rule": "section 5.2 (Framework 6 MVC)", "risk": "low", "verification": "probe 'search without name is 400' keeps status 400", "handled_by": "residual" },
+    { "id": "I10", "file": "pom.xml", "area": "[E3] Boot 3.3 parent + Cloud 2023.0", "evidence": "parent 3.0.13 -> 3.3.13; spring-cloud.version 2022.0.5 -> 2023.0.6", "reference_rule": "ladder edge E3 (no rules pack for a MINOR edge)", "risk": "low", "verification": "E3 round compiles on 3.3.13", "handled_by": "deterministic", "expected_symptoms": ["spring-boot-starter-parent"] },
+    { "id": "I11", "file": "pom.xml", "area": "[E4] Boot 3.5 parent + Cloud 2025.0 + Java 21", "evidence": "parent 3.3.13 -> 3.5.16; spring-cloud.version -> 2025.0.3; java.version 17 -> 21", "reference_rule": "ladder edge E4 (pin-only)", "risk": "medium", "verification": "E4 rounds on JDK 21: test-compile, then package with the same goal as round 0", "handled_by": "deterministic", "expected_symptoms": ["release version 21", "spring-boot-starter-parent"] },
+    { "id": "I12", "file": "pom.xml", "area": "[E4] Pinned jacoco-maven-plugin 0.8.7 on Java 21", "evidence": "unitTest profile (active by default) runs jacoco 0.8.7 prepare-agent/report; 0.8.7 predates Java 21 class files", "reference_rule": "residual (no pack rule; build/test evidence decides)", "risk": "medium", "verification": "E4 package round: tests and report goal", "handled_by": "residual", "expected_symptoms": ["Unsupported class file major version 65", "jacoco"] },
+    { "id": "I13", "file": "src/test/java/com/aura/vihanga/employeeservice/service/EmployeeServiceTest.java", "area": "[E3/E4] @MockBean deprecation", "evidence": "@MockBean in EmployeeServiceTest and EmployeeControllerTest (deprecated for removal from Boot 3.4)", "reference_rule": "residual (deprecation only, compiles on 3.5)", "risk": "low", "verification": "E4 test round", "handled_by": "either", "expected_symptoms": ["MockBean"] }
+  ],
+  "characterization": [
+    { "probe": "create employee", "protects": ["I2", "I10", "I11"], "category": "business-api" },
+    { "probe": "get employee by id", "protects": ["I2", "I11"], "category": "serialization" },
+    { "probe": "get unknown employee is 404", "protects": ["I4"], "category": "error-contract" },
+    { "probe": "unsupported method handled by advice", "protects": ["I4"], "category": "error-contract" },
+    { "probe": "get employee trailing slash", "protects": ["I8"], "category": "business-api" },
+    { "probe": "search without name is 400", "protects": ["I9"], "category": "error-contract" },
+    { "probe": "search employees by name", "protects": ["I2", "I11"], "category": "business-api" },
+    { "probe": "excel upload non-xlsx part", "protects": ["I2", "I11"], "category": "business-api" },
+    { "probe": "employee salary (no department service)", "protects": ["I3"], "category": "business-api" },
+    { "probe": "endpoint inventory (actuator)", "protects": ["I2", "I10", "I11"], "category": "actuator" },
+    { "probe": null, "protects": ["I5", "I6"], "category": "test-suite", "reason": "Cucumber glue is only compiled: the JUnit4 Cucumber runner is not executed by surefire (round 0 ran 7 JUnit 5 tests) and its steps target a hard-coded port 8500" },
+    { "probe": null, "protects": ["I7", "I12", "I13"], "category": "test-suite", "reason": "observed by the test suite (same package goal as round 0), not by a runtime probe" },
+    { "probe": null, "protects": ["I1"], "category": "other", "reason": "patch edge; observed by the E1 build round only" }
+  ],
+  "deterministic_candidates": [
+    { "id": "E1", "provider": "openrewrite", "transformation": "edge:E1", "edge": "E1", "policy": "optional", "license": "Apache-2.0", "covers": ["I1"], "notes": "pin-only: ChangeParentPom 2.7.18 + spring-cloud.version 2021.0.9" },
+    { "id": "E2", "provider": "openrewrite", "transformation": "edge:E2", "edge": "E2", "policy": "optional", "license": "Apache-2.0", "artifacts": ["org.openrewrite.recipe:rewrite-spring:5.24.1"], "covers": ["I2", "I3", "I4", "I5", "I7"], "notes": "UpgradeSpringBoot_3_0 chains many sub-recipes; reject modernisation (text blocks, pattern matching, formatting) and unrelated dependency changes at inspection" },
+    { "id": "E3", "provider": "openrewrite", "transformation": "edge:E3", "edge": "E3", "policy": "optional", "license": "Apache-2.0", "artifacts": ["org.openrewrite.recipe:rewrite-spring:5.24.1"], "covers": ["I10"], "notes": "UpgradeSpringBoot_3_3 (licence frontier); inspect for out-of-scope changes" },
+    { "id": "E4", "provider": "openrewrite", "transformation": "edge:E4", "edge": "E4", "policy": "optional", "license": "Apache-2.0", "covers": ["I11"], "notes": "pin-only: ChangeParentPom 3.5.16, java.version 21, spring-cloud.version 2025.0.3" }
+  ],
+  "residual_candidates": [
+    { "impact": "I5", "why_not_deterministic": "The javax->jakarta move of javax.ws.rs only helps if a Jakarta RS API is on the test classpath; Eureka 4 no longer brings Jersey, so what replaces the import must be decided from the resolved dependency tree" },
+    { "impact": "I6", "why_not_deterministic": "No recipe in the path switches HttpClient 4 to 5 for a test helper; only acted on if the build names it" },
+    { "impact": "I8", "why_not_deterministic": "Trailing-slash matching is a runtime behaviour change; recorded, not re-enabled silently (pack 5.1)" },
+    { "impact": "I9", "why_not_deterministic": "Framework-owned error body; classified after the final probe" },
+    { "impact": "I12", "why_not_deterministic": "No ladder recipe touches the pinned jacoco plugin; only changed if the Java 21 build/test evidence demands it" }
+  ],
+  "out_of_scope": [
+    "Fixing the injection-prone string query in EmployeeSearchRepository",
+    "Making the Cucumber JUnit4 runner execute (vintage engine / port 8500)",
+    "Moving @MockBean to @MockitoBean or getStatusCodeValue to getStatusCode().value() unless a build fails",
+    "Upgrading poi-ooxml 5.0.0 or cucumber 7.11.0",
+    "Switching packaging from war to jar",
+    "Re-enabling trailing-slash matching",
+    "Any modernisation proposed by recipes (text blocks, pattern matching, formatting, import reordering)"
+  ],
+  "stop_conditions": [
+    "An edge version or Spring Cloud train cannot be resolved",
+    "A recipe outside the Apache-2.0 stacks would be needed (policy open-source-only)",
+    "A business or error-contract probe changes status for a cause not within the migration's scope",
+    "An endpoint present at baseline is missing after the migration",
+    "The E4 package round introduces test failures that round 0 did not have and they cannot be traced to the migration"
+  ],
+  "unresolved_questions": [
+    "Does jacoco-maven-plugin 0.8.7 break the package goal on Java 21?"
+  ]
+}

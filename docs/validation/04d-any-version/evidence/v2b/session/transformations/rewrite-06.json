@@ -1,0 +1,87 @@
+{
+  "id": "rewrite-06",
+  "seq": 6,
+  "provider": "openrewrite",
+  "mode": "apply",
+  "applied": true,
+  "transformation": "edge-E3",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "env",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.edge.E3"
+  ],
+  "artifacts": [],
+  "config": null,
+  "config_sha": "b15ceaa19a8e36ef",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "4.1.1",
+  "jdk": {
+    "major": 21,
+    "version": "21.0.11"
+  },
+  "started_at": "2026-10-01T13:42:46.338Z",
+  "finished_at": "2026-10-01T13:43:03.774Z",
+  "duration_ms": 17436,
+  "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:runNoFork -Drewrite.activeRecipes=mars.migration.edge.E3 -Drewrite.configLocation=<session>\\transformations\\rewrite-06.rewrite.yml",
+  "exit_code": 0,
+  "status": "applied",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": "rewrite-05",
+  "proposed_files": [],
+  "changed_files": [
+    {
+      "state": "M",
+      "file": "pom.xml"
+    }
+  ],
+  "excluded_files": [],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.xml.ChangeTagValue: {elementName=/project/parent/version, oldValue=4.0.8, newValue=4.1.1}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.UpgradeDependencyVersion: {groupId=org.springframework.boot, artifactId=*, newVersion=4.1.1}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=java.version, newValue=21}"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-06.patch",
+  "log": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-06.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-06-before",
+    "commit": "5ce64a5197da367bec3690c3531fdea1881e942d"
+  },
+  "scope_check": {
+    "ok": true,
+    "out_of_preview": [],
+    "infrastructure_lines": []
+  },
+  "reconciliation": {
+    "requested_platform_version": "4.1.1",
+    "declared_after_apply": "4.1.1",
+    "recipe_target": "4.1.1",
+    "status": "matches-request"
+  },
+  "build_round": 5,
+  "notes": [],
+  "edge": "E3",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-06.rewrite.yml",
+  "goal": "runNoFork"
+}

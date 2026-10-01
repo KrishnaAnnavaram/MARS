@@ -16,7 +16,7 @@ const fs = require('fs');
 const path = require('path');
 const {
   PATHS, sessionPaths, readJson, writeJson, rel, run, listRounds, listTransformations, readState, inferState,
-  changedSince, isSandboxRepo, inventoryProject, compareProbeRecords,
+  changedSince, isSandboxRepo, inventoryProject, compareProbeRecords, scanEndpoints, compareEndpoints,
 } = require('./migration');
 
 const RUNS_DIR = path.join(PATHS.OUT_DIR, 'migration-runs');
@@ -65,6 +65,13 @@ function dependencyChanges(baseline, workspace) {
     else if ((b.version || null) !== (d.version || null)) out.push({ dependency: key(d), old: b.version || '(managed)', new: d.version || '(managed)', reason: 'version changed' });
   }
   for (const [k, b] of before) if (!now.has(k)) out.push({ dependency: key(b), old: b.version || '(managed)', new: null, reason: 'removed' });
+  // Build plugins too (including those inside profiles): a coverage or compiler plugin bump is a dependency change.
+  const pluginKey = (p) => `${p.groupId || 'org.apache.maven.plugins'}:${p.artifactId}`;
+  const pluginsBefore = new Map(((baseline.platform && baseline.platform.plugins) || []).filter((p) => p.version).map((p) => [pluginKey(p), p.version]));
+  for (const p of (after.plugins || []).filter((x) => x.version)) {
+    const old = pluginsBefore.get(pluginKey(p));
+    if (old && old !== p.version) out.push({ dependency: `${pluginKey(p)} (plugin)`, old, new: p.version, reason: 'plugin version changed' });
+  }
   const bp = (baseline.platform && baseline.platform.properties) || {};
   const ap = after.properties || {};
   for (const p of new Set([...Object.keys(bp), ...Object.keys(ap)])) {
@@ -77,18 +84,23 @@ function fileChanges(paths, meta, migration) {
   if (!meta || !isSandboxRepo(paths.workspace)) return [];
   let changed = [];
   try { changed = changedSince(paths.workspace, meta.baseline_commit) || []; } catch { return []; }
+  // A file is usually changed by several steps (a recipe, then a residual repair): keep all of them.
   const notes = new Map();
   for (const c of (migration && migration.code_changes) || []) {
-    for (const f of [].concat(c.file || c.files || [])) notes.set(String(f).replace(/\\/g, '/'), c);
+    for (const f of [].concat(c.file || c.files || [])) {
+      const k = String(f).replace(/\\/g, '/');
+      notes.set(k, [...(notes.get(k) || []), c]);
+    }
   }
   return changed.map((c) => {
     const file = c.file || c.path || String(c);
-    const note = notes.get(file) || [...notes.entries()].find(([k]) => file.endsWith(k) || k.endsWith(file))?.[1];
+    const entries = notes.get(file) || ([...notes.entries()].find(([k]) => file.endsWith(k) || k.endsWith(file)) || [])[1] || [];
+    const uniq = (xs) => [...new Set(xs.filter(Boolean))];
     return {
       file,
       change: { A: 'added', M: 'modified', D: 'deleted', R: 'renamed' }[String(c.state || '').charAt(0)] || c.state || 'changed',
-      tool: note ? (note.origin || null) : null,
-      reason: note ? (note.why || note.summary || note.description || note.evidence || null) : null,
+      tool: uniq(entries.map((e) => e.origin)).join(' + ') || null,
+      reason: uniq(entries.map((e) => e.why || e.summary || e.description || e.evidence)).join(' · ') || null,
     };
   });
 }
@@ -102,19 +114,32 @@ function deriveStatus(ctx) {
   }
   if (state && state.state === 'FAILED') return { status: 'FAIL', reason: state.reason || 'session failed' };
   const round0 = rounds.find((r) => r.baseline || r.round === 0);
-  if (round0 && !['passed', 'tests-failed'].includes(round0.outcome)) return { status: 'FAIL', reason: `round 0 (the untouched project) did not compile: ${round0.outcome}` };
-  if (!inferred.reached.includes('RENDERED')) {
+  if (round0 && !['passed', 'tests-failed', 'build-failed'].includes(round0.outcome)) return { status: 'FAIL', reason: `round 0 (the untouched project) did not compile: ${round0.outcome}` };
+  if (!ctx.finished) {
     return { status: 'IN_PROGRESS', reason: `stopped after ${inferred.state} — the migration has not been rendered; if the run ends here it is incomplete` };
   }
   const last = rounds[rounds.length - 1];
   const reasons = [];
-  const compiled = last && ['passed', 'tests-failed'].includes(last.outcome);
+  const compiled = last && ['passed', 'tests-failed', 'build-failed'].includes(last.outcome);
   if (!compiled) return { status: 'FAIL', reason: `final round ${last ? last.round : '?'} did not compile on the target (${last ? last.outcome : 'no rounds'})` };
   if (requested && finalDeclared && finalDeclared !== requested) return { status: 'FAIL', reason: `final build declares ${finalDeclared}, not the requested ${requested}` };
   if (tests && tests.worse) return { status: 'FAIL', reason: `${tests.after.failed + tests.after.errors - tests.before.failed - tests.before.errors} new test failure(s) against round 0` };
   const diffs = (migration && migration.behaviour && migration.behaviour.differences) || [];
-  if (comparison && comparison.statusChanged > 0) return { status: 'FAIL', reason: `${comparison.statusChanged} probe(s) changed HTTP status after the migration` };
+  // A changed HTTP status is a contract break for clients. It FAILs the run unless the agent read both
+  // responses and classified it as an expected framework change (e.g. Boot 3's trailing-slash
+  // matching) — and even then the run is only a PARTIAL PASS: a human must accept the change.
+  const statusRows = comparison ? comparison.rows.filter((r) => r.verdict === 'status-differs') : [];
+  const unaccepted = statusRows.filter((r) => r.classification !== 'expected-framework-change');
+  if (unaccepted.length) return { status: 'FAIL', reason: `${unaccepted.length} probe(s) changed HTTP status after the migration with no expected-framework-change classification: ${unaccepted.map((r) => r.name).join(', ')}` };
   if (diffs.some((d) => d.classification === 'regression')) return { status: 'FAIL', reason: 'a behavioural difference is classified as a regression' };
+  if (last.outcome === 'build-failed') return { status: 'FAIL', reason: `final round ${last.round} compiled but a build plugin failed — the artifact was not produced` };
+  if (statusRows.length) reasons.push(`${statusRows.length} client-visible HTTP status change(s) classified as expected framework changes need human acceptance: ${statusRows.map((r) => r.name).join(', ')}`);
+  const lost = ctx.endpoints
+    ? [...new Set([...(ctx.endpoints.static.missing || []), ...((ctx.endpoints.runtime && ctx.endpoints.runtime.missing) || [])])]
+    : [];
+  if (lost.length) return { status: 'FAIL', reason: `${lost.length} endpoint(s) the application served before are gone: ${lost.join(', ')}` };
+  const openEdges = (ctx.edges || []).filter((e) => !e.complete);
+  if (openEdges.length) return { status: 'FAIL', reason: `the planned path is not finished — edge(s) ${openEdges.map((e) => e.id).join(', ')} never built green on their planned version` };
   if (last.outcome !== 'passed' && !(tests && !tests.worse)) reasons.push(`final round ended ${last.outcome} without a comparable round-0 test baseline`);
   if (!PACKAGING_INTENTS.includes(last.build.intent)) reasons.push(`final round goal is ${last.build.intent}, not a packaging goal`);
   if (!requested) reasons.push('no exact target was requested, so reaching it cannot be checked');
@@ -126,7 +151,7 @@ function deriveStatus(ctx) {
   return reasons.length ? { status: 'PARTIAL PASS', reason: reasons.join('; ') } : { status: 'PASS', reason: 'green on the requested target, no new test failures, behaviour compared with no status changes' };
 }
 
-function buildSummary(slug) {
+function buildSummary(slug, { assumeRendered = false } = {}) {
   const paths = sessionPaths(slug);
   const baseline = readJson(paths.baseline);
   const state = readState(slug);
@@ -148,14 +173,53 @@ function buildSummary(slug) {
   const mp = (baseline && baseline.migration_path) || {};
   const requested = baseline && baseline.target && baseline.target.platform ? baseline.target.platform.version : null;
   const last = rounds[rounds.length - 1];
-  const finalDeclared = last && last.declared && last.declared.parent ? last.declared.parent.version : null;
+  const finalDeclared = last && last.declared
+    ? ((last.declared.platform && last.declared.platform.version) || (last.declared.parent && last.declared.parent.version) || null)
+    : null;
   const round0 = rounds.find((r) => r.baseline || r.round === 0);
   const before = testTotals(round0) || testTotals(rounds.find((r) => TEST_INTENTS.includes(r.build.intent)));
   const after = [...rounds].reverse().map(testTotals).find((t) => t && (!before || t.round !== before.round)) || null;
   const tests = before || after ? { before, after, worse: Boolean(before && after && (after.failed + after.errors) > (before.failed + before.errors)) } : null;
   const comparison = runtimeBaseline && runtimeFinal ? compareProbeRecords(runtimeBaseline, runtimeFinal, (migration && migration.behaviour && migration.behaviour.differences) || []) : null;
 
-  const { status, reason } = deriveStatus({ state, inferred, rounds, baseline, migration, comparison, tests, finalDeclared, requested });
+  // Migration-path edges (ladder sessions): what each rung planned, ran and reached.
+  const edges = ((baseline && baseline.migration_path && baseline.migration_path.edges) || []).map((e) => {
+    const ts = transformations.filter((t) => t.edge === e.id);
+    const rs = rounds.filter((r) => r.edge === e.id);
+    const done = rs.find((r) => ['passed', 'tests-failed', 'build-failed'].includes(r.outcome) && r.declared
+      && ((r.declared.platform && r.declared.platform.version === e.to) || (r.declared.parent && r.declared.parent.version === e.to)));
+    return {
+      id: e.id, class: e.class, role: e.role, from: e.from, to: e.to, java: e.java, jdk: e.jdk ? e.jdk.version : null,
+      recipe_source: e.recipe_source, recipe: e.recipe || e.composite || null, stack: e.stack, license: e.license,
+      open_source: e.open_source, cloud_train: e.cloud_train, pack: e.pack, notes: e.notes || [],
+      previews: ts.filter((t) => t.mode === 'dry-run').map((t) => `${t.id} ${t.status} (${(t.proposed_files || []).length} files)`),
+      applies: ts.filter((t) => t.mode === 'apply').map((t) => `${t.id} ${t.status} (${(t.changed_files || []).length} files)`),
+      rounds: rs.map((r) => `R${r.round} ${r.build.intent} ${r.outcome}`),
+      complete: Boolean(done),
+      completed_by: done ? `R${done.round}` : null,
+    };
+  });
+  // Endpoint preservation: the source's mappings before vs the sandbox now; the running app before vs after.
+  const staticBefore = (baseline && baseline.observations && baseline.observations.endpoints) || null;
+  const staticAfter = staticBefore && meta && isSandboxRepo(paths.workspace) ? scanEndpoints(paths.workspace) : null;
+  const inv = (record) => (record && record.endpoint_inventory && record.endpoint_inventory.available ? record.endpoint_inventory.endpoints : null);
+  const rtBefore = inv(runtimeBaseline);
+  const rtAfter = inv(runtimeFinal);
+  const asObjects = (keys) => keys.map((k) => ({ method: k.split(' ')[0], path: k.slice(k.indexOf(' ') + 1) }));
+  const endpoints = staticBefore ? {
+    static: staticAfter
+      ? compareEndpoints(staticBefore, staticAfter)
+      : { before: staticBefore.length, after: null, preserved: [], missing: [], added: [], note: 'no sandbox to compare yet' },
+    runtime: rtBefore && rtAfter
+      ? { ...compareEndpoints(asObjects(rtBefore), asObjects(rtAfter)), source: 'actuator /mappings' }
+      : { source: 'actuator /mappings', missing: [], note: rtBefore || rtAfter ? 'only one side exposed /actuator/mappings' : '/actuator/mappings not exposed or not probed — static inventory only' },
+  } : null;
+  // The report renders before the RENDERED state is recorded; it asks for the status as if rendered.
+  const finished = assumeRendered || inferred.reached.includes('RENDERED');
+  const { status, reason } = deriveStatus({
+    state, inferred, rounds, baseline, migration, comparison, tests, finalDeclared, requested,
+    endpoints: finished ? endpoints : null, edges: finished ? edges : [], finished,
+  });
   const projectDir = baseline && baseline.project ? baseline.project.dir : null;
   const platformName = (baseline && baseline.target && baseline.target.platform && baseline.target.platform.name)
     || (mp.stack) || ((baseline && baseline.reference_pack_eligibility && baseline.reference_pack_eligibility[0]) || {}).stack || null;
@@ -219,6 +283,11 @@ function buildSummary(slug) {
       warnings: mp.warnings || [],
       unresolved: mp.unresolved || [],
     },
+    license_policy: (baseline && baseline.license_policy) || 'open-source-only',
+    path: edges.length ? {
+      ladder: mp.ladder, granularity: mp.granularity, versions_from: mp.evidence ? mp.evidence.published : null, edges,
+    } : null,
+    endpoints,
     planned_transformations: plan ? {
       impact_areas: [...new Set((plan.impact || []).map((i) => i.area).filter(Boolean))],
       impact_entries: (plan.impact || []).length,
@@ -227,7 +296,7 @@ function buildSummary(slug) {
     } : null,
     openrewrite: transformations.map((t) => ({
       seq: t.seq, id: t.id || t.transformation, mode: t.mode, status: t.status,
-      recipes: t.recipes || [], files: (t.changed_files || t.proposed_files || []).length,
+      recipes: t.recipes || [], files: ((t.mode === 'apply' ? t.changed_files : t.proposed_files) || []).length,
       error: t.error || t.reason || null,
       decision: (((migration && migration.transformations) || []).find((d) => d.record === `rewrite-${String(t.seq).padStart(2, '0')}`) || {}).decision || null,
     })),
@@ -260,7 +329,7 @@ function buildSummary(slug) {
       unexpected_differences: ((migration && migration.behaviour && migration.behaviour.differences) || []).filter((d) => ['regression', 'unexplained'].includes(d.classification)).map((d) => `${d.probe}: ${d.classification}`),
       verdict: comparison.verdictText,
     } : null,
-    compiled_on_target: Boolean(last && !(last.baseline || last.round === 0) && ['passed', 'tests-failed'].includes(last.outcome)),
+    compiled_on_target: Boolean(last && !(last.baseline || last.round === 0) && ['passed', 'tests-failed', 'build-failed'].includes(last.outcome)),
     target_reached: Boolean(requested && finalDeclared && finalDeclared === requested),
     validation: [],
     handoff: null,
@@ -339,6 +408,40 @@ function renderMarkdown(s) {
   }
   if (mp.warnings.length) out.push('Warnings:', '', ...list(mp.warnings), '');
   if (mp.unresolved.length) out.push('Unresolved:', '', ...list(mp.unresolved), '');
+
+  out.push('## Migration path (edges)', '');
+  if (!s.path) out.push(`_No ladder path — a single pack session._ Licence policy: **${s.license_policy}**`, '');
+  else {
+    out.push(`Ladder \`${s.path.ladder}\` · licence policy **${s.license_policy}** · granularity ${s.path.granularity} · versions from ${s.path.versions_from || '—'}`, '');
+    out.push(...table(['Edge', 'From → To', 'Class', 'Recipe', 'Licence', 'JDK', 'Cloud train', 'Previews', 'Applies', 'Rounds', 'Complete'],
+      s.path.edges.map((e) => [
+        e.id, `${e.from} → ${e.to}`, `${e.class}${e.role === 'landing' ? ' (landing)' : ''}`,
+        `${e.recipe_source}${e.recipe ? `: ${e.recipe}` : ''}`, `${e.license || '—'}${e.open_source === false ? ' (not OSI open source)' : ''}`,
+        e.java, e.cloud_train, e.previews.join('; '), e.applies.join('; '), e.rounds.join('; '), e.complete ? `yes (${e.completed_by})` : 'no',
+      ])), '');
+    const notes = s.path.edges.flatMap((e) => e.notes.map((n) => `${e.id}: ${n}`));
+    if (notes.length) out.push('Edge notes:', '', ...list(notes), '');
+  }
+
+  out.push('## Endpoint preservation', '');
+  if (!s.endpoints) out.push('_No endpoint inventory was recorded for this session._', '');
+  else {
+    const st = s.endpoints.static;
+    const rt = s.endpoints.runtime;
+    const n = (v) => (v === undefined || v === null ? '—' : v);
+    out.push(...table(['Inventory', 'Before', 'After', 'Preserved', 'Missing', 'Added'], [
+      ['Source mappings (static scan)', st.before, n(st.after), st.preserved.length, st.missing.length, st.added.length],
+      [`Running application (${rt.source})`, n(rt.before), n(rt.after), rt.preserved ? rt.preserved.length : '—', rt.preserved ? rt.missing.length : '—', rt.added ? rt.added.length : '—'],
+    ]), '');
+    const notes = [st.note, rt.note].filter(Boolean);
+    if (notes.length) out.push(...list(notes), '');
+    const missing = [...new Set([...(st.missing || []), ...(rt.missing || [])])];
+    const compared = st.after !== null || Boolean(rt.preserved);
+    out.push(missing.length
+      ? `**Missing after the migration:** ${missing.map((m) => `\`${m}\``).join(', ')}`
+      : (compared ? 'No endpoint observed before the migration is missing after it, in any inventory that was available.' : '_Not compared yet._'), '');
+    if ((st.added || []).length || (rt.added || []).length) out.push(`Added: ${[...new Set([...(st.added || []), ...(rt.added || [])])].map((m) => `\`${m}\``).join(', ')}`, '');
+  }
 
   out.push('## Planned transformations', '');
   if (!s.planned_transformations) out.push('_No migration plan was recorded._');

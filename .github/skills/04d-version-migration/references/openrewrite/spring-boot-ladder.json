@@ -1,0 +1,267 @@
+{
+  "$comment": "04D Spring Boot migration ladder. Data, not code: scripts/lib/references.js reads it to plan a multi-edge path from any Boot line to any later one, and to pick the OpenRewrite recipe each edge runs. Every Boot line is one rung; a pack in references/ supplies the rules for each major boundary. Recipe names were verified against the jars on Maven Central (META-INF/rewrite/*.yml); licences were read from each artifact's own POM <licenses> element on 2026-10-01. Latest patches and Spring Cloud trains are re-read from Maven Central metadata at detect time; the values here are only the offline fallback.",
+  "id": "spring-boot",
+  "stack": "Spring Boot",
+  "platform_coordinates": [
+    "org.springframework.boot:spring-boot-starter-parent",
+    "org.springframework.boot:spring-boot-dependencies"
+  ],
+  "metadata": {
+    "group_id": "org.springframework.boot",
+    "artifact_id": "spring-boot-starter-parent",
+    "repository": "https://repo1.maven.org/maven2"
+  },
+  "license_policies": {
+    "open-source-only": "Only recipe stacks whose every artifact is under an OSI-approved licence. The default.",
+    "source-available": "Also allows the Moderne Source Available License recipe stack (free to use internally on your own code; not OSI open source; may not be offered to third parties as a service). Must be chosen explicitly and is recorded in the evidence."
+  },
+  "recipe_stacks": {
+    "apache-2.0": {
+      "license": "Apache-2.0",
+      "open_source": true,
+      "plugin_version": "5.46.1",
+      "gradle_plugin_version": "6.28.1",
+      "artifacts": [
+        "org.openrewrite.recipe:rewrite-spring:5.24.1"
+      ],
+      "evidence": "rewrite-spring 5.24.1 (2024-11-28) is the last Apache-2.0 release; 5.25.0 (2024-12-18) onwards is Moderne Source Available. Its POM pins rewrite 8.41.1, rewrite-migrate-java 2.30.1, rewrite-testing-frameworks 2.23.1, rewrite-hibernate 1.13.1, rewrite-java-dependencies 1.24.1, rewrite-static-analysis 1.21.1, rewrite-apache 1.9.1, rewrite-micrometer 0.11.1, rewrite-openapi 0.10.1, rewrite-reactive-streams 0.6.1 — every one Apache-2.0 per its POM. rewrite-maven-plugin 5.46.1 (2024-11-28, rewrite 8.41.1) and the Gradle plugin 6.28.1 (2024-11-28) are Apache-2.0. Verified at run time (validation run V1, 2.7.12 -> 3.5.16): all 34 org.openrewrite jars the plugin loaded declare Apache-2.0 in their POM, including the transitive rewrite-logging-frameworks 2.17.0, rewrite-jenkins 0.18.1, rewrite-github-actions 2.10.1, rewrite-csharp 0.16.1, rewrite-analysis 2.13.1, rewrite-kotlin 1.23.1 and rewrite-templating 1.19.1. (Their newer lines — e.g. rewrite-logging-frameworks 3.x, rewrite-jenkins 0.37, rewrite-github-actions 3.x — are Moderne Source Available; the 5.24.1 pins keep them out.)"
+    },
+    "core-apache-2.0": {
+      "license": "Apache-2.0",
+      "open_source": true,
+      "plugin_version": "6.46.1",
+      "gradle_plugin_version": "7.41.0",
+      "artifacts": [],
+      "evidence": "rewrite-maven-plugin 6.46.1 and everything it depends on (rewrite-core/java/java-8..25/maven/xml/groovy/kotlin/polyglot) are Apache-2.0. Only OpenRewrite's built-in recipes (xml ChangeTagValue for the parent pin, ChangeType, ChangePackage, ChangePropertyValue, ChangeDependencyGroupIdAndArtifactId, AddDependency, UpgradeDependencyVersion, ...) are used — no recipe artifact."
+    },
+    "moderne-source-available": {
+      "license": "Moderne Source Available License",
+      "open_source": false,
+      "plugin_version": "6.46.1",
+      "gradle_plugin_version": "7.41.0",
+      "artifacts": [
+        "org.openrewrite.recipe:rewrite-spring:6.37.1"
+      ],
+      "evidence": "rewrite-spring 6.x and its recipe dependencies (rewrite-migrate-java 3.x, rewrite-testing-frameworks 3.x, rewrite-hibernate 2.x, ...) declare the Moderne Source Available License: royalty-free for internal use and derivative works, but not OSI open source and not to be offered to third parties as a service."
+    }
+  },
+  "lines": [
+    {
+      "line": "1.5",
+      "major": 1,
+      "java_min": "8",
+      "latest_known": "1.5.22.RELEASE",
+      "recipe": null
+    },
+    {
+      "line": "2.0",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.0.9.RELEASE",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_0",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "2.1",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.1.18.RELEASE",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_1",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "2.2",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.2.13.RELEASE",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_2",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "2.3",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.3.12.RELEASE",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_3",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "2.4",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.4.13",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_4",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "2.5",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.5.15",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_5",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "2.6",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.6.15",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_6",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "2.7",
+      "major": 2,
+      "java_min": "8",
+      "latest_known": "2.7.18",
+      "recipe": "org.openrewrite.java.spring.boot2.UpgradeSpringBoot_2_7",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "3.0",
+      "major": 3,
+      "java_min": "17",
+      "latest_known": "3.0.13",
+      "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "3.1",
+      "major": 3,
+      "java_min": "17",
+      "latest_known": "3.1.12",
+      "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_1",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "3.2",
+      "major": 3,
+      "java_min": "17",
+      "latest_known": "3.2.12",
+      "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_2",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "3.3",
+      "major": 3,
+      "java_min": "17",
+      "latest_known": "3.3.13",
+      "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3",
+      "recipe_stacks": [
+        "apache-2.0",
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "3.4",
+      "major": 3,
+      "java_min": "17",
+      "latest_known": "3.4.13",
+      "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_4",
+      "recipe_stacks": [
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "3.5",
+      "major": 3,
+      "java_min": "17",
+      "latest_known": "3.5.16",
+      "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5",
+      "recipe_stacks": [
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "4.0",
+      "major": 4,
+      "java_min": "17",
+      "latest_known": "4.0.8",
+      "recipe": "org.openrewrite.java.spring.boot4.UpgradeSpringBoot_4_0",
+      "recipe_stacks": [
+        "moderne-source-available"
+      ]
+    },
+    {
+      "line": "4.1",
+      "major": 4,
+      "java_min": "17",
+      "latest_known": "4.1.1",
+      "recipe": "org.openrewrite.java.spring.boot4.SpringBootProperties_4_1",
+      "recipe_stacks": [
+        "moderne-source-available"
+      ],
+      "note": "rewrite-spring 6.37.1 has no UpgradeSpringBoot_4_1; only the 4.1 property migrations. The 4.0 boundary edge carries the code migration."
+    }
+  ],
+  "oss_composites": {
+    "4": "openrewrite/spring-boot-3-to-4.oss.yml",
+    "$comment": "04D-authored declarative recipes built only from Apache-2.0 OpenRewrite core recipes, keyed by the major a MAJOR_BOUNDARY rung enters. Used under open-source-only when no Apache-2.0 upstream recipe covers the rung. A same-major rung with no Apache-2.0 recipe runs the edge pin alone (parent/BOM, Java, Spring Cloud train) and relies on compiler-driven repair for the rest."
+  },
+  "cloud": {
+    "bom": "org.springframework.cloud:spring-cloud-dependencies",
+    "starter_parent": "org.springframework.cloud:spring-cloud-starter-parent",
+    "$comment": "Spring Cloud release train compatible with each Boot line (Spring Cloud's published compatibility table). At detect time 04D re-reads the latest GA patch of each train from Maven Central and confirms the train's Boot version from its spring-cloud-starter-parent POM (up to 2025.0) or, from 2025.1 on (no starter parent is published), from the <spring-boot.version> of the spring-cloud-build release its BOM names. 2025.1 (Boot 4.0/4.1) is GA since 2025.1.0; 2025.1.3 was the latest patch on 2026-10-01. null = no GA train for that line.",
+    "trains": {
+      "1.5": "Edgware.SR6",
+      "2.0": "Finchley.SR4",
+      "2.1": "Greenwich.SR6",
+      "2.2": "Hoxton.SR12",
+      "2.3": "Hoxton.SR12",
+      "2.4": "2020.0",
+      "2.5": "2020.0",
+      "2.6": "2021.0",
+      "2.7": "2021.0",
+      "3.0": "2022.0",
+      "3.1": "2022.0",
+      "3.2": "2023.0",
+      "3.3": "2023.0",
+      "3.4": "2024.0",
+      "3.5": "2025.0",
+      "4.0": "2025.1",
+      "4.1": "2025.1"
+    },
+    "latest_known": {
+      "2020.0": "2020.0.6",
+      "2021.0": "2021.0.9",
+      "2022.0": "2022.0.5",
+      "2023.0": "2023.0.6",
+      "2024.0": "2024.0.3",
+      "2025.0": "2025.0.3",
+      "2025.1": "2025.1.3"
+    }
+  }
+}

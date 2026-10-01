@@ -1,0 +1,23 @@
+{
+  "slug": "v1-employee",
+  "created_at": "2026-10-01T13:00:57.631Z",
+  "project_dir": "E:/mv/C/src/employee-service",
+  "workspace": "E:/mv/evidence/v3/v1/ctx/version-migration/v1-employee/workspace",
+  "baseline_commit": "cdb0aeba6d7cb6f78d0e0466b9f0c9bbf77590be",
+  "files_copied": 33,
+  "files_skipped": [],
+  "excluded": [
+    ".git",
+    "target",
+    "build",
+    "out",
+    "node_modules",
+    ".idea",
+    ".gradle",
+    ".mvn/wrapper/maven-wrapper.jar"
+  ],
+  "mode": "copy+git-init",
+  "checkpoints": {
+    "baseline": "refs/checkpoints/baseline"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$comment": "V1 probes for employee-service, written from EmployeeController/EmployeeAdvice/EmployeeServiceImpl. Every endpoint in the static inventory (5) is probed. The app runs with --spring.cloud.config.enabled=false --eureka.client.enabled=false --spring.data.mongodb.database=v1_probe --management.endpoints.web.exposure.include=health,mappings on both sides (no Config Server / Eureka in this environment; mappings exposed only so the endpoint inventory can be read at runtime).",
+  "base_url": "http://localhost:8091",
+  "readiness": { "path": "/actuator/health", "timeout_seconds": 240 },
+  "requests": [
+    { "name": "actuator health", "method": "GET", "path": "/actuator/health", "category": "actuator", "expect_status": 200 },
+    { "name": "endpoint inventory (actuator)", "method": "GET", "path": "/actuator/mappings", "category": "actuator", "expect_status": 200 },
+    { "name": "create employee", "method": "POST", "path": "/api/v1/employee", "category": "business-api", "expect_status": 201,
+      "body": { "employeeId": "V1PROBE01", "name": "V1Probe Person", "department": "DEP01", "phoneNo": "0700000000", "address": "No 1, Probe Street", "gender": "FEMALE", "employeeType": "PERMANENT" } },
+    { "name": "get employee by id", "method": "GET", "path": "/api/v1/employee/V1PROBE01", "category": "serialization", "expect_status": 200 },
+    { "name": "get unknown employee is 404", "method": "GET", "path": "/api/v1/employee/V1-NO-SUCH-ID", "category": "error-contract", "expect_status": 404 },
+    { "name": "get employee trailing slash", "method": "GET", "path": "/api/v1/employee/V1PROBE01/", "category": "business-api" },
+    { "name": "search employees by name", "method": "GET", "path": "/api/v1/employee/search?name=V1Probe", "category": "business-api", "expect_status": 200 },
+    { "name": "search by name and department", "method": "GET", "path": "/api/v1/employee/search?name=V1Probe&department=DEP01", "category": "business-api", "expect_status": 200 },
+    { "name": "search without name is 400", "method": "GET", "path": "/api/v1/employee/search", "category": "error-contract", "expect_status": 400 },
+    { "name": "unsupported method handled by advice", "method": "PUT", "path": "/api/v1/employee", "category": "error-contract", "expect_status": 400,
+      "body": { "employeeId": "V1PROBE01" } },
+    { "name": "excel upload non-xlsx part", "method": "POST", "path": "/api/v1/employee/excelUpload", "category": "business-api", "expect_status": 200,
+      "headers": { "Content-Type": "multipart/form-data; boundary=V1PROBEBOUNDARY" },
+      "body": "--V1PROBEBOUNDARY\r\nContent-Disposition: form-data; name=\"file\"; filename=\"probe.txt\"\r\nContent-Type: text/plain\r\n\r\nnot an excel workbook\r\n--V1PROBEBOUNDARY--\r\n" },
+    { "name": "employee salary (no department service)", "method": "GET", "path": "/api/v1/employee/salary/V1PROBE01", "category": "business-api" },
+    { "name": "salary of unknown employee", "method": "GET", "path": "/api/v1/employee/salary/V1-NO-SUCH-ID", "category": "error-contract" }
+  ],
+  "not_probed": []
+}

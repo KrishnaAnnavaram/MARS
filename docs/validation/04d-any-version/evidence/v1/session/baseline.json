@@ -1,0 +1,711 @@
+{
+  "slug": "v1-employee",
+  "generated_at": "2026-10-01T12:59:25.019Z",
+  "run_id": "v1-employee-20261001T125925Z",
+  "project": {
+    "dir": "E:/mv/C/src/employee-service",
+    "relative_to_repo": "src/employee-service",
+    "name": "employee-service",
+    "descriptor": "pom.xml",
+    "coordinates": {
+      "groupId": "com.aura.vihanga",
+      "artifactId": "employee-service",
+      "version": "0.0.1-SNAPSHOT",
+      "name": "employee-service"
+    },
+    "sources": {
+      "main": 18,
+      "test": 7,
+      "resources": 2
+    },
+    "ancillary_files": []
+  },
+  "build_tool": {
+    "tool": "maven",
+    "kind": "wrapper",
+    "command": "E:\\mv\\C\\src\\employee-service\\mvnw.cmd",
+    "display": "mvnw.cmd",
+    "version": "Apache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29)"
+  },
+  "language": {
+    "name": "Java",
+    "declared": "17",
+    "target": "21",
+    "from_jdk": {
+      "major": 17,
+      "version": "17.0.20.1",
+      "home": "E:/mv/tools/jdk-17.0.20.1+1"
+    },
+    "to_jdk": {
+      "major": 21,
+      "version": "21.0.11",
+      "home": "C:/Program Files/Microsoft/jdk-21.0.11.10-hotspot"
+    }
+  },
+  "platform": {
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "2.7.12"
+    },
+    "properties": {
+      "java.version": "17",
+      "spring-cloud.version": "2021.0.7"
+    },
+    "dependencies": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-data-mongodb",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-web",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-circuitbreaker-resilience4j",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-netflix-eureka-client",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-actuator",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-aop",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.projectlombok",
+        "artifactId": "lombok",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-webflux",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-config",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-bootstrap",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-test",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "org.apache.poi",
+        "artifactId": "poi-ooxml",
+        "version": "5.0.0",
+        "declaredVersion": "5.0.0",
+        "scope": "compile",
+        "managed": false
+      },
+      {
+        "groupId": "io.cucumber",
+        "artifactId": "cucumber-junit",
+        "version": "7.11.0",
+        "declaredVersion": "7.11.0",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "io.cucumber",
+        "artifactId": "cucumber-java",
+        "version": "7.11.0",
+        "declaredVersion": "7.11.0",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.jacoco",
+        "artifactId": "jacoco-maven-plugin",
+        "version": "0.8.7",
+        "declaredVersion": "0.8.7",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-dependencies",
+        "version": "2021.0.7",
+        "declaredVersion": "${spring-cloud.version}",
+        "scope": "import",
+        "managed": false
+      }
+    ],
+    "plugins": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-maven-plugin",
+        "version": null
+      },
+      {
+        "groupId": "org.jacoco",
+        "artifactId": "jacoco-maven-plugin",
+        "version": "0.8.7"
+      },
+      {
+        "groupId": "org.apache.maven.plugins",
+        "artifactId": "maven-surefire-plugin",
+        "version": "2.19.1"
+      },
+      {
+        "groupId": "net.masterthought",
+        "artifactId": "maven-cucumber-reporting",
+        "version": "3.15.0"
+      }
+    ]
+  },
+  "toolchain": {
+    "installed_jdks": [
+      {
+        "home": "E:\\mv\\tools\\jdk-17.0.20.1+1",
+        "major": 17,
+        "version": "17.0.20.1",
+        "source": "MIGRATION_JDK_17"
+      },
+      {
+        "home": "C:\\Program Files\\Microsoft\\jdk-21.0.11.10-hotspot",
+        "major": 21,
+        "version": "21.0.11",
+        "source": "MIGRATION_JDK_21"
+      }
+    ]
+  },
+  "reference_packs": [
+    {
+      "id": "spring-boot-2-to-3",
+      "title": "Spring Boot 2.x to 3.x (Java 8/11/17 to 17+, javax to jakarta)",
+      "stack": "Spring Boot",
+      "from": "2",
+      "to": "3",
+      "language_from": "8",
+      "language_to": "17",
+      "file": "references/spring-boot-2-to-3.md",
+      "matched_on": []
+    }
+  ],
+  "reference_pack_eligibility": [
+    {
+      "pack": "spring-boot-2-to-3",
+      "stack": "Spring Boot",
+      "pack_from": "2",
+      "pack_to": "3",
+      "matched_on": [
+        "org.springframework.boot:spring-boot-starter-parent:2"
+      ],
+      "platform_coordinates": [
+        "org.springframework.boot:spring-boot-starter-parent",
+        "org.springframework.boot:spring-boot-dependencies"
+      ],
+      "source_platform": {
+        "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+        "version": "2.7.12",
+        "where": "parent",
+        "descriptor": "pom.xml"
+      },
+      "nominated": true,
+      "eligible": true,
+      "relation": "in-generation",
+      "reason": "source org.springframework.boot:spring-boot-starter-parent 2.7.12 (parent) is in the pack's 2.x generation"
+    },
+    {
+      "pack": "spring-boot-3-to-4",
+      "stack": "Spring Boot",
+      "pack_from": "3",
+      "pack_to": "4",
+      "matched_on": [
+        "org.springframework.boot:spring-boot-starter-web"
+      ],
+      "platform_coordinates": [
+        "org.springframework.boot:spring-boot-starter-parent",
+        "org.springframework.boot:spring-boot-dependencies"
+      ],
+      "source_platform": {
+        "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+        "version": "2.7.12",
+        "where": "parent",
+        "descriptor": "pom.xml"
+      },
+      "nominated": true,
+      "eligible": false,
+      "relation": "behind",
+      "reason": "source org.springframework.boot:spring-boot-starter-parent 2.7.12 (parent) is generation 2, but the pack migrates from 3.x"
+    }
+  ],
+  "target": {
+    "platform": {
+      "name": "Spring Boot",
+      "version": "3.5.16",
+      "source": "request (line 3.5 → latest GA patch, maven-metadata)"
+    },
+    "language": {
+      "name": "Java",
+      "version": "21",
+      "source": "request"
+    },
+    "constraints": {
+      "platform_major": "3",
+      "language_min": "17",
+      "note": "Boot 3.0 requires Java 17 and Jakarta EE 9+ (Servlet 6.0, JPA 3.1 in 3.0). Confirm the exact line's requirements from its release notes and resolved BOM (section 11)."
+    }
+  },
+  "license_policy": "open-source-only",
+  "migration_path": {
+    "pack": "spring-boot-2-to-3",
+    "stack": "Spring Boot",
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "2.7.12",
+      "where": "parent",
+      "descriptor": "pom.xml"
+    },
+    "source": "2.7.12",
+    "source_line": "2.7",
+    "requested_target": "3.5.16",
+    "warnings": [],
+    "unresolved": [],
+    "status": "SUPPORTED",
+    "reason": "4 edge(s): E1 2.7.12→2.7.18 PATCH (pin-only, Apache-2.0); E2 2.7.18→3.0.13 MAJOR_BOUNDARY (upstream: UpgradeSpringBoot_3_0, Apache-2.0); E3 3.0.13→3.3.13 MINOR (upstream: UpgradeSpringBoot_3_3, Apache-2.0); E4 3.3.13→3.5.16 MINOR (pin-only, Apache-2.0)",
+    "required_path": {
+      "stack": "Spring Boot",
+      "source": "2.7.12",
+      "target": "3.5.16",
+      "steps": [
+        {
+          "from": "2.7.12",
+          "to": "2.7.18",
+          "capability": "pin-only (core-apache-2.0)",
+          "available": true
+        },
+        {
+          "from": "2.7.18",
+          "to": "3.0.13",
+          "capability": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0",
+          "available": true
+        },
+        {
+          "from": "3.0.13",
+          "to": "3.3.13",
+          "capability": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3",
+          "available": true
+        },
+        {
+          "from": "3.3.13",
+          "to": "3.5.16",
+          "capability": "pin-only (core-apache-2.0)",
+          "available": true
+        }
+      ],
+      "missing_capability": []
+    },
+    "missing_capability": [],
+    "ladder": "references/openrewrite/spring-boot-ladder.json",
+    "policy": "open-source-only",
+    "granularity": "boundary",
+    "edges": [
+      {
+        "id": "E1",
+        "seq": 1,
+        "class": "PATCH",
+        "role": "transit",
+        "from": "2.7.12",
+        "to": "2.7.18",
+        "from_line": "2.7",
+        "to_line": "2.7",
+        "java_from": "17",
+        "java": "17",
+        "recipe_source": "pin-only",
+        "recipe": null,
+        "composite": null,
+        "stack": "core-apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "artifacts": [],
+        "cloud_train": "2021.0.9",
+        "pack": null,
+        "notes": [
+          "patch edge within 2.7: pins the platform and Spring Cloud train only — a patch release carries no framework migration"
+        ],
+        "jdk": {
+          "major": 17,
+          "version": "17.0.20.1"
+        },
+        "cloud_evidence": "spring-cloud-starter-parent 2021.0.9 declares spring-boot-starter-parent 2.6.15"
+      },
+      {
+        "id": "E2",
+        "seq": 2,
+        "class": "MAJOR_BOUNDARY",
+        "role": "transit",
+        "from": "2.7.18",
+        "to": "3.0.13",
+        "from_line": "2.7",
+        "to_line": "3.0",
+        "java_from": "17",
+        "java": "17",
+        "recipe_source": "upstream",
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0",
+        "composite": null,
+        "stack": "apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "plugin_version": "5.46.1",
+        "gradle_plugin_version": "6.28.1",
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:5.24.1"
+        ],
+        "cloud_train": "2022.0.5",
+        "pack": "spring-boot-2-to-3",
+        "notes": [],
+        "jdk": {
+          "major": 17,
+          "version": "17.0.20.1"
+        },
+        "cloud_evidence": "spring-cloud-starter-parent 2022.0.5 declares spring-boot-starter-parent 3.0.13"
+      },
+      {
+        "id": "E3",
+        "seq": 3,
+        "class": "MINOR",
+        "role": "transit",
+        "from": "3.0.13",
+        "to": "3.3.13",
+        "from_line": "3.0",
+        "to_line": "3.3",
+        "java_from": "17",
+        "java": "17",
+        "recipe_source": "upstream",
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3",
+        "composite": null,
+        "stack": "apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "plugin_version": "5.46.1",
+        "gradle_plugin_version": "6.28.1",
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:5.24.1"
+        ],
+        "cloud_train": "2023.0.6",
+        "pack": null,
+        "notes": [],
+        "jdk": {
+          "major": 17,
+          "version": "17.0.20.1"
+        },
+        "cloud_evidence": "spring-cloud-starter-parent 2023.0.6 declares spring-boot-starter-parent 3.3.13"
+      },
+      {
+        "id": "E4",
+        "seq": 4,
+        "class": "MINOR",
+        "role": "landing",
+        "from": "3.3.13",
+        "to": "3.5.16",
+        "from_line": "3.3",
+        "to_line": "3.5",
+        "java_from": "17",
+        "java": "21",
+        "recipe_source": "pin-only",
+        "recipe": null,
+        "composite": null,
+        "stack": "core-apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "artifacts": [],
+        "cloud_train": "2025.0.3",
+        "pack": null,
+        "notes": [
+          "no open-source-only upstream recipe for 3.5: the edge pins the platform, Spring Cloud train and Java level; compiler-driven repair handles the rest"
+        ],
+        "jdk": {
+          "major": 21,
+          "version": "21.0.11"
+        },
+        "cloud_evidence": "spring-cloud-starter-parent 2025.0.3 declares spring-boot-starter-parent 3.5.15"
+      }
+    ],
+    "blocked_ecosystem": [],
+    "closest_supported_target": null,
+    "evidence": {
+      "published": "maven-metadata https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter-parent/maven-metadata.xml",
+      "target_resolution": {
+        "requested": "3.5",
+        "resolved": "3.5.16",
+        "source": "maven-metadata"
+      },
+      "cloud": {
+        "current": "2021.0.7",
+        "property": "spring-cloud.version",
+        "published": "maven-metadata https://repo1.maven.org/maven2/org/springframework/cloud/spring-cloud-dependencies/maven-metadata.xml"
+      }
+    }
+  },
+  "observations": {
+    "basis": "machine-detected: file names and a regular-expression scan of source text. Not a semantic Java model — every entry is a place to read, not a conclusion.",
+    "entry_points": [
+      "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+    ],
+    "config_files": [
+      {
+        "file": "src/main/resources/application.properties",
+        "scope": "main",
+        "profile": "default"
+      },
+      {
+        "file": "src/main/resources/bootstrap.properties",
+        "scope": "main",
+        "profile": "default"
+      }
+    ],
+    "pinned_dependencies": [
+      {
+        "coordinate": "org.apache.poi:poi-ooxml",
+        "version": "5.0.0",
+        "declared": "5.0.0",
+        "scope": "compile"
+      },
+      {
+        "coordinate": "io.cucumber:cucumber-junit",
+        "version": "7.11.0",
+        "declared": "7.11.0",
+        "scope": "test"
+      },
+      {
+        "coordinate": "io.cucumber:cucumber-java",
+        "version": "7.11.0",
+        "declared": "7.11.0",
+        "scope": "test"
+      },
+      {
+        "coordinate": "org.jacoco:jacoco-maven-plugin",
+        "version": "0.8.7",
+        "declared": "0.8.7",
+        "scope": "test"
+      }
+    ],
+    "platform_boms": [
+      {
+        "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+        "version": "2.7.12",
+        "kind": "parent"
+      },
+      {
+        "coordinate": "org.springframework.cloud:spring-cloud-dependencies",
+        "version": "2021.0.7",
+        "kind": "bom-import"
+      }
+    ],
+    "container_runtime": [],
+    "ci_java_references": [],
+    "pack_surfaces": [
+      {
+        "id": "jakarta-namespace",
+        "label": "javax.* APIs that moved to jakarta.* (servlet, persistence, validation, annotation, transaction, ws.rs, xml.bind, inject, mail, websocket)",
+        "rule": "section 2",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 13,
+                "text": "import javax.ws.rs.core.Application;"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "security",
+        "label": "Spring Security configuration (WebSecurityConfigurerAdapter, antMatchers, global method security)",
+        "rule": "section 4",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "web-api",
+        "label": "Controllers whose paths may rely on trailing-slash matching (now off by default)",
+        "rule": "section 5.1",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 24,
+                "text": "@RequestMapping(\"api/v1\")"
+              },
+              {
+                "line": 31,
+                "text": "@PostMapping(\"employee\")"
+              },
+              {
+                "line": 41,
+                "text": "@PostMapping(\"employee/excelUpload\")"
+              },
+              {
+                "line": 50,
+                "text": "@GetMapping(\"employee/search\")"
+              },
+              {
+                "line": 61,
+                "text": "@GetMapping(\"employee/{id}\")"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "data-repositories",
+        "label": "Spring Data repositories built on PagingAndSortingRepository alone",
+        "rule": "section 6.2",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "autoconfig-registration",
+        "label": "Auto-configuration registered in spring.factories",
+        "rule": "section 7.3",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "cloud",
+        "label": "Spring Cloud annotations removed in 2022.0",
+        "rule": "section 8",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 10,
+                "text": "@EnableEurekaClient"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "http-client",
+        "label": "Apache HttpClient 4 behind RestTemplate",
+        "rule": "section 7.2",
+        "invalid_patterns": [],
+        "files": []
+      }
+    ],
+    "migration_sensitive_files": [
+      "pom.xml",
+      "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+      "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+      "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java"
+    ],
+    "endpoints": [
+      {
+        "method": "POST",
+        "path": "/api/v1/employee",
+        "handler": "createEmployee",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+        "line": 31
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/employee/{id}",
+        "handler": "getEmployee",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+        "line": 61
+      },
+      {
+        "method": "POST",
+        "path": "/api/v1/employee/excelUpload",
+        "handler": "uploadEmployee",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+        "line": 41
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/employee/salary/{id}",
+        "handler": "getEmployeeSalary",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+        "line": 71
+      },
+      {
+        "method": "GET",
+        "path": "/api/v1/employee/search",
+        "handler": "searchEmployees",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+        "line": 50
+      }
+    ]
+  },
+  "capabilities": {
+    "transformations": []
+  },
+  "reference_provenance": {
+    "sources": [
+      "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide",
+      "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Release-Notes",
+      "https://docs.spring.io/spring-security/reference/6.0/migration/index.html",
+      "https://github.com/spring-projects/spring-data-commons/wiki/Spring-Data-2022.0-%28Turing%29-Release-Notes",
+      "https://github.com/spring-cloud/spring-cloud-release/wiki/Spring-Cloud-2022.0-Release-Notes"
+    ],
+    "last_reviewed": "2026-10-01"
+  }
+}

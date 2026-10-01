@@ -1,0 +1,87 @@
+{
+  "id": "rewrite-08",
+  "seq": 8,
+  "provider": "openrewrite",
+  "mode": "apply",
+  "applied": true,
+  "transformation": "edge-E4",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "wrapper",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.edge.E4"
+  ],
+  "artifacts": [],
+  "config": null,
+  "config_sha": "1f81ee02a914cb9f",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "3.5.16",
+  "jdk": {
+    "major": 21,
+    "version": "21.0.11"
+  },
+  "started_at": "2026-10-01T13:17:04.615Z",
+  "finished_at": "2026-10-01T13:17:27.120Z",
+  "duration_ms": 22505,
+  "command": "mvnw.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:runNoFork -Drewrite.activeRecipes=mars.migration.edge.E4 -Drewrite.configLocation=<session>\\transformations\\rewrite-08.rewrite.yml",
+  "exit_code": 0,
+  "status": "applied",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": "rewrite-07",
+  "proposed_files": [],
+  "changed_files": [
+    {
+      "state": "M",
+      "file": "pom.xml"
+    }
+  ],
+  "excluded_files": [],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.maven.ChangeParentPom: {oldGroupId=org.springframework.boot, oldArtifactId=spring-boot-starter-parent, newVersion=3.5.16, allowVersionDowngrades=true}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=java.version, newValue=21}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=spring-cloud.version, newValue=2025.0.3}"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-08.patch",
+  "log": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-08.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-08-before",
+    "commit": "919ca9cc0f4ece60bf609fb0803e88db69a9912a"
+  },
+  "scope_check": {
+    "ok": true,
+    "out_of_preview": [],
+    "infrastructure_lines": []
+  },
+  "reconciliation": {
+    "requested_platform_version": "3.5.16",
+    "declared_after_apply": "3.5.16",
+    "recipe_target": "3.5.16",
+    "status": "matches-request"
+  },
+  "build_round": 6,
+  "notes": [],
+  "edge": "E4",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations/rewrite-08.rewrite.yml",
+  "goal": "runNoFork"
+}

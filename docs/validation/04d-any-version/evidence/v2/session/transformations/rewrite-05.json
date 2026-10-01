@@ -1,0 +1,71 @@
+{
+  "id": "rewrite-05",
+  "seq": 5,
+  "provider": "openrewrite",
+  "mode": "dry-run",
+  "applied": false,
+  "transformation": "edge-E3",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "env",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.edge.E3"
+  ],
+  "artifacts": [],
+  "config": null,
+  "config_sha": "a76aa40f6ff9ccf5",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "4.1.1",
+  "jdk": {
+    "major": 21,
+    "version": "21.0.11"
+  },
+  "started_at": "2026-10-01T13:12:56.417Z",
+  "finished_at": "2026-10-01T13:13:24.137Z",
+  "duration_ms": 27720,
+  "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:dryRunNoFork -Drewrite.activeRecipes=mars.migration.edge.E3 -Drewrite.configLocation=<session>\\transformations\\rewrite-05.rewrite.yml",
+  "exit_code": 0,
+  "status": "previewed",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": null,
+  "proposed_files": [
+    "pom.xml"
+  ],
+  "changed_files": [],
+  "excluded_files": [],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.maven.ChangeParentPom: {oldGroupId=org.springframework.boot, oldArtifactId=spring-boot-starter-parent, newVersion=4.1.1, allowVersionDowngrades=true}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=java.version, newValue=21}"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v2/ctx/version-migration/v2-golden/transformations/rewrite-05.patch",
+  "log": "../evidence/v3/v2/ctx/version-migration/v2-golden/transformations/rewrite-05.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-05-before",
+    "commit": "2991cf0d1b2953daa6f4ecb5982dc226276b7192"
+  },
+  "scope_check": null,
+  "reconciliation": null,
+  "build_round": null,
+  "notes": [],
+  "edge": "E3",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v2/ctx/version-migration/v2-golden/transformations/rewrite-05.rewrite.yml",
+  "goal": "dryRunNoFork"
+}

@@ -12,6 +12,8 @@
  *   - nothing blocks it: no BLOCKED state, no open blocking condition in migration.json, no
  *     unresolved blocking plan constraint, and the final declared platform version is the one
  *     that was requested;
+ *   - on a ladder path, every edge stood green on its version, and no endpoint the source mapped or
+ *     the running application served before the migration is missing after it;
  *   - the project has not drifted since the sandbox was copied, so the change lands cleanly.
  *
  * A session written before v2 (no plan, no state.json) is held only to the checks its own files
@@ -31,6 +33,7 @@ const path = require('path');
 const {
   sessionPaths, readJson, listRounds, rel, run, inferState, isSandboxRepo,
 } = require('./lib/migration');
+const { buildSummary } = require('./lib/summary');
 
 const PACKAGING_INTENTS = ['package', 'package-skip-tests', 'verify'];
 
@@ -90,6 +93,20 @@ function eligibility(slug, changes = null) {
     }
   } else if (!requested && !legacy) {
     notes.push('no exact target version was recorded (detect-baseline.js --to-version), so the final version could not be checked against the request');
+  }
+
+  // Ladder sessions: every planned edge must have landed, and no endpoint the application had
+  // before the migration may be missing after it (source mappings or the running application).
+  let summary = {};
+  try { summary = buildSummary(slug, { assumeRendered: true }); } catch (err) {
+    reasons.push(`the migration path and endpoint evidence could not be evaluated: ${err.message}`);
+  }
+  for (const e of (summary.path && summary.path.edges) || []) {
+    if (!e.complete) reasons.push(`edge ${e.id} (${e.from} → ${e.to}) never stood green on its version — the migration path is unfinished`);
+  }
+  const ep = summary.endpoints;
+  for (const [label, cmp] of [['source mappings', ep && ep.static], ['running application', ep && ep.runtime]]) {
+    if (cmp && cmp.missing && cmp.missing.length) reasons.push(`endpoint(s) lost (${label}): ${cmp.missing.join(', ')}`);
   }
 
   // Clean application: every file about to be overwritten must still be what the sandbox was

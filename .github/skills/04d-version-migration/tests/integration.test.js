@@ -40,11 +40,12 @@ function summaryFor(root) {
   };
 }
 
-test('13. a Boot 2.x source is never eligible for the 3→4 pack: UNSUPPORTED_MIGRATION_PATH, BLOCKED, summary written', () => {
+test('13. forcing the 3→4 pack on a Boot 2.x source: never eligible, one session never spans two generations, BLOCKED, summary written', () => {
   const root = tempRoot('eligibility');
   const project = fixtureWithParent(root, '2.7.12');
   const env = envFor(root, { MIGRATION_MVN: fakeMaven(path.join(root, 'bin')) });
-  const result = runScript('detect-baseline.js', ['--project', project, '--slug', 'boot2', '--to-java', '21', '--to-version', '4.1.1'], env);
+  // Pack mode (--reference skips the ladder): the B1 regression — a starter must not make the pack eligible.
+  const result = runScript('detect-baseline.js', ['--project', project, '--slug', 'boot2', '--to-java', '21', '--to-version', '4.1.1', '--reference', 'spring-boot-3-to-4'], env);
   assert.equal(result.status, 2, result.out);
   const baseline = readJson(path.join(sessionDir(root, 'boot2'), 'baseline.json'));
   assert.deepEqual(baseline.reference_packs, [], 'the 3→4 pack must not be selected for a 2.x source');
@@ -53,9 +54,11 @@ test('13. a Boot 2.x source is never eligible for the 3→4 pack: UNSUPPORTED_MI
   assert.equal(e.relation, 'behind');
   assert.equal(e.source_platform.version, '2.7.12');
   assert.ok(e.matched_on.includes('org.springframework.boot:spring-boot-starter-web'), 'the starter still nominates the pack');
-  assert.equal(baseline.migration_path.status, 'UNSUPPORTED_MIGRATION_PATH');
-  assert.deepEqual(baseline.migration_path.missing_capability, ['spring-boot-2-to-3']);
-  assert.deepEqual(baseline.migration_path.required_path.steps.map((s) => [s.capability, s.available]), [['spring-boot-2-to-3', false], ['spring-boot-3-to-4', true]]);
+  // Both generation packs exist now, so pack mode reports that the jump needs two sessions (the
+  // ladder, without --reference, plans it as one path of edges instead — see ladder.test.js).
+  assert.equal(baseline.migration_path.status, 'MULTI_STEP_REQUIRED');
+  assert.deepEqual(baseline.migration_path.missing_capability, []);
+  assert.deepEqual(baseline.migration_path.required_path.steps.map((s) => [s.capability, s.available]), [['spring-boot-2-to-3', true], ['spring-boot-3-to-4', true]]);
   assert.equal(readJson(path.join(sessionDir(root, 'boot2'), 'state.json')).state, 'BLOCKED');
 
   const prepare = runScript('prepare-workspace.js', ['--slug', 'boot2'], env);
@@ -65,7 +68,7 @@ test('13. a Boot 2.x source is never eligible for the 3→4 pack: UNSUPPORTED_MI
   const summary = summaryFor(root);
   assert.ok(summary, 'MIGRATION_SUMMARY written even though the run was blocked');
   assert.equal(summary.json.final_status, 'BLOCKED');
-  assert.match(summary.md, /spring-boot-2-to-3 \| \*\*MISSING\*\*/);
+  assert.match(summary.md, /MULTI_STEP_REQUIRED/);
 });
 
 test('13b. a Boot 3.x source stays eligible and SUPPORTED; a Boot 3 project without a versioned platform is not', () => {
@@ -86,10 +89,10 @@ test('13b. a Boot 3.x source stays eligible and SUPPORTED; a Boot 3 project with
   assert.match(b.reference_pack_eligibility[0].reason, /not proven/);
 });
 
-test('13c. a jump past the last covered generation (3.x → 5.0.0, no 4→5 pack) is UNSUPPORTED, never jumped', () => {
+test('13c. pack mode: a jump past the pack generation (3.x → 5.0.0, no 4→5 pack) is UNSUPPORTED, never jumped', () => {
   const root = tempRoot('multistep');
   const env = envFor(root, { MIGRATION_MVN: fakeMaven(path.join(root, 'bin')) });
-  const r = runScript('detect-baseline.js', ['--project', SAMPLE_PROJECT, '--slug', 'boot3to5', '--to-version', '5.0.0'], env);
+  const r = runScript('detect-baseline.js', ['--project', SAMPLE_PROJECT, '--slug', 'boot3to5', '--to-version', '5.0.0', '--reference', 'spring-boot-3-to-4'], env);
   assert.equal(r.status, 2, r.out);
   const b = readJson(path.join(sessionDir(root, 'boot3to5'), 'baseline.json'));
   assert.equal(b.migration_path.status, 'UNSUPPORTED_MIGRATION_PATH');

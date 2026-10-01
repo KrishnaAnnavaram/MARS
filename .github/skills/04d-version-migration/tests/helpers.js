@@ -143,6 +143,8 @@ function envFor(root, extra = {}) {
     ...process.env,
     PIPELINE_CONTEXT_DATA_DIR: path.join(root, 'ctx'),
     MIGRATION_REPORT_DIR: path.join(root, 'reports'),
+    // Deterministic and offline: the ladder's recorded versions, never a live Maven Central read.
+    MIGRATION_OFFLINE: '1',
     ...extra,
   };
 }
@@ -212,7 +214,10 @@ function preparedSession(root, { slug = 'fixture', jdk, transformation = 'boot4-
   const mvn = fakeMaven(path.join(root, 'bin'));
   const env = envFor(root, { MIGRATION_MVN: mvn, FAKE_MVN_CALLS: path.join(root, 'calls.jsonl'), ...extraEnv });
   const steps = [
-    runScript('detect-baseline.js', ['--project', SAMPLE_PROJECT, '--slug', slug, '--to-java', '21', '--to-version', '4.1.1'], env),
+    // Single-pack mode (the v2 pack-transformation flow these tests cover): the pack is forced, which
+    // skips the ladder, and its Moderne Source Available recipes need the explicit licence opt-in.
+    runScript('detect-baseline.js', ['--project', SAMPLE_PROJECT, '--slug', slug, '--to-java', '21', '--to-version', '4.1.1',
+      '--reference', 'spring-boot-3-to-4', '--license-policy', 'source-available'], env),
     runScript('prepare-workspace.js', ['--slug', slug], env),
     runScript('run-migration-build.js', ['--slug', slug, '--baseline', '--jdk', String(jdk), '--intent', 'compile'], env),
   ];

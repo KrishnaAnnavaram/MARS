@@ -36,10 +36,12 @@ const {
   REPO_ROOT, sessionPaths, slugify, rel, writeJson, readJson,
   inventoryProject, findAncillaryFiles, resolveBuildTool, installedJdks, resolveJdk, runTool, envForJdk,
   declaredPlatformVersion, recordState,
+  publishedLines, publishedCloudTrains, cloudTrainBootParent, scanEndpoints,
 } = require('./lib/migration');
 const {
   listReferencePacks, resolveReferencePack, transformationProblems,
   assessReferencePacks, packEligibility, requiredMigrationPath,
+  LICENSE_POLICIES, loadLadder, sourcePlatformVersion, latestPatch, planLadderPath,
 } = require('./lib/references');
 const { readMigrationPlan, gateMigrationPlan, approvalMode } = require('./lib/handoff');
 const { noteSession, newRunId, runAndFinalize } = require('./lib/summary');
@@ -55,6 +57,8 @@ function parseArgs(argv) {
     else if (a === '--to-java') args.toJava = argv[++i];
     else if (a === '--to-version') args.toVersion = argv[++i];
     else if (a === '--issue' || a === '-i') args.issue = argv[++i];
+    else if (a === '--license-policy') args.licensePolicy = argv[++i];
+    else if (a === '--path-granularity') args.granularity = argv[++i];
     else if (a === '--help' || a === '-h') args.help = true;
   }
   return args;
@@ -73,11 +77,22 @@ Options:
   --from-java      Record the source Java version explicitly (default: what the build declares).
   --to-java        Record the target Java version this migration is aiming at.
   --to-version     Record the exact platform version requested (e.g. 4.1.1). Never inferred:
-                   without it the target is recorded as unresolved.
+                   without it the target is recorded as unresolved. A bare line (e.g. 3.5) is
+                   resolved to that line's latest GA patch read from Maven Central, and recorded so.
   --issue, -i      Stage 2 of 04_fix-generator: read the project, target version and target Java
                    from docs/agent_output/04-remediation/fix_plan_<ID>.md. Refused unless that plan
                    reads Status: Approved and Fix Type: VERSION_MIGRATION. The slug defaults to the id.
-  --help, -h       Show this message`);
+  --license-policy open-source-only (default): only OSI open-source OpenRewrite recipe stacks run.
+                   source-available: also the Moderne Source Available recipes (free for internal
+                   use, not open source) — an explicit choice, recorded in every report.
+  --path-granularity boundary (default): stop on the source major's last line, each major's first
+                   and last line, then the target. minor: stop on every line in between.
+  --help, -h       Show this message
+
+When the project's platform has a ladder in references/openrewrite/ (Spring Boot does), the path
+from any published line to any later one is planned as edges — PATCH, MINOR, MAJOR_BOUNDARY — each
+with its OpenRewrite recipe, Java level and Spring Cloud train. MIGRATION_OFFLINE=1 skips the Maven
+Central reads and uses the ladder's recorded versions.`);
 }
 
 // ---------------------------------------------------------------------------
@@ -411,9 +426,86 @@ function main() {
     packs = assessed.eligible;
     eligibility = [...assessed.eligible.map((p) => p.eligibility), ...assessed.ineligible];
   }
-  const pathGate = migrationPathGate(packs, eligibility, args.toVersion);
 
-  const targetJava = args.toJava || (packs[0] && packs[0].language_to) || null;
+  // The migration ladder: OpenRewrite at the centre, any published line to any later one. Used
+  // whenever the project declares the ladder's platform with a concrete version (and no pack was
+  // forced); a generation pack then only supplies the rules for the boundary it covers.
+  const policy = args.licensePolicy || 'open-source-only';
+  if (!LICENSE_POLICIES.includes(policy)) {
+    console.error(`Unknown --license-policy "${policy}" (one of: ${LICENSE_POLICIES.join(', ')}).`);
+    process.exitCode = 1;
+    return;
+  }
+  const granularity = args.granularity || 'boundary';
+  const ladder = args.reference ? null : loadLadder('spring-boot');
+  const ladderSource = ladder ? sourcePlatformVersion({ detect: [], platform_coordinates: ladder.platform_coordinates }, inventory) : null;
+  let ladderPlan = null;
+  let ladderEvidence = null;
+  if (ladder && ladderSource) {
+    const repo = ladder.metadata.repository;
+    const lines = publishedLines(repo, ladder.metadata.group_id, ladder.metadata.artifact_id);
+    ladderEvidence = { published: lines.ok ? `maven-metadata ${lines.source}` : `ladder fallback (${lines.error})`, target_resolution: null, cloud: null };
+    if (args.toVersion && /^\d+\.\d+$/.test(args.toVersion)) {
+      const resolved = latestPatch(ladder, args.toVersion, lines.lines);
+      if (resolved) {
+        ladderEvidence.target_resolution = { requested: args.toVersion, resolved: resolved.version, source: resolved.source };
+        args.toVersion = resolved.version;
+      }
+    }
+    const cloudDep = (inventory.dependencies || []).find((d) => `${d.groupId}:${d.artifactId}` === ladder.cloud.bom);
+    let cloud = null;
+    if (cloudDep) {
+      const trains = publishedCloudTrains(repo);
+      cloud = {
+        used: true,
+        current: cloudDep.version,
+        property: (/^\$\{(.+)\}$/.exec(String(cloudDep.declaredVersion || '')) || [])[1] || null,
+        published: trains.trains,
+      };
+      ladderEvidence.cloud = { current: cloud.current, property: cloud.property, published: trains.ok ? `maven-metadata ${trains.source}` : `ladder fallback (${trains.error})` };
+    }
+    if (args.toVersion) {
+      ladderPlan = planLadderPath(ladder, {
+        source: ladderSource.version, target: args.toVersion, policy, granularity,
+        published: lines.lines, javaFrom: declaredJava, javaTarget: args.toJava || null, cloud,
+        packs: listReferencePacks().filter((p) => p.stack === ladder.stack),
+      });
+      for (const edge of ladderPlan.edges) {
+        const jdk = edge.java ? resolveJdk(edge.java) : null;
+        edge.jdk = jdk ? { major: jdk.major, version: jdk.version } : null;
+        if (edge.java && !jdk) edge.notes.push(`no JDK ${edge.java} installed — set MIGRATION_JDK_${edge.java}`);
+        if (edge.cloud_train && /^\d{4}\./.test(edge.cloud_train)) {
+          const ev = cloudTrainBootParent(repo, edge.cloud_train);
+          edge.cloud_evidence = ev.ok ? `${ev.via} declares ${ev.artifactId} ${ev.version}` : `train not verified against its POM (${ev.error})`;
+        }
+      }
+      // A missing JDK is a warning here, not a block: run-migration-build.js refuses an edge whose JDK
+      // is absent at the moment it runs, and the JDK may well be installed before then.
+      ladderPlan.missing_jdks = [...new Set(ladderPlan.edges.filter((e) => e.java && !e.jdk).map((e) => e.java))];
+      // The rules packs this path needs (one per major boundary), in path order.
+      const edgePacks = [...new Set(ladderPlan.edges.map((e) => e.pack).filter(Boolean))].map((id) => resolveReferencePack(id)).filter(Boolean);
+      packs = edgePacks.map((p) => ({ ...p, matched: [], eligibility: { reason: `rules for the ${p.from}.x → ${p.to}.x boundary edge of the planned path` } }));
+    }
+  }
+  const pathGate = ladderPlan
+    ? {
+      status: ladderPlan.status,
+      reason: ladderPlan.reason,
+      required_path: {
+        stack: ladderPlan.stack,
+        source: ladderPlan.source,
+        target: ladderPlan.target,
+        steps: ladderPlan.edges.map((e) => ({
+          from: e.from, to: e.to, capability: e.recipe || e.composite || `pin-only (${e.stack})`, available: Boolean(e.recipe_source),
+        })),
+        missing_capability: ladderPlan.missing_capability,
+      },
+      missing_capability: ladderPlan.missing_capability,
+    }
+    : migrationPathGate(packs, eligibility, args.toVersion);
+
+  const landing = ladderPlan && ladderPlan.edges.length ? ladderPlan.edges[ladderPlan.edges.length - 1] : null;
+  const targetJava = args.toJava || (landing && landing.java) || (packs[0] && packs[0].language_to) || null;
   const fromJdk = declaredJava ? resolveJdk(declaredJava) : null;
   const toJdk = targetJava ? resolveJdk(targetJava) : null;
 
@@ -466,18 +558,41 @@ function main() {
   const nominated = eligibility.find((e) => e.relation === 'behind') || eligibility.find((e) => e.nominated) || null;
   baseline.target = {
     platform: {
-      name: pack ? pack.stack : (nominated ? nominated.stack : null),
+      name: ladderPlan ? ladderPlan.stack : (pack ? pack.stack : (nominated ? nominated.stack : null)),
       version: args.toVersion || null,
-      source: args.toVersion ? 'request' : 'unresolved',
+      source: ladderEvidence && ladderEvidence.target_resolution
+        ? `request (line ${ladderEvidence.target_resolution.requested} → latest GA patch, ${ladderEvidence.target_resolution.source})`
+        : (args.toVersion ? 'request' : 'unresolved'),
     },
     language: {
       name: 'Java',
       version: targetJava,
-      source: args.toJava ? 'request' : (targetJava ? 'reference-pack-default' : 'unresolved'),
+      source: args.toJava ? 'request' : (targetJava ? (ladderPlan ? 'ladder (landing rung Java floor)' : 'reference-pack-default') : 'unresolved'),
     },
     constraints: pack ? pack.target_constraints : null,
   };
-  baseline.migration_path = pack
+  baseline.license_policy = policy;
+  baseline.migration_path = ladderPlan
+    ? {
+      pack: pack ? pack.id : null,
+      stack: ladderPlan.stack,
+      platform: ladderSource,
+      source: ladderSource.version,
+      source_line: ladderSource.version.split('.').slice(0, 2).join('.'),
+      requested_target: args.toVersion,
+      warnings: [],
+      unresolved: (ladderEvidence.cloud ? [] : []),
+      ...pathGate,
+      // The plan the whole session follows: one edge per rung, each built green before the next.
+      ladder: ladderPlan.ladder,
+      policy,
+      granularity,
+      edges: ladderPlan.edges,
+      blocked_ecosystem: ladderPlan.blocked_ecosystem,
+      closest_supported_target: ladderPlan.closest_supported_target || null,
+      evidence: ladderEvidence,
+    }
+    : pack
     ? { ...migrationPath(pack, inventory, { platformVersion: args.toVersion, language: targetJava }), ...pathGate }
     : {
       pack: null,
@@ -489,7 +604,11 @@ function main() {
       unresolved: [],
       ...pathGate,
     };
-  baseline.observations = collectObservations(projectDir, inventory, baseline.project.ancillary_files, pack);
+  // Surfaces to read: every rules pack the path needs, not only the first.
+  const surfacePack = packs.length > 1 ? { ...pack, surfaces: packs.flatMap((p) => p.surfaces || []) } : pack;
+  baseline.observations = collectObservations(projectDir, inventory, baseline.project.ancillary_files, surfacePack);
+  // What the application serves today — the endpoint set the migration must preserve.
+  baseline.observations.endpoints = scanEndpoints(projectDir);
   baseline.capabilities = capabilities(pack, buildTool);
   baseline.reference_provenance = pack ? pack.provenance : null;
 
@@ -511,9 +630,19 @@ function main() {
   line('Sources', `${baseline.project.sources.main} main / ${baseline.project.sources.test} test`);
   line('Ancillary', baseline.project.ancillary_files.join(', ') || 'none');
   line('JDKs available', jdks.map((j) => `${j.major} (${j.version})`).join(', ') || 'none found');
-  console.log(`\n  Reference packs eligible (a detect entry nominates; the declared source version decides):`);
-  for (const e of eligibility.filter((x) => !x.eligible)) console.log(`    ✗ ${e.pack} — NOT ELIGIBLE: ${e.reason}`);
-  if (!baseline.reference_packs.length) {
+  if (ladderPlan) {
+    console.log(`\n  Rules packs for the planned path (one per major boundary):`);
+    const bare = ladderPlan.edges.filter((e) => e.class === 'MAJOR_BOUNDARY' && !e.pack);
+    if (!baseline.reference_packs.length && !bare.length) console.log('    none needed — the path crosses no major boundary');
+    for (const e of bare) console.log(`    ! ${e.id} (${e.from_line} → ${e.to_line}) has no rules pack — residual repair has only the recipe and the compiler`);
+    for (const p of baseline.reference_packs) console.log(`    ${p.id} — ${p.title}`);
+  } else {
+    console.log(`\n  Reference packs eligible (a detect entry nominates; the declared source version decides):`);
+    for (const e of eligibility.filter((x) => !x.eligible)) console.log(`    ✗ ${e.pack} — NOT ELIGIBLE: ${e.reason}`);
+  }
+  if (ladderPlan) {
+    // printed with the path below
+  } else if (!baseline.reference_packs.length) {
     const all = listReferencePacks();
     console.log('    none — no pack in references/ is eligible for this project.');
     console.log(`    Available: ${all.map((p) => p.id).join(', ') || '(none)'}`);
@@ -549,15 +678,30 @@ function main() {
       for (const p of t.configuration_problems) console.log(`      ! ${p}`);
     }
   }
+  line('Endpoints', `${obs.endpoints.length} mapped in source (static scan) — the set the migration must preserve`);
   console.log(`\n  Migration path gate: ${pathGate.status}`);
-  for (const st of (pathGate.required_path && pathGate.required_path.steps) || []) {
-    console.log(`    ${st.from} → ${st.to}   ${st.capability}   ${st.available ? 'available' : 'MISSING'}`);
+  if (ladderPlan) {
+    console.log(`    ladder ${ladderPlan.ladder} · licence policy ${policy} · granularity ${granularity} · versions from ${ladderEvidence.published}`);
+    if (ladderEvidence.target_resolution) console.log(`    target ${ladderEvidence.target_resolution.requested} resolved to ${ladderEvidence.target_resolution.resolved} (${ladderEvidence.target_resolution.source})`);
+    if (ladderEvidence.cloud) console.log(`    Spring Cloud ${ladderEvidence.cloud.current} via ${ladderEvidence.cloud.property ? `\${${ladderEvidence.cloud.property}}` : 'a literal version'}; trains from ${ladderEvidence.cloud.published}`);
+    for (const e of ladderPlan.edges) {
+      const what = e.recipe ? e.recipe.split('.').pop() : (e.composite ? e.composite.split('/').pop() : (e.recipe_source || 'NO RECIPE'));
+      console.log(`    ${e.id.padEnd(3)} ${e.from} → ${e.to}  ${e.class.padEnd(14)} ${String(e.recipe_source).padEnd(13)} ${what} [${e.license || '—'}] JDK ${e.java || '?'}${e.cloud_train ? ` · Cloud ${e.cloud_train}` : ''}${e.pack ? ` · rules ${e.pack}` : ''}`);
+      for (const n of e.notes) console.log(`          · ${n}`);
+      if (e.cloud_evidence) console.log(`          · ${e.cloud_evidence}`);
+    }
+  } else {
+    for (const st of (pathGate.required_path && pathGate.required_path.steps) || []) {
+      console.log(`    ${st.from} → ${st.to}   ${st.capability}   ${st.available ? 'available' : 'MISSING'}`);
+    }
   }
   console.log(`\n  Written: ${rel(out)}`);
   if (blocked) {
     console.log(`\n  BLOCKED — ${pathGate.reason}`);
     if ((pathGate.missing_capability || []).length) console.log(`  Missing capability: ${pathGate.missing_capability.join(', ')}`);
-    console.log('  Nothing downstream may run for this session. Add the missing reference pack(s) first; never migrate across a generation from memory.\n');
+    console.log(ladderPlan
+      ? `  Nothing downstream may run for this session.${ladderPlan.closest_supported_target ? ` The closest supportable target is ${ladderPlan.closest_supported_target} — re-run with --to-version ${ladderPlan.closest_supported_target}.` : ''} Never skip a rung or migrate across a generation from memory.\n`
+      : '  Nothing downstream may run for this session. Add the missing reference pack(s) first; never migrate across a generation from memory.\n');
     process.exitCode = 2;
     return;
   }

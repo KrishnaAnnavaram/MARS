@@ -1,0 +1,73 @@
+{
+  "round": 8,
+  "label": "jacoco-maven-plugin 0.8.7 -> 0.8.11 in the unitTest profile (Java 21 class files)",
+  "baseline": false,
+  "started_at": "2026-10-01T13:18:58.088Z",
+  "duration_ms": 38312,
+  "jdk": {
+    "major": 21,
+    "version": "21.0.11",
+    "home": "C:/Program Files/Microsoft/jdk-21.0.11.10-hotspot",
+    "source": "MIGRATION_JDK_21"
+  },
+  "build": {
+    "tool": "maven",
+    "kind": "wrapper",
+    "command": "mvnw.cmd -B clean package",
+    "intent": "package",
+    "exit_code": 0,
+    "spawn_error": null
+  },
+  "outcome": "passed",
+  "declared": {
+    "java": "21",
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "3.5.16"
+    },
+    "dependency_count": 16,
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "3.5.16",
+      "where": "parent"
+    }
+  },
+  "workspace": {
+    "changed_files": [
+      {
+        "state": "A",
+        "file": ".mvn/wrapper/maven-wrapper.jar"
+      },
+      {
+        "state": "M",
+        "file": "pom.xml"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java"
+      },
+      {
+        "state": "M",
+        "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java"
+      }
+    ],
+    "diff_stat": "5 files changed, 7 insertions(+), 8 deletions(-)"
+  },
+  "error_summary": {
+    "total": 0,
+    "byCategory": [],
+    "byFile": []
+  },
+  "errors": [],
+  "errors_truncated": 0,
+  "log_tail": "…(truncated, showing last 8000 chars)…\n[spring-beans-6.2.19.jar:6.2.19]\r\n\tat org.springframework.context.support.AbstractApplicationContext.destroyBeans(AbstractApplicationContext.java:1243) ~[spring-context-6.2.19.jar:6.2.19]\r\n\tat org.springframework.context.support.AbstractApplicationContext.doClose(AbstractApplicationContext.java:1204) ~[spring-context-6.2.19.jar:6.2.19]\r\n\tat org.springframework.context.support.AbstractApplicationContext.close(AbstractApplicationContext.java:1150) ~[spring-context-6.2.19.jar:6.2.19]\r\n\tat org.springframework.boot.SpringApplicationShutdownHook.closeAndWait(SpringApplicationShutdownHook.java:147) ~[spring-boot-3.5.16.jar:3.5.16]\r\n\tat java.base/java.lang.Iterable.forEach(Iterable.java:75) ~[na:na]\r\n\tat org.springframework.boot.SpringApplicationShutdownHook.run(SpringApplicationShutdownHook.java:116) ~[spring-boot-3.5.16.jar:3.5.16]\r\n\tat java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]\r\n\r\n2026-10-01T08:19:32.186-05:00  INFO 37708 --- [employee] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Completed shut down of DiscoveryClient\r\n2026-10-01T08:19:32.194-05:00  INFO 37708 --- [employee] [ionShutdownHook] o.s.c.n.e.s.EurekaServiceRegistry        : Unregistering application EMPLOYEE with eureka with status DOWN\r\n2026-10-01T08:19:32.194-05:00  INFO 37708 --- [employee] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1790860772194, current=DOWN, previous=UP]\r\n2026-10-01T08:19:32.195-05:00  INFO 37708 --- [employee] [foReplicator-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_EMPLOYEE/KrishnaA.mshome.net:employee: registering service...\r\n2026-10-01T08:19:32.198-05:00  INFO 37708 --- [employee] [ionShutdownHook] com.netflix.discovery.DiscoveryClient    : Shutting down DiscoveryClient ...\r\n[INFO] \r\n[INFO] Results:\r\n[INFO] \r\n[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0\r\n[INFO] \r\n[INFO] \r\n[INFO] --- jacoco-maven-plugin:0.8.11:report (report) @ employee-service ---\r\n[INFO] Loading execution data file .\\target\\jacoco.exec\r\n[INFO] Analyzed bundle 'employee-service' with 7 classes\r\n[INFO] \r\n[INFO] --- maven-war-plugin:3.4.0:war (default-war) @ employee-service ---\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.0/maven-archiver-3.6.0.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.0/maven-archiver-3.6.0.pom (3.9 kB at 47 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.0/plexus-io-3.4.0.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.0/plexus-io-3.4.0.pom (6.0 kB at 90 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.4.0/plexus-archiver-4.4.0.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.4.0/plexus-archiver-4.4.0.pom (6.3 kB at 95 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.7.1/plexus-archiver-4.7.1.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.7.1/plexus-archiver-4.7.1.pom (6.5 kB at 85 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-2/zstd-jni-1.5.5-2.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-2/zstd-jni-1.5.5-2.pom (1.9 kB at 19 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.0/maven-archiver-3.6.0.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.0/plexus-io-3.4.0.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.7.1/plexus-archiver-4.7.1.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-2/zstd-jni-1.5.5-2.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-io/3.4.0/plexus-io-3.4.0.jar (79 kB at 979 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/3.6.0/maven-archiver-3.6.0.jar (26 kB at 230 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/4.7.1/plexus-archiver-4.7.1.jar (221 kB at 1.6 MB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/github/luben/zstd-jni/1.5.5-2/zstd-jni-1.5.5-2.jar (5.9 MB at 22 MB/s)\r\n[INFO] Packaging webapp\r\n[INFO] Assembling webapp [employee-service] in [.\\target\\employee-service-0.0.1-SNAPSHOT]\r\n[INFO] Processing war project\r\n[INFO] Building war: .\\target\\employee-service-0.0.1-SNAPSHOT.war\r\n[INFO] \r\n[INFO] --- spring-boot-maven-plugin:3.5.16:repackage (repackage) @ employee-service ---\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/3.5.16/spring-boot-buildpack-platform-3.5.16.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/3.5.16/spring-boot-buildpack-platform-3.5.16.pom (3.2 kB at 32 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/3.5.16/spring-boot-loader-tools-3.5.16.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/3.5.16/spring-boot-loader-tools-3.5.16.pom (2.2 kB at 27 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/3.5.16/spring-boot-loader-tools-3.5.16.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/3.5.16/spring-boot-buildpack-platform-3.5.16.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-buildpack-platform/3.5.16/spring-boot-buildpack-platform-3.5.16.jar (325 kB at 3.7 MB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/springframework/boot/spring-boot-loader-tools/3.5.16/spring-boot-loader-tools-3.5.16.jar (468 kB at 4.2 MB/s)\r\n[INFO] Replacing main artifact .\\target\\employee-service-0.0.1-SNAPSHOT.war with repackaged archive, adding nested dependencies in BOOT-INF/.\r\n[INFO] The original artifact has been renamed to .\\target\\employee-service-0.0.1-SNAPSHOT.war.original\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD SUCCESS\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  37.027 s\r\n[INFO] Finished at: 2026-10-01T08:19:36-05:00\r\n[INFO] ------------------------------------------------------------------------\r\n\nMockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3\r\nOpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended\r\nWARNING: A Java agent has been loaded dynamically (C:\\Users\\annav\\.m2\\repository\\net\\bytebuddy\\byte-buddy-agent\\1.17.8\\byte-buddy-agent-1.17.8.jar)\r\nWARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning\r\nWARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information\r\nWARNING: Dynamic loading of agents will be disallowed by default in a future release\r\n",
+  "transformation": null,
+  "edge": "E4",
+  "error_groups": [],
+  "correlation": null
+}
