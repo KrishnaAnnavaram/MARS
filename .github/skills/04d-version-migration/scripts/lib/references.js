@@ -216,6 +216,9 @@ function normalisePack(meta, file, full = null) {
     language_from: meta.language_from || null,
     language_to: meta.language_to || null,
     detect: Array.isArray(meta.detect) ? meta.detect : [],
+    // Optional: the groupId:artifactId coordinates whose declared version *is* the platform version.
+    // Absent, the pack's versioned detect entries serve (see packEligibility).
+    platform_coordinates: asList(meta.platform_coordinates).map(String),
     // Optional v2 metadata — all absent in a pack written before it existed.
     provenance: meta.provenance && typeof meta.provenance === 'object' ? meta.provenance : null,
     target_constraints: meta.target_constraints && typeof meta.target_constraints === 'object' ? meta.target_constraints : null,
@@ -256,13 +259,122 @@ function matchesCoordinate(entry, inventory) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Source-version eligibility
+//
+// A detect entry only *nominates* a pack. Whether the pack may be used is decided by the version
+// the project actually declares for its platform: a pack migrates from one generation (`from`), so
+// the source must be proven to sit in it. "Proven" means a version-bearing coordinate the pack
+// names — `platform_coordinates`, or else its versioned detect entries (a parent, an imported BOM,
+// a plugin) — is declared with a concrete version. The presence of an unversioned dependency (a
+// starter, say) proves nothing about the generation and never makes a pack eligible on its own.
+// ---------------------------------------------------------------------------
+
+function majorOf(version) {
+  const m = /^\s*v?(\d+)/.exec(String(version === null || version === undefined ? '' : version));
+  return m ? Number(m[1]) : null;
+}
+
+function platformCoordinatesOf(pack) {
+  const explicit = asList(pack.platform_coordinates).map(String);
+  const fromDetect = pack.detect
+    .filter((entry) => String(entry).split(':').length >= 3)
+    .map((entry) => String(entry).split(':').slice(0, 2).join(':'));
+  return [...new Set(explicit.length ? explicit : fromDetect)];
+}
+
+/** The concrete platform version the project declares on one of the pack's platform coordinates. */
+function sourcePlatformVersion(pack, inventory) {
+  const candidates = [
+    ...(inventory.parent ? [{ ...inventory.parent, where: 'parent' }] : []),
+    ...(inventory.dependencies || []).map((d) => ({ ...d, where: d.scope === 'import' ? 'bom-import' : 'dependency' })),
+    ...(inventory.plugins || []).map((p) => ({ ...p, where: 'plugin' })),
+  ];
+  for (const coordinate of platformCoordinatesOf(pack)) {
+    const [groupId, artifactId] = coordinate.split(':');
+    const hit = candidates.find((c) => c.groupId === groupId && c.artifactId === artifactId
+      && typeof c.version === 'string' && /^\d/.test(c.version));
+    if (hit) return { coordinate, version: hit.version, where: hit.where, descriptor: inventory.descriptor || null };
+  }
+  return null;
+}
+
+function packEligibility(pack, inventory) {
+  const matched = pack.detect.filter((entry) => matchesCoordinate(entry, inventory));
+  const platform = sourcePlatformVersion(pack, inventory);
+  const base = {
+    pack: pack.id, stack: pack.stack, pack_from: pack.from, pack_to: pack.to,
+    matched_on: matched, platform_coordinates: platformCoordinatesOf(pack), source_platform: platform,
+  };
+  if (!matched.length) return { ...base, nominated: false, eligible: false, relation: 'no-match', reason: 'no detect entry matches the project' };
+  if (!platform) {
+    return {
+      ...base, nominated: true, eligible: false, relation: 'unproven',
+      reason: `source platform version not proven: none of ${base.platform_coordinates.join(', ') || '(no platform coordinates)'} is declared with a concrete version — a matching unversioned dependency (${matched.join(', ')}) says nothing about the generation`,
+    };
+  }
+  const fromMajor = majorOf(pack.from);
+  if (fromMajor === null) {
+    return { ...base, nominated: true, eligible: true, relation: 'unchecked', reason: 'the pack declares no `from` generation; eligibility rests on its detect entries' };
+  }
+  const sourceMajor = majorOf(platform.version);
+  if (sourceMajor === fromMajor) {
+    return { ...base, nominated: true, eligible: true, relation: 'in-generation', reason: `source ${platform.coordinate} ${platform.version} (${platform.where}) is in the pack's ${pack.from}.x generation` };
+  }
+  return {
+    ...base, nominated: true, eligible: false, relation: sourceMajor < fromMajor ? 'behind' : 'ahead',
+    reason: `source ${platform.coordinate} ${platform.version} (${platform.where}) is generation ${sourceMajor}, but the pack migrates from ${pack.from}.x`,
+  };
+}
+
+/** Every pack, split into the eligible ones and the ones a detect entry nominated but the source version rules out. */
+function assessReferencePacks(inventory) {
+  const assessed = listReferencePacks().map((pack) => ({ pack, eligibility: packEligibility(pack, inventory) }));
+  return {
+    eligible: assessed
+      .filter((a) => a.eligibility.eligible)
+      .map((a) => ({ ...a.pack, matched: a.eligibility.matched_on, eligibility: a.eligibility })),
+    ineligible: assessed.filter((a) => a.eligibility.nominated && !a.eligibility.eligible).map((a) => a.eligibility),
+  };
+}
+
 function matchReferencePacks(inventory) {
-  return listReferencePacks()
-    .map((pack) => ({
-      ...pack,
-      matched: pack.detect.filter((entry) => matchesCoordinate(entry, inventory)),
-    }))
-    .filter((pack) => pack.matched.length > 0);
+  return assessReferencePacks(inventory).eligible;
+}
+
+/** `spring-boot-3-to-4` → `spring-boot`: the capability-name prefix packs of one stack share. */
+function capabilityPrefix(packId) {
+  return String(packId || '').replace(/-\d+(?:\.\d+)*-to-\d+(?:\.\d+)*$/, '') || 'migration';
+}
+
+/**
+ * The chain of single-generation steps from the source version to the requested target, and the
+ * pack that covers each step. A pack covers exactly one `from` → `to` generation of one stack; a
+ * step with no pack is a missing capability, and is never silently jumped over.
+ */
+function requiredMigrationPath(stack, sourceVersion, targetVersion, packIdHint = null) {
+  const from = majorOf(sourceVersion);
+  const to = majorOf(targetVersion);
+  if (from === null || to === null) return null;
+  const packs = listReferencePacks().filter((p) => p.stack === stack);
+  const prefix = capabilityPrefix(packIdHint || (packs[0] && packs[0].id));
+  const steps = [];
+  for (let m = from; m < to; m += 1) {
+    const pack = packs.find((p) => majorOf(p.from) === m && majorOf(p.to) === m + 1);
+    steps.push({
+      from: m === from ? String(sourceVersion) : `${m}.x`,
+      to: m + 1 === to ? String(targetVersion) : `${m + 1}.x`,
+      capability: pack ? pack.id : `${prefix}-${m}-to-${m + 1}`,
+      available: Boolean(pack),
+    });
+  }
+  return {
+    stack,
+    source: String(sourceVersion),
+    target: String(targetVersion),
+    steps,
+    missing_capability: steps.filter((s) => !s.available).map((s) => s.capability),
+  };
 }
 
 function resolveReferencePack(idOrFile) {
@@ -274,4 +386,6 @@ function resolveReferencePack(idOrFile) {
 module.exports = {
   parseFrontMatter, listReferencePacks, matchReferencePacks, resolveReferencePack, normalisePack,
   normaliseTransformation, transformationProblems, matchesCoordinate, FLOATING_VERSION,
+  majorOf, platformCoordinatesOf, sourcePlatformVersion, packEligibility, assessReferencePacks,
+  capabilityPrefix, requiredMigrationPath,
 };

@@ -1,0 +1,33 @@
+
+OpenRewrite apply — boot4-curated
+  recipes   mars.migration.SpringBoot3To4Curated
+  artifacts org.openrewrite.recipe:rewrite-spring:6.37.1
+  licence   Moderne Source Available License · policy optional
+  sandbox   ../evidence/roundB/ctx/version-migration/b2-golden/workspace on JDK 21
+  running…
+
+  Record    ../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-01.json
+  Status    APPLIED (exit 0)
+  Command   E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:runNoFork -Drewrite.activeRecipes=mars.migration.SpringBoot3To4Curated -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-spring:6.37.1 -Drewrite.configLocation=<session>\transformations\rewrite-01.rewrite.yml
+  Log       ../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-01.log
+  ! restored 1 out-of-scope file(s) from the checkpoint: src/main/java/com/example/migrationdemo/exception/ErrorResponse.java
+
+  Applied to 6 file(s) in the sandbox; all inside the inspected preview.
+  Excluded as out of scope (restored): src/main/java/com/example/migrationdemo/exception/ErrorResponse.java
+  Building immediately…
+
+Round 1 — maven -B clean test-compile on JDK 21 (21.0.11)
+  workspace ../evidence/roundB/ctx/version-migration/b2-golden/workspace
+  change    Applied boot4-curated (preview rewrite-00) with ErrorResponse.java excluded
+  building…
+
+  Outcome     PASSED  (exit 0, 13.0s)
+  Declared    Java 21 · spring-boot-starter-parent 4.1.1
+  Workspace   6 files changed, 33 insertions(+), 34 deletions(-)
+
+  Round record ../evidence/roundB/ctx/version-migration/b2-golden/rounds/round-01.json
+  Full log     ../evidence/roundB/ctx/version-migration/b2-golden/rounds/round-01.log
+
+  Build is green on JDK 21. Next: probe the runtime, then render the report.
+
+exit=0

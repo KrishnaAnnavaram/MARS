@@ -1,0 +1,559 @@
+{
+  "slug": "b1-employee-2x",
+  "generated_at": "2026-10-01T02:46:44.820Z",
+  "project": {
+    "dir": "E:/mv/A/src/employee-service",
+    "relative_to_repo": "src/employee-service",
+    "name": "employee-service",
+    "descriptor": "pom.xml",
+    "coordinates": {
+      "groupId": "com.aura.vihanga",
+      "artifactId": "employee-service",
+      "version": "0.0.1-SNAPSHOT",
+      "name": "employee-service"
+    },
+    "sources": {
+      "main": 18,
+      "test": 7,
+      "resources": 2
+    },
+    "ancillary_files": []
+  },
+  "build_tool": {
+    "tool": "maven",
+    "kind": "wrapper",
+    "command": "E:\\mv\\A\\src\\employee-service\\mvnw.cmd",
+    "display": "mvnw.cmd",
+    "version": "Apache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29)"
+  },
+  "language": {
+    "name": "Java",
+    "declared": "17",
+    "target": "21",
+    "from_jdk": {
+      "major": 17,
+      "version": "17.0.20.1",
+      "home": "E:/mv/tools/jdk-17.0.20.1+1"
+    },
+    "to_jdk": {
+      "major": 21,
+      "version": "21.0.11",
+      "home": "C:/Program Files/Microsoft/jdk-21.0.11.10-hotspot"
+    }
+  },
+  "platform": {
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "2.7.12"
+    },
+    "properties": {
+      "java.version": "17",
+      "spring-cloud.version": "2021.0.7"
+    },
+    "dependencies": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-data-mongodb",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-web",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-circuitbreaker-resilience4j",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-netflix-eureka-client",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-actuator",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-aop",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.projectlombok",
+        "artifactId": "lombok",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-webflux",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-config",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-starter-bootstrap",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-test",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "org.apache.poi",
+        "artifactId": "poi-ooxml",
+        "version": "5.0.0",
+        "declaredVersion": "5.0.0",
+        "scope": "compile",
+        "managed": false
+      },
+      {
+        "groupId": "io.cucumber",
+        "artifactId": "cucumber-junit",
+        "version": "7.11.0",
+        "declaredVersion": "7.11.0",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "io.cucumber",
+        "artifactId": "cucumber-java",
+        "version": "7.11.0",
+        "declaredVersion": "7.11.0",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.jacoco",
+        "artifactId": "jacoco-maven-plugin",
+        "version": "0.8.7",
+        "declaredVersion": "0.8.7",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.springframework.cloud",
+        "artifactId": "spring-cloud-dependencies",
+        "version": "2021.0.7",
+        "declaredVersion": "${spring-cloud.version}",
+        "scope": "import",
+        "managed": false
+      }
+    ],
+    "plugins": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-maven-plugin",
+        "version": null
+      },
+      {
+        "groupId": "org.jacoco",
+        "artifactId": "jacoco-maven-plugin",
+        "version": "0.8.7"
+      },
+      {
+        "groupId": "org.apache.maven.plugins",
+        "artifactId": "maven-surefire-plugin",
+        "version": "2.19.1"
+      },
+      {
+        "groupId": "net.masterthought",
+        "artifactId": "maven-cucumber-reporting",
+        "version": "3.15.0"
+      }
+    ]
+  },
+  "toolchain": {
+    "installed_jdks": [
+      {
+        "home": "E:\\mv\\tools\\jdk-17.0.20.1+1",
+        "major": 17,
+        "version": "17.0.20.1",
+        "source": "MIGRATION_JDK_17"
+      },
+      {
+        "home": "C:\\Program Files\\Microsoft\\jdk-21.0.11.10-hotspot",
+        "major": 21,
+        "version": "21.0.11",
+        "source": "MIGRATION_JDK_21"
+      }
+    ]
+  },
+  "reference_packs": [
+    {
+      "id": "spring-boot-3-to-4",
+      "title": "Spring Boot 3.x to 4.x (Java 17 to 21)",
+      "stack": "Spring Boot",
+      "from": "3",
+      "to": "4",
+      "language_from": "17",
+      "language_to": "21",
+      "file": "references/spring-boot-3-to-4.md",
+      "matched_on": [
+        "org.springframework.boot:spring-boot-starter-web"
+      ]
+    }
+  ],
+  "target": {
+    "platform": {
+      "name": "Spring Boot",
+      "version": "4.1.1",
+      "source": "request"
+    },
+    "language": {
+      "name": "Java",
+      "version": "21",
+      "source": "request"
+    },
+    "constraints": {
+      "platform_major": "4",
+      "language_min": "17",
+      "language_target": "21",
+      "note": "Confirm the exact release's documented minimum Java level and managed versions from its release notes and resolved BOM (section 11)."
+    }
+  },
+  "migration_path": {
+    "pack": "spring-boot-3-to-4",
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "2.7.12",
+      "where": "parent"
+    },
+    "source_line": "2.7",
+    "preparation_line": "3.5",
+    "on_preparation_line": false,
+    "requested_target": "4.1.1",
+    "ecosystem_boms_present": [
+      {
+        "coordinate": "org.springframework.cloud:spring-cloud-dependencies",
+        "version": "2021.0.7",
+        "note": "The Spring Cloud release train must be one documented as compatible with the requested Boot 4 release. Check Spring Cloud's supported-versions table; unresolved until confirmed."
+      }
+    ],
+    "warnings": [
+      "source org.springframework.boot:spring-boot-starter-parent 2.7.12 is not on the 3.5.x preparation line the pack expects — a planning input, not an automatic upgrade"
+    ],
+    "unresolved": [
+      "compatibility of org.springframework.cloud:spring-cloud-dependencies 2021.0.7 with Spring Boot 4.1.1 is not proven locally — The Spring Cloud release train must be one documented as compatible with the requested Boot 4 release. Check Spring Cloud's supported-versions table; unresolved until confirmed."
+    ]
+  },
+  "observations": {
+    "basis": "machine-detected: file names and a regular-expression scan of source text. Not a semantic Java model — every entry is a place to read, not a conclusion.",
+    "entry_points": [
+      "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+    ],
+    "config_files": [
+      {
+        "file": "src/main/resources/application.properties",
+        "scope": "main",
+        "profile": "default"
+      },
+      {
+        "file": "src/main/resources/bootstrap.properties",
+        "scope": "main",
+        "profile": "default"
+      }
+    ],
+    "pinned_dependencies": [
+      {
+        "coordinate": "org.apache.poi:poi-ooxml",
+        "version": "5.0.0",
+        "declared": "5.0.0",
+        "scope": "compile"
+      },
+      {
+        "coordinate": "io.cucumber:cucumber-junit",
+        "version": "7.11.0",
+        "declared": "7.11.0",
+        "scope": "test"
+      },
+      {
+        "coordinate": "io.cucumber:cucumber-java",
+        "version": "7.11.0",
+        "declared": "7.11.0",
+        "scope": "test"
+      },
+      {
+        "coordinate": "org.jacoco:jacoco-maven-plugin",
+        "version": "0.8.7",
+        "declared": "0.8.7",
+        "scope": "test"
+      }
+    ],
+    "platform_boms": [
+      {
+        "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+        "version": "2.7.12",
+        "kind": "parent"
+      },
+      {
+        "coordinate": "org.springframework.cloud:spring-cloud-dependencies",
+        "version": "2021.0.7",
+        "kind": "bom-import"
+      }
+    ],
+    "container_runtime": [],
+    "ci_java_references": [],
+    "pack_surfaces": [
+      {
+        "id": "web-api",
+        "label": "HTTP controllers and request mappings",
+        "rule": "probes (section 13)",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 15,
+                "text": "@RestControllerAdvice"
+              }
+            ]
+          },
+          {
+            "file": "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 23,
+                "text": "@RestController"
+              },
+              {
+                "line": 24,
+                "text": "@RequestMapping(\"api/v1\")"
+              },
+              {
+                "line": 31,
+                "text": "@PostMapping(\"employee\")"
+              },
+              {
+                "line": 41,
+                "text": "@PostMapping(\"employee/excelUpload\")"
+              },
+              {
+                "line": 50,
+                "text": "@GetMapping(\"employee/search\")"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "json",
+        "label": "Jackson / ObjectMapper configuration and injection",
+        "rule": "section 2",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "actuator",
+        "label": "Actuator extension points (health, endpoints, info)",
+        "rule": "section 3",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "security",
+        "label": "Spring Security configuration",
+        "rule": "section 5",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "persistence",
+        "label": "JPA / Hibernate persistence",
+        "rule": "section 6",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "test-mocking",
+        "label": "Removed Boot mocking annotations",
+        "rule": "section 4.1",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/test/java/com/aura/vihanga/employeeservice/controller/EmployeeControllerTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 16,
+                "text": "import org.springframework.boot.test.mock.mockito.MockBean;"
+              },
+              {
+                "line": 28,
+                "text": "@MockBean"
+              }
+            ]
+          },
+          {
+            "file": "src/test/java/com/aura/vihanga/employeeservice/service/EmployeeServiceTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 16,
+                "text": "import org.springframework.boot.test.mock.mockito.MockBean;"
+              },
+              {
+                "line": 30,
+                "text": "@MockBean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "test-slices",
+        "label": "Test slices whose annotations moved module and package",
+        "rule": "section 4.3",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 11,
+                "text": "import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "test-security",
+        "label": "Security test support that moved to the Boot security-test starter",
+        "rule": "section 4.4",
+        "invalid_patterns": [],
+        "files": []
+      },
+      {
+        "id": "testcontainers",
+        "label": "Testcontainers (environment-dependent tests)",
+        "rule": "section 12 round 0",
+        "invalid_patterns": [],
+        "files": []
+      }
+    ],
+    "migration_sensitive_files": [
+      "pom.xml",
+      "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java",
+      "src/main/java/com/aura/vihanga/employeeservice/controller/EmployeeController.java",
+      "src/test/java/com/aura/vihanga/employeeservice/controller/EmployeeControllerTest.java",
+      "src/test/java/com/aura/vihanga/employeeservice/repository/EmployeeRepositoryTest.java",
+      "src/test/java/com/aura/vihanga/employeeservice/service/EmployeeServiceTest.java"
+    ]
+  },
+  "capabilities": {
+    "transformations": [
+      {
+        "id": "boot4-curated",
+        "provider": "openrewrite",
+        "policy": "optional",
+        "recipes": [
+          "mars.migration.SpringBoot3To4Curated"
+        ],
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:6.37.1"
+        ],
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "config": "references/openrewrite/spring-boot-3-to-4.curated.yml",
+        "license": "Moderne Source Available License",
+        "recipe_target": "requested",
+        "build_tool_supported": true,
+        "configuration_problems": [],
+        "availability": "not checked — decided by a dry-run in the sandbox"
+      },
+      {
+        "id": "boot35-preparation",
+        "provider": "openrewrite",
+        "policy": "optional",
+        "recipes": [
+          "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5"
+        ],
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:6.37.1"
+        ],
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "config": null,
+        "license": "Moderne Source Available License",
+        "recipe_target": "3.5.x",
+        "build_tool_supported": true,
+        "configuration_problems": [],
+        "availability": "not checked — decided by a dry-run in the sandbox"
+      },
+      {
+        "id": "boot4-composite",
+        "provider": "openrewrite",
+        "policy": "optional",
+        "recipes": [
+          "org.openrewrite.java.spring.boot4.UpgradeSpringBoot_4_0"
+        ],
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:6.37.1"
+        ],
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "config": null,
+        "license": "Moderne Source Available License",
+        "recipe_target": "4.0.x",
+        "build_tool_supported": true,
+        "configuration_problems": [],
+        "availability": "not checked — decided by a dry-run in the sandbox"
+      }
+    ]
+  },
+  "reference_provenance": {
+    "sources": [
+      "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide",
+      "https://docs.openrewrite.org/recipes/java/spring/boot4/upgradespringboot_4_0",
+      "rewrite-spring 6.37.1 recipe catalogue (META-INF/rewrite/spring-boot-40.yml, spring-boot-40-modular-starters.yml, recipes.csv)"
+    ],
+    "observed_run": "Rounds 0-7 of a recorded Boot 3.5.0 to 4.1.1 migration (sections 12 and 13)",
+    "last_reviewed": "2026-09-30"
+  }
+}

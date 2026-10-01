@@ -231,6 +231,6 @@ function main() {
   console.log(`  Review with: git -C "${projectDir}" diff   (if the project is version-controlled)\n`);
 }
 
-if (require.main === module) main();
+if (require.main === module) require('./lib/summary').runAndFinalize(main, 'apply-migration.js');
 
 module.exports = { eligibility, listWorkspaceChanges, PACKAGING_INTENTS };

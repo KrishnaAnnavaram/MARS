@@ -89,6 +89,17 @@ named — note (not block, since discovery isn't a gate) if any upstream report 
 3. Commit only the validated patch, push the branch, then run `gh pr create` using the title and
   body from `pr_<id>.md`. Report the resulting PR URL.
 
+## Version migrations (Fix Type `VERSION_MIGRATION`)
+
+A `VERSION_MIGRATION` fix is scored on the same five independent reports as any other fix — never
+on 04D's word. `scoring.json` adds one hard gate: a migration whose **Migration Status** is not
+`PASS`/`PARTIAL PASS` is Blocked. In the narrative, PR body and audit trail, cite the migration
+evidence the chain collector adds (the migration report and the per-run `MIGRATION_SUMMARY.md`):
+source → target versions, rounds, test counts before/after, the behaviour comparison, and every
+manual follow-up. A `PARTIAL PASS` must say what was not verified. After rendering, refresh the
+summary's pipeline-handoff answers with
+`node .github/skills/04d-version-migration/scripts/finalize-run.js --issue <ID>`.
+
 ## Constraints
 
 - DO NOT create, edit, rename or delete anything in `docs/agent_output/04-remediation/`, `docs/agent_output/05-verify/`,

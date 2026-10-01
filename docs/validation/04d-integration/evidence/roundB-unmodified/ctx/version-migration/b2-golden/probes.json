@@ -1,0 +1,20 @@
+{
+  "base_url": "http://localhost:8080",
+  "auth": { "type": "basic", "username": "demo", "password": "demo123" },
+  "readiness": { "path": "/actuator/health", "timeout_seconds": 180 },
+  "requests": [
+    { "name": "list all employees", "method": "GET", "path": "/api/v1/employees", "category": "business-api", "expect_status": 200 },
+    { "name": "employee by id", "method": "GET", "path": "/api/v1/employees/1", "category": "serialization", "expect_status": 200 },
+    { "name": "employee not found is 404", "method": "GET", "path": "/api/v1/employees/99999", "category": "error-contract", "expect_status": 404, "ignore_json_paths": ["timestamp"] },
+    { "name": "search by department", "method": "GET", "path": "/api/v1/employees/search?department=Technology", "category": "business-api", "expect_status": 200 },
+    { "name": "high earners (native query)", "method": "GET", "path": "/api/v1/employees/high-earners?salary=80000", "category": "business-api", "expect_status": 200 },
+    { "name": "bad path variable type", "method": "GET", "path": "/api/v1/employees/abc", "category": "error-contract" },
+    { "name": "create invalid is 400", "method": "POST", "path": "/api/v1/employees", "category": "error-contract", "expect_status": 400, "body": { "employeeNumber": "", "firstName": "John", "lastName": "Doe", "email": "invalid-email", "department": "Technology", "salary": 1000 }, "ignore_json_paths": ["timestamp"] },
+    { "name": "create duplicate is 409", "method": "POST", "path": "/api/v1/employees", "category": "error-contract", "expect_status": 409, "body": { "employeeNumber": "EMP001", "firstName": "John", "lastName": "Smith", "email": "dup@example.com", "department": "Technology", "salary": 1000 }, "ignore_json_paths": ["timestamp"] },
+    { "name": "unauthenticated is 401", "method": "GET", "path": "/api/v1/employees", "no_auth": true, "category": "security-boundary", "expect_status": 401, "capture_headers": ["WWW-Authenticate"] },
+    { "name": "bad credentials is 401", "method": "GET", "path": "/api/v1/employees", "no_auth": true, "headers": { "Authorization": "Basic ZGVtbzp3cm9uZy1wYXNzd29yZA==" }, "category": "security-boundary", "expect_status": 401, "capture_headers": ["WWW-Authenticate"] },
+    { "name": "health is public", "method": "GET", "path": "/actuator/health", "no_auth": true, "category": "actuator", "expect_status": 200 },
+    { "name": "info is public", "method": "GET", "path": "/actuator/info", "no_auth": true, "category": "actuator", "expect_status": 200 },
+    { "name": "metrics endpoint", "method": "GET", "path": "/actuator/metrics", "no_auth": true, "category": "actuator", "expect_status": 200, "unordered_arrays": true }
+  ]
+}

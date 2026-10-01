@@ -1,0 +1,286 @@
+{
+  "id": "rewrite-01",
+  "seq": 1,
+  "provider": "openrewrite",
+  "mode": "apply",
+  "applied": true,
+  "transformation": "boot4-curated",
+  "pack_transformation": "boot4-curated",
+  "policy": "optional",
+  "phase": "after-baseline",
+  "build_tool": "maven",
+  "build_tool_kind": "env",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.SpringBoot3To4Curated"
+  ],
+  "artifacts": [
+    "org.openrewrite.recipe:rewrite-spring:6.37.1"
+  ],
+  "config": "openrewrite/spring-boot-3-to-4.curated.yml",
+  "config_sha": "1d0f77c8f257812c",
+  "license": "Moderne Source Available License",
+  "license_note": "rewrite-spring 6.x is published to Maven Central under the Moderne Source Available License. Confirm your organisation's use is permitted before relying on it; 04D records the licence but does not judge it.",
+  "source_repository": "Maven Central",
+  "recipe_target": "requested",
+  "jdk": {
+    "major": 21,
+    "version": "21.0.11"
+  },
+  "started_at": "2026-10-01T02:58:10.670Z",
+  "finished_at": "2026-10-01T02:59:19.610Z",
+  "duration_ms": 68940,
+  "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:runNoFork -Drewrite.activeRecipes=mars.migration.SpringBoot3To4Curated -Drewrite.recipeArtifactCoordinates=org.openrewrite.recipe:rewrite-spring:6.37.1 -Drewrite.configLocation=<session>\\transformations\\rewrite-01.rewrite.yml",
+  "exit_code": 0,
+  "status": "applied",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": "rewrite-00",
+  "proposed_files": [],
+  "changed_files": [
+    {
+      "state": "M",
+      "file": "Dockerfile"
+    },
+    {
+      "state": "M",
+      "file": "pom.xml"
+    },
+    {
+      "state": "M",
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+    },
+    {
+      "state": "M",
+      "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java"
+    },
+    {
+      "state": "M",
+      "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java"
+    },
+    {
+      "state": "M",
+      "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"
+    }
+  ],
+  "excluded_files": [
+    "src/main/java/com/example/migrationdemo/exception/ErrorResponse.java"
+  ],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.maven.UpgradeParentVersion: {groupId=org.springframework.boot, artifactId=spring-boot-starter-parent, newVersion=4.1.1}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot4.MigrateToModularStarters"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot4.AddModularStarterDependencies"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.dependencies.AddDependency"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.dependencies.ChangeDependency"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.migrate.UpgradeJavaVersion: {version=21}"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.maven.UseMavenCompilerPluginReleaseConfiguration: {releaseVersion=21}"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.maven.UpdateMavenProjectPropertyJavaVersion: {version=21}"
+      }
+    ],
+    "src/main/java/com/example/migrationdemo/config/JacksonConfig.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.framework.UpgradeSpringFramework_7_0"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.jackson.UpgradeJackson_2_3"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.jackson.UseFormatAlignedObjectMappers"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.jackson.UpgradeJackson_2_3_RemoveRedundantFeatureFlags"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.jackson.RemoveRedundantFeatureFlags: {featureName=SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, newDefaultValue=false}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.jackson.RemoveBuiltInModuleRegistrations"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.jackson.MigrateMapperSettersToBuilder"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.jackson.UpgradeJackson_2_3_PackageChanges"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.ChangePackage: {oldPackageName=com.fasterxml.jackson.databind, newPackageName=tools.jackson.databind, recursive=true}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.migrate.UpgradeJavaVersion: {version=21}"
+      }
+    ],
+    "src/main/java/com/example/migrationdemo/exception/ErrorResponse.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.framework.UpgradeSpringFramework_7_0"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.jackson.UpgradeJackson_2_3"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.jackson.UseModernDateTimeSerialization"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.migrate.UpgradeJavaVersion: {version=21}"
+      }
+    ],
+    "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot4.MigrateToModularStarters"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot4.MigrateAutoconfigurePackages"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.ChangeType"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.ChangePackage"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.migrate.UpgradeJavaVersion: {version=21}"
+      }
+    ],
+    "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.framework.UpgradeSpringFramework_7_0"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.jackson.UpgradeJackson_2_3"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.jackson.UpgradeJackson_2_3_PackageChanges"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.ChangePackage: {oldPackageName=com.fasterxml.jackson.databind, newPackageName=tools.jackson.databind, recursive=true}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot4.ReplaceMockBeanAndSpyBean"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.ChangeType: {oldFullyQualifiedTypeName=org.springframework.boot.test.mock.mockito.MockBean, newFullyQualifiedTypeName=org.springframework.test.context.bean.override.mockito.MockitoBean}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.spring.boot4.MigrateToModularStarters"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.spring.boot4.MigrateAutoconfigurePackages"
+      },
+      {
+        "depth": 4,
+        "recipe": "org.openrewrite.java.ChangePackage"
+      },
+      {
+        "depth": 3,
+        "recipe": "org.openrewrite.java.migrate.UpgradeJavaVersion: {version=21}"
+      }
+    ],
+    "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.spring.boot4.MigrateToModularStarters"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.spring.boot4.MigrateAutoconfigurePackages"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.java.ChangePackage"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.migrate.UpgradeJavaVersion: {version=21}"
+      }
+    ],
+    "Dockerfile": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.java.migrate.UpgradeJavaVersion: {version=21}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.java.migrate.UpgradeDockerImageVersion: {version=21}"
+      },
+      {
+        "depth": 2,
+        "recipe": "org.openrewrite.docker.ChangeFrom: {oldImageName=eclipse-temurin, oldTag=17*, newTag=21$1}"
+      }
+    ]
+  },
+  "patch": "../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-01.patch",
+  "log": "../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-01.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-01-before",
+    "commit": "5a7d84d83da314170c75dfa53824072f288e44f2"
+  },
+  "scope_check": {
+    "ok": true,
+    "out_of_preview": [],
+    "infrastructure_lines": []
+  },
+  "reconciliation": {
+    "requested_platform_version": "4.1.1",
+    "declared_after_apply": "4.1.1",
+    "recipe_target": "requested",
+    "status": "matches-request"
+  },
+  "build_round": 1,
+  "notes": [
+    "restored 1 out-of-scope file(s) from the checkpoint: src/main/java/com/example/migrationdemo/exception/ErrorResponse.java"
+  ],
+  "rendered_config": "../evidence/roundB/ctx/version-migration/b2-golden/transformations/rewrite-01.rewrite.yml",
+  "goal": "runNoFork"
+}

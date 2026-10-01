@@ -457,6 +457,6 @@ function main() {
   return record;
 }
 
-if (require.main === module) main();
+if (require.main === module) require('./lib/summary').runAndFinalize(main, 'run-migration-build.js');
 
 module.exports = { parseArgs, workspaceState, checkPlan, INTENTS };

@@ -1,0 +1,191 @@
+{
+  "schema": "migration-summary/1",
+  "run_id": "b1-employee-2x-20261001T030532Z",
+  "slug": "b1-employee-2x",
+  "generated_at": "2026-10-01T03:05:33.484Z",
+  "final_status": "BLOCKED",
+  "status_reason": "UNSUPPORTED_MIGRATION_PATH: source org.springframework.boot:spring-boot-starter-parent 2.7.12 (parent) is generation 2, but the pack migrates from 3.x; reaching 4.1.1 requires 2.7.12 → 3.x (spring-boot-2-to-3: MISSING), 3.x → 4.1.1 (spring-boot-3-to-4)",
+  "state": "BLOCKED",
+  "states_reached": [
+    "BASELINE_DETECTED"
+  ],
+  "metadata": {
+    "started_at": "2026-10-01T03:05:32.939Z",
+    "last_transition_at": "2026-10-01T03:05:32.989Z",
+    "duration_ms": 50,
+    "input_location": "E:/mv/C/src/employee-service",
+    "source_commit": "5b8008b09db2b302a8d03477b519b6a656998d8a",
+    "working_branch": "validate/04d-integration",
+    "worktree": "E:/mv/C",
+    "output_location": "../evidence/roundB-fixed/ctx/version-migration/b1-employee-2x",
+    "selected_pack": null,
+    "agent04_issue_id": null,
+    "approval_mode": "n/a — direct request, not routed by Agent 04"
+  },
+  "versions": {
+    "source_platform_name": "Spring Boot",
+    "source_platform": "2.7.12",
+    "target_platform_name": "Spring Boot",
+    "target_platform": "4.1.1",
+    "final_declared_platform": null,
+    "source_java": "17",
+    "source_jdk": "17.0.20.1",
+    "target_java": "21",
+    "target_jdk": "21.0.11",
+    "final_declared_java": null
+  },
+  "trigger": {
+    "kind": "direct-request",
+    "note": "invoked directly, not by 04_fix-generator Stage 2"
+  },
+  "detection": [
+    {
+      "what": "build tool",
+      "value": "maven (wrapper) Apache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29)",
+      "where": "pom.xml"
+    },
+    {
+      "what": "declared Java",
+      "value": "17",
+      "where": "pom.xml (java.version / compiler release)"
+    },
+    {
+      "what": "source platform",
+      "value": "2.7.12",
+      "where": "org.springframework.boot:spring-boot-starter-parent (parent)"
+    },
+    {
+      "what": "requested target platform",
+      "value": "4.1.1",
+      "where": "request"
+    },
+    {
+      "what": "requested target Java",
+      "value": "21",
+      "where": "request"
+    },
+    {
+      "what": "JDKs available",
+      "value": "17 (17.0.20.1), 21 (21.0.11)",
+      "where": "local toolchain probe"
+    }
+  ],
+  "migration_path": {
+    "status": "UNSUPPORTED_MIGRATION_PATH",
+    "source": "2.7.12",
+    "target": "4.1.1",
+    "required_path": {
+      "stack": "Spring Boot",
+      "source": "2.7.12",
+      "target": "4.1.1",
+      "steps": [
+        {
+          "from": "2.7.12",
+          "to": "3.x",
+          "capability": "spring-boot-2-to-3",
+          "available": false
+        },
+        {
+          "from": "3.x",
+          "to": "4.1.1",
+          "capability": "spring-boot-3-to-4",
+          "available": true
+        }
+      ],
+      "missing_capability": [
+        "spring-boot-2-to-3"
+      ]
+    },
+    "missing_capability": [
+      "spring-boot-2-to-3"
+    ],
+    "pack_eligibility": [
+      {
+        "pack": "spring-boot-3-to-4",
+        "stack": "Spring Boot",
+        "pack_from": "3",
+        "pack_to": "4",
+        "matched_on": [
+          "org.springframework.boot:spring-boot-starter-web"
+        ],
+        "platform_coordinates": [
+          "org.springframework.boot:spring-boot-starter-parent",
+          "org.springframework.boot:spring-boot-dependencies"
+        ],
+        "source_platform": {
+          "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+          "version": "2.7.12",
+          "where": "parent",
+          "descriptor": "pom.xml"
+        },
+        "nominated": true,
+        "eligible": false,
+        "relation": "behind",
+        "reason": "source org.springframework.boot:spring-boot-starter-parent 2.7.12 (parent) is generation 2, but the pack migrates from 3.x"
+      }
+    ],
+    "warnings": [],
+    "unresolved": []
+  },
+  "planned_transformations": null,
+  "openrewrite": [],
+  "actual_transformations": [],
+  "file_changes": [],
+  "dependency_changes": [],
+  "compile_history": [],
+  "tests": null,
+  "runtime": {
+    "baseline_probed": false,
+    "final_probed": false,
+    "baseline_started": null,
+    "final_started": null,
+    "final_startup_seconds": null,
+    "readiness": null,
+    "probes": 0,
+    "failures": []
+  },
+  "behaviour": null,
+  "compiled_on_target": false,
+  "target_reached": false,
+  "validation": [
+    [
+      "Build rounds",
+      "0 (none)"
+    ],
+    [
+      "Final round",
+      "none"
+    ],
+    [
+      "Target declared by final build",
+      "n/a"
+    ],
+    [
+      "Tests before → after",
+      "not comparable"
+    ],
+    [
+      "Runtime probes",
+      "not compared"
+    ],
+    [
+      "Migration result",
+      "BLOCKED — UNSUPPORTED_MIGRATION_PATH: source org.springframework.boot:spring-boot-starter-parent 2.7.12 (parent) is generation 2, but the pack migrates from 3.x; reaching 4.1.1 requires 2.7.12 → 3.x (spring-boot-2-to-3: MISSING), 3.x → 4.1.1 (spring-boot-3-to-4)"
+    ]
+  ],
+  "handoff": null,
+  "paths": {
+    "session": "../evidence/roundB-fixed/ctx/version-migration/b1-employee-2x",
+    "report_md": "E:\\mv\\evidence\\roundB-fixed\\reports\\migration_b1-employee-2x.md",
+    "report_md_exists": false,
+    "report_diff": "E:\\mv\\evidence\\roundB-fixed\\reports\\migration_b1-employee-2x.diff",
+    "report_diff_exists": false,
+    "summary_md": "E:\\mv\\evidence\\roundB-fixed\\reports\\migration-runs\\b1-employee-2x-20261001T030532Z\\MIGRATION_SUMMARY.md",
+    "summary_json": "E:\\mv\\evidence\\roundB-fixed\\reports\\migration-runs\\b1-employee-2x-20261001T030532Z\\migration-summary.json",
+    "evidence": [
+      "../evidence/roundB-fixed/ctx/version-migration/b1-employee-2x/baseline.json",
+      "../evidence/roundB-fixed/ctx/version-migration/b1-employee-2x/state.json"
+    ]
+  },
+  "finalized_by": "prepare-workspace.js"
+}

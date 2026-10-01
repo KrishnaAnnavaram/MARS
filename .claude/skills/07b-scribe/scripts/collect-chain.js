@@ -66,6 +66,8 @@ function renderBriefing(id, chain, jsonSummary) {
     ['QA gate', jsonSummary.qa],
     ['Build gate', jsonSummary.build],
     ['Merge verdict', jsonSummary.verdict],
+    ...(jsonSummary.migrationReport ? [['Migration report (04D)', jsonSummary.migrationReport]] : []),
+    ...(jsonSummary.migrationSummary ? [['Migration run summary (04D)', jsonSummary.migrationSummary]] : []),
   ];
   out.push('| Stage | Status/Verdict | File |');
   out.push('|---|---|---|');
@@ -122,6 +124,8 @@ function collectForFix(fix) {
     build: summarize(chain.build),
     verdict: summarize(chain.verdict, 'Decision'),
     fixDiffFile: chain.fixDiff ? chain.fixDiff.file : null,
+    ...(chain.migrationReport ? { migrationReport: summarize(chain.migrationReport, 'Result') } : {}),
+    ...(chain.migrationSummary ? { migrationSummary: { present: true, file: chain.migrationSummary.file, title: titleOf(chain.migrationSummary.text), status: (/^>\s*\*\*([A-Z_ ]+)\*\*/m.exec(chain.migrationSummary.text) || [])[1] || null } } : {}),
   };
 
   fs.mkdirSync(WORK_DIR, { recursive: true });

@@ -2,7 +2,8 @@
   "$comment": "Merge arbiter scoring config — externalized and auditable, same philosophy as 04a-fix-strategist's CWE catalog. Edit weights/thresholds here, never in compute-score.js.",
   "hard_gates": {
     "rescan_still_vulnerable_blocks": true,
-    "build_failed_blocks": true
+    "build_failed_blocks": true,
+    "migration_not_passed_blocks": true
   },
   "weights": {
     "redteam": {

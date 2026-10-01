@@ -1,0 +1,178 @@
+{
+  "slug": "b2-golden",
+  "title": "Spring Boot 3.5.0 to 4.1.1 on Java 21",
+  "summary": "The demo employee service moved from Spring Boot 3.5.0 on Java 17 to Spring Boot 4.1.1 on Java 21. A previewed OpenRewrite recipe made the mechanical changes: the parent, the Java level, the modular test starters, Jackson 3, the actuator health package, the mocking annotation and the Docker base image. Two of its proposals were rejected: removing the error timestamp format, and unpinning Testcontainers. One starter rename was made by hand. The test suite shows the same result as before the upgrade (19 run, the same 2 pre-existing failures), and every business endpoint returns byte-identical responses. Framework-owned payloads did change shape: the health document, the default 401 error body and header, and the Spring ProblemDetail body for a bad path variable. These are reported below as findings for clients, not as regressions.",
+  "migration": {
+    "reference_pack": "references/spring-boot-3-to-4.md",
+    "language": { "name": "Java", "from": "17", "to": "21" },
+    "platform": { "name": "Spring Boot", "from": "3.5.0", "to": "4.1.1" }
+  },
+  "plan": "migration-plan.json",
+  "dependency_changes": [
+    { "coordinate": "org.springframework.boot:spring-boot-starter-parent", "from": "3.5.0", "to": "4.1.1", "kind": "version", "reason": "Requested target; set by the curated recipe pinned to the request (section 1.1)." },
+    { "coordinate": "java.version", "from": "17", "to": "21", "kind": "property", "reason": "Requested Java 21 (section 1.2), set by UpgradeJavaVersion." },
+    { "coordinate": "maven-compiler-plugin source/target", "from": "<source>17</source><target>17</target>", "to": "<release>${java.version}</release>", "kind": "plugin", "reason": "A stale explicit source/target would keep compiling at 17 (section 1.2); normalised by UseMavenCompilerPluginReleaseConfiguration." },
+    { "coordinate": "org.springframework.boot:spring-boot-starter-web", "from": "spring-boot-starter-web", "to": "org.springframework.boot:spring-boot-starter-webmvc", "kind": "rename", "reason": "Section 1.3 starter rename; the recipe did not make it, and the 4.1.1 web starter declares itself deprecated in favour of webmvc." },
+    { "coordinate": "org.springframework.security:spring-security-test", "from": "spring-security-test", "to": "org.springframework.boot:spring-boot-starter-security-test", "kind": "rename", "reason": "Boot 4 carries the MockMvc security test auto-configuration in its own starter (section 4.4)." },
+    { "coordinate": "org.springframework.boot:spring-boot-starter-webmvc-test", "from": "absent", "to": "managed (4.1.1)", "kind": "added", "reason": "@WebMvcTest moved module and package (section 4.3)." },
+    { "coordinate": "org.springframework.boot:spring-boot-starter-data-jpa-test", "from": "absent", "to": "managed (4.1.1)", "kind": "added", "reason": "@DataJpaTest moved module and package (section 4.3)." },
+    { "coordinate": "Dockerfile base image", "from": "eclipse-temurin:17-jre", "to": "eclipse-temurin:21-jre", "kind": "version", "reason": "The jar targets Java 21 and would not start on a 17 runtime (section 8); changed by UpgradeJavaVersion/UpgradeDockerImageVersion." }
+  ],
+  "code_changes": [
+    {
+      "file": "pom.xml", "category": "Build", "what": "Parent 4.1.1, java.version 21, compiler release, security-test starter, webmvc-test and data-jpa-test starters.",
+      "why": "Boot 4 platform and its modularised test starters.", "reference_rule": "sections 1.1, 1.2, 4.3, 4.4",
+      "origin": "openrewrite", "transformation": "rewrite-01"
+    },
+    {
+      "file": "pom.xml", "category": "Build", "what": "Restored <version>1.20.1</version> on org.testcontainers:testcontainers after the apply removed it.",
+      "why": "The recipe dropped the pin, which would let the Boot 4.1.1 BOM move Testcontainers core to 2.0.5 while the postgresql and junit-jupiter modules stay at 1.20.1. That is a Testcontainers 2 move, which this migration does not require.",
+      "before": "<artifactId>testcontainers</artifactId>\n<scope>test</scope>", "after": "<artifactId>testcontainers</artifactId>\n<version>1.20.1</version>\n<scope>test</scope>",
+      "found_in_round": 1, "origin": "harness-residual",
+      "evidence": "Preview rewrite-00.patch removes the pin. spring-boot-dependencies-4.1.1.pom sets testcontainers.version 2.0.5. Plan out_of_scope: no Testcontainers version change. The rejected hunk shared pom.xml with wanted hunks, so it was reverted by hand before round 2."
+    },
+    {
+      "file": "pom.xml", "category": "Build", "what": "spring-boot-starter-web renamed to spring-boot-starter-webmvc.",
+      "why": "Boot 4 names the servlet starter after its stack, and the old name is deprecated.",
+      "reference_rule": "section 1.3", "before": "<artifactId>spring-boot-starter-web</artifactId>", "after": "<artifactId>spring-boot-starter-webmvc</artifactId>",
+      "found_in_round": 1, "origin": "build-file",
+      "evidence": "Plan impact I3 is a verified pack rule that the recipe did not apply: rewrite-01 left the web starter in place. spring-boot-starter-web-4.1.1.pom describes itself as 'deprecated in favor of spring-boot-starter-webmvc'. spring-boot-starter-webmvc 4.1.1 resolves, and the dependency tree after round 2 shows the same jackson/tomcat/http-converter/webmvc modules. No build failure demanded it, because the deprecated starter still resolves in 4.1.1."
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java", "category": "JSON handling",
+      "what": "The hand-built Jackson 2 ObjectMapper bean became a tools.jackson ObjectMapper built with JsonMapper.builder(), with NON_NULL value and content inclusion and INDENT_OUTPUT disabled. The JavaTimeModule registration and the WRITE_DATES_AS_TIMESTAMPS disable were dropped as Jackson 3 defaults.",
+      "why": "Boot 4 ships Jackson 3, which moves the databind package and replaces the mapper configuration API.",
+      "reference_rule": "sections 2.1, 2.2", "origin": "openrewrite", "transformation": "rewrite-01"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java", "category": "Health monitoring",
+      "what": "Health/HealthIndicator imports moved to org.springframework.boot.health.contributor.",
+      "why": "Boot 4 relocated the health contributor types.", "reference_rule": "section 3", "origin": "openrewrite", "transformation": "rewrite-01"
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java", "category": "Test wiring",
+      "what": "@MockBean became @MockitoBean, @WebMvcTest was imported from org.springframework.boot.webmvc.test.autoconfigure, and ObjectMapper from tools.jackson.databind. The slice was kept: there is no widening to @SpringBootTest.",
+      "why": "@MockBean was removed, the slice moved package, and Jackson 3 replaced Jackson 2.", "reference_rule": "sections 4.1, 4.2, 4.3", "origin": "openrewrite", "transformation": "rewrite-01"
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java", "category": "Test wiring",
+      "what": "@DataJpaTest imported from org.springframework.boot.data.jpa.test.autoconfigure.",
+      "why": "The JPA slice moved module and package.", "reference_rule": "section 4.3", "origin": "openrewrite", "transformation": "rewrite-01"
+    },
+    {
+      "file": "Dockerfile", "category": "Runtime image", "what": "Base image eclipse-temurin:17-jre to eclipse-temurin:21-jre.",
+      "why": "The jar now targets Java 21.", "reference_rule": "section 8", "origin": "openrewrite", "transformation": "rewrite-01"
+    }
+  ],
+  "round_notes": [
+    {
+      "round": 0,
+      "diagnosis": "Pre-migration reference on JDK 17 with Boot 3.5.0. The Docker daemon was up, so Testcontainers ran: 19 tests run, 0 errors. The only failures are EmployeeControllerTest.testActuatorHealth_Public and testActuatorInfo_Public. They return 404 because a @WebMvcTest slice does not load the actuator endpoints. Both are pre-existing, they were not fixed, and they are the comparison point for the target rounds.",
+      "changes": [],
+      "reference_rules": [],
+      "root_causes": [
+        { "groups": ["G1", "G2", "G3"], "judgement": "All three groups are the same two pre-existing slice-test failures and the Maven/surefire summary lines they produce. Nothing in them is environmental: the Testcontainers tests passed against PostgreSQL 16." }
+      ]
+    },
+    {
+      "round": 1,
+      "diagnosis": "This round built the OpenRewrite apply straight away. Main and test code compile on JDK 21 at release 21 against Boot 4.1.1 (Framework 7, Security 7, Hibernate 7, Jackson 3), so the recipe left no compile-level residual. The parent, java.version and compiler release resolved, which proves constraints C2 and C3. The one rejected hunk (the Testcontainers pin removal) was still in the tree for this round. It cannot affect a test-compile, and it was reverted before round 2.",
+      "changes": ["Applied rewrite-01 (boot4-curated, previewed as rewrite-00) with src/main/java/com/example/migrationdemo/exception/ErrorResponse.java excluded as out of scope"],
+      "reference_rules": ["section 1.1", "section 1.2", "section 2", "section 3", "section 4.1", "section 4.3", "section 4.4", "section 8"],
+      "transformation": "rewrite-01",
+      "root_causes": []
+    },
+    {
+      "round": 2,
+      "diagnosis": "This round used the same package goal as round 0, so its test counts are comparable. It has the same 19 tests and the same 2 failures (the actuator slice tests, 404), with 0 errors. The 6 @WithMockUser tests still pass, so the section 4.4 regression did not occur: the security-test starter was swapped before the first test run. The 5 Testcontainers tests pass on PostgreSQL 16 with Testcontainers 1.20.1, which proves constraint C5 and shows the JPQL and native queries work under Hibernate 7.4.5. Nothing was introduced.",
+      "changes": [
+        "Restored <version>1.20.1</version> on org.testcontainers:testcontainers (reverts the rejected rewrite-01 hunk)",
+        "spring-boot-starter-web renamed to spring-boot-starter-webmvc (pack section 1.3, build-file edit)"
+      ],
+      "reference_rules": ["section 1.3", "section 4.4"],
+      "root_causes": [
+        { "groups": ["G1", "G2", "G3"], "judgement": "These are the same pre-existing failures as round 0 (testActuatorHealth_Public and testActuatorInfo_Public, 404 instead of 200 in the MVC slice). The migration did not cause them, and they were not fixed (out of scope)." }
+      ]
+    },
+    {
+      "round": 3,
+      "diagnosis": "Packaging gate on JDK 21 with tests skipped, because round 2 already ran the suite. A runnable Boot 4.1.1 jar was produced, and the final runtime probe ran against it.",
+      "changes": [],
+      "reference_rules": []
+    }
+  ],
+  "behaviour": {
+    "verdict": "changed",
+    "notes": "13 probes on each side, with the same probe file (probes_sha matches). No status changed. 5 responses are byte-identical: all four business reads and /actuator/info. The other 8 differ in body or header only. Three of them (404, 409, 400 validation) are explained by the per-run error timestamp, plus the validation field-error order. The rest are framework-owned shape changes: health, the 401 bodies and header, the ProblemDetail for a type mismatch, and the metrics names.",
+    "differences": [
+      { "probe": "employee not found is 404", "classification": "non-deterministic", "explanation": "Only the application's ErrorResponse timestamp differs: the ignored-paths hash with 'timestamp' removed is equal. The yyyy-MM-dd'T'HH:mm:ss format is unchanged because the recipe's @JsonFormat removal was rejected." },
+      { "probe": "create duplicate is 409", "classification": "non-deterministic", "explanation": "Only the timestamp differs (the ignored-paths hash is equal). The message and the format are unchanged." },
+      { "probe": "create invalid is 400", "classification": "non-deterministic", "explanation": "The timestamp differs, and the two field errors are joined in the opposite order (email first before, employeeNumber first after). The order comes from the Bean Validation violation set, which has no defined order, so it is not a contract. This explanation is reasoned, not reproduced: the order was not re-sampled twice on one version in this session." },
+      { "probe": "bad path variable type", "classification": "expected-framework-change", "explanation": "Spring's ProblemDetail body for a type mismatch lost \"type\":\"about:blank\", and its keys are now alphabetical. Verified against the jars: spring-web 6.2.7 ProblemDetail initialises type to BLANK_TYPE, while 7.0.9 has no default, so the null type is omitted. Jackson 3's MapperFeature.SORT_PROPERTIES_ALPHABETICALLY.enabledByDefault() is true (checked with jshell on jackson-databind 3.1.5). This is a client-visible change in a framework-owned payload." },
+      { "probe": "unauthenticated is 401", "classification": "expected-framework-change", "explanation": "The status is unchanged at 401. Boot's default error body timestamp changed from +00:00 to Z, as the pack's section 13 also observed. The WWW-Authenticate header gained charset=\"UTF-8\" (Spring Security 7 BasicAuthenticationEntryPoint, whose jar carries the RFC 7617 UTF-8 charset message)." },
+      { "probe": "bad credentials is 401", "classification": "expected-framework-change", "explanation": "Same as the unauthenticated probe: still 401, with the timestamp format changed to Z and charset=\"UTF-8\" added to WWW-Authenticate." },
+      { "probe": "health is public", "classification": "expected-framework-change", "explanation": "All components are still UP with the same details, including the custom 'database' indicator. The keys are now alphabetical (Jackson 3 default). The health document adds livenessState and readinessState components and a groups [liveness, readiness] array, and the ssl details add expiringChains. These additions appear without any application configuration, so they come from Boot 4's defaults. A client parsing exact health JSON would see a larger document." },
+      { "probe": "metrics endpoint", "classification": "expected-framework-change", "explanation": "The metric-name list is 27 bytes longer. In the recorded 1500-character excerpt the only real addition is jvm.classes.loaded.count, which comes from the newer Micrometer JVM binders. The rest of the list lies beyond the excerpt and cannot be compared from the record." }
+    ],
+    "security_boundary": "preserved",
+    "unobserved_areas": [
+      "Create, update and delete happy paths at runtime: they are covered only by the mocked controller tests, because the H2 file database persists between the two probe runs",
+      "PostgreSQL behaviour of the running application: the driver is test-scoped, so the app runs on H2. PostgreSQL is exercised only by EmployeeRepositoryIntegrationTest via Testcontainers",
+      "The container image built from the Dockerfile on eclipse-temurin:21-jre",
+      "Metric names beyond the first 1500 characters of /actuator/metrics"
+    ]
+  },
+  "impact_review": [
+    { "impact": "I1", "outcome": "handled-by-transformation", "note": "Parent 4.1.1 from rewrite-01; reconciliation matches-request." },
+    { "impact": "I2", "outcome": "handled-by-transformation", "note": "java.version 21 and the compiler <release>${java.version}</release> came from the recipe, so no residual was needed." },
+    { "impact": "I3", "outcome": "confirmed", "note": "The recipe did not rename the starter, so it was renamed by hand. The pack's predicted symptom (a resolution failure) does not hold for 4.1.1: spring-boot-starter-web 4.1.1 still exists and is deprecated." },
+    { "impact": "I4", "outcome": "handled-by-transformation", "note": "webmvc-test and data-jpa-test starters were added and the imports repointed. Test-compile is green in round 1." },
+    { "impact": "I5", "outcome": "handled-by-transformation", "note": "The swap to spring-boot-starter-security-test came before any test ran. All @WithMockUser tests pass in round 2." },
+    { "impact": "I6", "outcome": "handled-by-transformation", "note": "The mapper was rewritten to Jackson 3. The serialization probes (employee by id, list all) are byte-identical, and the error-contract timestamps keep their format." },
+    { "impact": "I7", "outcome": "handled-by-transformation", "note": "Health contributor package moved. The custom 'database' indicator is still UP in the final health probe." },
+    { "impact": "I8", "outcome": "handled-by-transformation", "note": "Same 9 tests and the same 2 pre-existing failures in round 2." },
+    { "impact": "I9", "outcome": "handled-by-transformation", "note": "5/5 integration tests pass on PostgreSQL 16 in round 2." },
+    { "impact": "I10", "outcome": "handled-by-transformation", "note": "The plan expected a residual edit, but UpgradeJavaVersion/UpgradeDockerImageVersion changed the Dockerfile. The image was not built in this session." },
+    { "impact": "I11", "outcome": "not-needed", "note": "No property rename was proposed, and the yml settings still take effect: show-details always, metrics exposure, non_null. The health document changed shape from framework defaults, not from a property." },
+    { "impact": "I12", "outcome": "not-needed", "note": "No change was required. Integration tests (PostgreSQL) and probes (H2) for the JPQL and native queries are unchanged." },
+    { "impact": "I13", "outcome": "not-needed", "note": "The lambda DSL compiled unchanged on Security 7.1.1. The security boundary is preserved." }
+  ],
+  "transformations": [
+    { "record": "rewrite-00", "decision": "superseded", "rationale": "The dry-run preview was inspected against the plan and applied as rewrite-01, with ErrorResponse.java excluded and the Testcontainers pin removal reverted by hand afterwards.", "reviewed_files": ["pom.xml", "Dockerfile", "src/main/java/com/example/migrationdemo/config/JacksonConfig.java", "src/main/java/com/example/migrationdemo/exception/ErrorResponse.java", "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java", "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java", "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"] },
+    { "record": "rewrite-01", "decision": "accepted", "rationale": "Every applied file maps to a plan impact (I1, I2, I4-I10). ErrorResponse.java was excluded at apply time, because removing its @JsonFormat (UseModernDateTimeSerialization) would change the error-contract timestamp. The removal of the org.testcontainers:testcontainers version shared pom.xml with wanted hunks, so it was reverted by hand before round 2 (out of scope: a Testcontainers 2 move).", "reviewed_files": ["pom.xml", "Dockerfile", "src/main/java/com/example/migrationdemo/config/JacksonConfig.java", "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java", "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java", "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"] }
+  ],
+  "unresolved_constraints": [
+    { "constraint": "C2", "status": "resolved", "evidence": "Round 1 resolved and compiled against spring-boot-starter-parent 4.1.1." },
+    { "constraint": "C3", "status": "resolved", "evidence": "Rounds 1-3 compiled at release 21 on JDK 21.0.11, and the jar started on JDK 21." },
+    { "constraint": "C4", "status": "resolved", "evidence": "dependency:tree after round 2: spring-core 7.0.9, spring-security-core 7.1.1, hibernate-core 7.4.5.Final, tools.jackson databind 3.1.5." },
+    { "constraint": "C5", "status": "resolved", "evidence": "Round 2: EmployeeRepositoryIntegrationTest passes 5/5 with Testcontainers 1.20.1 on Boot 4.1.1." },
+    { "constraint": "C8", "status": "unresolved", "evidence": "The rewrite-spring 6.37.1 Moderne Source Available License is recorded, not judged. A human must confirm it is acceptable." }
+  ],
+  "blocking_conditions": [
+    { "condition": "Spring Boot 4.1.1 must resolve and build on Java 21", "status": "cleared", "evidence": "rounds 1-3" },
+    { "condition": "No new test failure against round 0", "status": "cleared", "evidence": "round 2: 19 run, the same 2 failures, 0 errors" },
+    { "condition": "No business or security-boundary probe changes status", "status": "cleared", "evidence": "final probe: 0 status changes across 13 probes" }
+  ],
+  "provenance": {
+    "sources": ["references/spring-boot-3-to-4.md", "references/openrewrite/spring-boot-3-to-4.curated.yml", "spring-boot-dependencies-4.1.1.pom (local Maven repository)", "spring-web 6.2.7 / 7.0.9 and spring-security-web 7.1.1 jars (javap)", "jackson-databind 3.1.5 (jshell)"],
+    "notes": "Recipe attribution per file is in transformations/rewrite-00.json and rewrite-01.json. Two pack discrepancies were found. Section 1.3's resolution-failure symptom does not occur on 4.1.1, where the web starter is only deprecated. Section 13's 'same information' for health understates the change on 4.1.1, which adds components and groups."
+  },
+  "out_of_scope_changes": [
+    { "change": "Rejected: OpenRewrite's removal of @JsonFormat(pattern yyyy-MM-dd'T'HH:mm:ss) from ErrorResponse.", "why_separate": "Boot 4 does not require it (the annotation still works under Jackson 3), and it would change the error-contract timestamp format." },
+    { "change": "Rejected: OpenRewrite's removal of the org.testcontainers:testcontainers 1.20.1 pin.", "why_separate": "It would move Testcontainers core to the BOM-managed 2.0.5. A Testcontainers 2 migration is separate work." },
+    { "change": "Not fixed: the pre-existing EmployeeControllerTest actuator slice failures (404).", "why_separate": "They fail identically on Boot 3.5.0 and are a test-design issue, not an upgrade issue." },
+    { "change": "Noticed, not fixed: EmployeeService checks for a duplicate email with findByEmployeeNumber(request.getEmail()).", "why_separate": "A business-logic bug that predates the upgrade (pack section 10)." }
+  ],
+  "manual_follow_ups": [
+    "Build and run the Docker image on eclipse-temurin:21-jre; it was not built here.",
+    "Tell API consumers about the framework-owned payload changes: the health document (new components and groups, key order), the 401 body timestamp format and the WWW-Authenticate charset parameter, and the ProblemDetail body (no 'type', alphabetical keys).",
+    "Confirm that the rewrite-spring licence (Moderne Source Available License) is acceptable.",
+    "Plan the Testcontainers 2 move separately. Boot 4.1.1 manages 2.0.5, while the project still pins 1.20.1.",
+    "Optionally replace the hand-built mapper bean with a JsonMapperBuilderCustomizer (pack section 2.2). The evidence did not demand it here."
+  ],
+  "residual_risk": [
+    "Only the 13 probed requests were exercised at runtime. The create/update/delete happy paths were verified only through mocked controller tests.",
+    "The running application used H2 (2.4.240 opening a file created by 2.3.232). PostgreSQL was exercised only by the Testcontainers repository tests.",
+    "JacksonConfig still defines its own ObjectMapper bean, as before. Which mapper Spring MVC uses on Boot 4 was not inspected; the byte-identical business payloads are the evidence that serialization is preserved."
+  ]
+}

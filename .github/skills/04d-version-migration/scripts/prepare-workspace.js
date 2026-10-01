@@ -106,6 +106,14 @@ function main() {
     return;
   }
 
+  // A blocked baseline (unsupported path, no eligible pack, a refused Stage 2 plan) never gets a sandbox.
+  const gate = baseline.migration_path && baseline.migration_path.status;
+  if (!baseline.project || (gate && gate !== 'SUPPORTED')) {
+    console.error(`Refused: the baseline for "${args.slug}" is not migratable — ${gate || 'Stage 2 refused'}: ${(baseline.migration_path && baseline.migration_path.reason) || (baseline.issue && baseline.issue.refused) || 'see baseline.json'}`);
+    process.exitCode = 1;
+    return;
+  }
+
   const projectDir = path.resolve(baseline.project.dir);
   if (!fs.existsSync(projectDir)) {
     console.error(`Project directory recorded in the baseline no longer exists: ${projectDir}`);
@@ -195,6 +203,6 @@ function main() {
   console.log(`  Next: node scripts/run-migration-build.js --slug ${args.slug} --baseline --jdk ${baseline.language.declared || '17'}\n`);
 }
 
-if (require.main === module) main();
+if (require.main === module) require('./lib/summary').runAndFinalize(main, 'prepare-workspace.js');
 
 module.exports = { copyTree, EXCLUDED };

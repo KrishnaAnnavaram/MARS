@@ -1,0 +1,745 @@
+{
+  "slug": "issue-001",
+  "generated_at": "2026-10-01T03:34:03.024Z",
+  "run_id": "issue-001-20261001T033403Z",
+  "project": {
+    "dir": "E:/mv/R/src/spring-boot-migration-demo",
+    "relative_to_repo": "src/spring-boot-migration-demo",
+    "name": "Spring Boot 3 to 4 Migration Demo",
+    "descriptor": "pom.xml",
+    "coordinates": {
+      "groupId": "com.example",
+      "artifactId": "spring-boot-migration-demo",
+      "version": "1.0.0",
+      "name": "Spring Boot 3 to 4 Migration Demo"
+    },
+    "sources": {
+      "main": 17,
+      "test": 5,
+      "resources": 2
+    },
+    "ancillary_files": [
+      "Dockerfile",
+      "docker-compose.yml"
+    ]
+  },
+  "build_tool": {
+    "tool": "maven",
+    "kind": "env",
+    "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd",
+    "display": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd",
+    "version": "Apache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937)"
+  },
+  "language": {
+    "name": "Java",
+    "declared": "17",
+    "target": "21",
+    "from_jdk": {
+      "major": 17,
+      "version": "17.0.20.1",
+      "home": "E:/mv/tools/jdk-17.0.20.1+1"
+    },
+    "to_jdk": {
+      "major": 21,
+      "version": "21.0.11",
+      "home": "C:/Program Files/Microsoft/jdk-21.0.11.10-hotspot"
+    }
+  },
+  "platform": {
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "3.5.0"
+    },
+    "properties": {
+      "java.version": "17",
+      "project.build.sourceEncoding": "UTF-8",
+      "project.reporting.outputEncoding": "UTF-8"
+    },
+    "dependencies": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-web",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-data-jpa",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-validation",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-security",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-actuator",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "compile",
+        "managed": true
+      },
+      {
+        "groupId": "org.postgresql",
+        "artifactId": "postgresql",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "com.h2database",
+        "artifactId": "h2",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "runtime",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.security",
+        "artifactId": "spring-security-test",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-starter-test",
+        "version": null,
+        "declaredVersion": null,
+        "scope": "test",
+        "managed": true
+      },
+      {
+        "groupId": "org.testcontainers",
+        "artifactId": "testcontainers",
+        "version": "1.20.1",
+        "declaredVersion": "1.20.1",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.testcontainers",
+        "artifactId": "postgresql",
+        "version": "1.20.1",
+        "declaredVersion": "1.20.1",
+        "scope": "test",
+        "managed": false
+      },
+      {
+        "groupId": "org.testcontainers",
+        "artifactId": "junit-jupiter",
+        "version": "1.20.1",
+        "declaredVersion": "1.20.1",
+        "scope": "test",
+        "managed": false
+      }
+    ],
+    "plugins": [
+      {
+        "groupId": "org.springframework.boot",
+        "artifactId": "spring-boot-maven-plugin",
+        "version": null
+      },
+      {
+        "groupId": "org.apache.maven.plugins",
+        "artifactId": "maven-compiler-plugin",
+        "version": null
+      },
+      {
+        "groupId": "org.apache.maven.plugins",
+        "artifactId": "maven-surefire-plugin",
+        "version": null
+      }
+    ]
+  },
+  "toolchain": {
+    "installed_jdks": [
+      {
+        "home": "E:\\mv\\tools\\jdk-17.0.20.1+1",
+        "major": 17,
+        "version": "17.0.20.1",
+        "source": "MIGRATION_JDK_17"
+      },
+      {
+        "home": "C:\\Program Files\\Microsoft\\jdk-21.0.11.10-hotspot",
+        "major": 21,
+        "version": "21.0.11",
+        "source": "MIGRATION_JDK_21"
+      }
+    ]
+  },
+  "reference_packs": [
+    {
+      "id": "spring-boot-3-to-4",
+      "title": "Spring Boot 3.x to 4.x (Java 17 to 21)",
+      "stack": "Spring Boot",
+      "from": "3",
+      "to": "4",
+      "language_from": "17",
+      "language_to": "21",
+      "file": "references/spring-boot-3-to-4.md",
+      "matched_on": [
+        "org.springframework.boot:spring-boot-starter-parent:3",
+        "org.springframework.boot:spring-boot-starter-web"
+      ]
+    }
+  ],
+  "reference_pack_eligibility": [
+    {
+      "pack": "spring-boot-3-to-4",
+      "stack": "Spring Boot",
+      "pack_from": "3",
+      "pack_to": "4",
+      "matched_on": [
+        "org.springframework.boot:spring-boot-starter-parent:3",
+        "org.springframework.boot:spring-boot-starter-web"
+      ],
+      "platform_coordinates": [
+        "org.springframework.boot:spring-boot-starter-parent",
+        "org.springframework.boot:spring-boot-dependencies"
+      ],
+      "source_platform": {
+        "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+        "version": "3.5.0",
+        "where": "parent",
+        "descriptor": "pom.xml"
+      },
+      "nominated": true,
+      "eligible": true,
+      "relation": "in-generation",
+      "reason": "source org.springframework.boot:spring-boot-starter-parent 3.5.0 (parent) is in the pack's 3.x generation"
+    }
+  ],
+  "issue": {
+    "id": "ISSUE-001",
+    "plan": "docs/agent_output/04-remediation/fix_plan_ISSUE-001.md",
+    "fix_type": "VERSION_MIGRATION",
+    "cwe": "CWE-1104",
+    "status": "Approved",
+    "approval_mode": "TEST_AUTO_APPROVED (APPROVAL_MODE, 2026-10-01T03:32:19.806Z) — Approval was programmatically granted for controlled pipeline validation; this does not replace the production human approval requirement.",
+    "routing_evidence": [
+      "Stage 1 recorded explicit migration intent: Spring Boot 3.5.0 → 4.1.1, Java 17 → 21 — The issue requires the platform parent/BOM to cross a major generation (3.x -> 4.x) together with a Java level change (17 -> 21); the parent manages every Spring and third-party version and the Java level is declared in pom.xml (twice) and the Dockerfile, so no single-coordinate bump can make this move.",
+      "src/spring-boot-migration-demo/pom.xml declares org.springframework.boot:spring-boot-starter-parent 3.5.0 as its parent — source platform proven",
+      "src/spring-boot-migration-demo/pom.xml declares Java 17",
+      "major framework generation changes: 3.x → 4.x",
+      "Java target changes: 17 → 21"
+    ],
+    "request": {
+      "issue_id": "ISSUE-001",
+      "project": "src/spring-boot-migration-demo",
+      "platform": "Spring Boot",
+      "platform_coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "source_version": "3.5.0",
+      "target_version": "4.1.1",
+      "source_java": "17",
+      "target_java": "21"
+    }
+  },
+  "target": {
+    "platform": {
+      "name": "Spring Boot",
+      "version": "4.1.1",
+      "source": "request"
+    },
+    "language": {
+      "name": "Java",
+      "version": "21",
+      "source": "request"
+    },
+    "constraints": {
+      "platform_major": "4",
+      "language_min": "17",
+      "language_target": "21",
+      "note": "Confirm the exact release's documented minimum Java level and managed versions from its release notes and resolved BOM (section 11)."
+    }
+  },
+  "migration_path": {
+    "pack": "spring-boot-3-to-4",
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "3.5.0",
+      "where": "parent"
+    },
+    "source_line": "3.5",
+    "preparation_line": "3.5",
+    "on_preparation_line": true,
+    "requested_target": "4.1.1",
+    "ecosystem_boms_present": [],
+    "warnings": [],
+    "unresolved": [],
+    "status": "SUPPORTED",
+    "reason": "spring-boot-3-to-4 is eligible for 3.5.0 → 4.1.1",
+    "required_path": {
+      "stack": "Spring Boot",
+      "source": "3.5.0",
+      "target": "4.1.1",
+      "steps": [
+        {
+          "from": "3.5.0",
+          "to": "4.1.1",
+          "capability": "spring-boot-3-to-4",
+          "available": true
+        }
+      ],
+      "missing_capability": []
+    },
+    "missing_capability": []
+  },
+  "observations": {
+    "basis": "machine-detected: file names and a regular-expression scan of source text. Not a semantic Java model — every entry is a place to read, not a conclusion.",
+    "entry_points": [
+      "src/main/java/com/example/migrationdemo/MigrationDemoApplication.java"
+    ],
+    "config_files": [
+      {
+        "file": "src/main/resources/application.yml",
+        "scope": "main",
+        "profile": "default"
+      },
+      {
+        "file": "src/test/resources/application-test.yml",
+        "scope": "test",
+        "profile": "test"
+      }
+    ],
+    "pinned_dependencies": [
+      {
+        "coordinate": "org.testcontainers:testcontainers",
+        "version": "1.20.1",
+        "declared": "1.20.1",
+        "scope": "test"
+      },
+      {
+        "coordinate": "org.testcontainers:postgresql",
+        "version": "1.20.1",
+        "declared": "1.20.1",
+        "scope": "test"
+      },
+      {
+        "coordinate": "org.testcontainers:junit-jupiter",
+        "version": "1.20.1",
+        "declared": "1.20.1",
+        "scope": "test"
+      }
+    ],
+    "platform_boms": [
+      {
+        "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+        "version": "3.5.0",
+        "kind": "parent"
+      }
+    ],
+    "container_runtime": [
+      {
+        "file": "Dockerfile",
+        "line": 4,
+        "image": "eclipse-temurin:17-jre",
+        "java_guess": "17"
+      }
+    ],
+    "ci_java_references": [],
+    "pack_surfaces": [
+      {
+        "id": "web-api",
+        "label": "HTTP controllers and request mappings",
+        "rule": "probes (section 13)",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 15,
+                "text": "@RestController"
+              },
+              {
+                "line": 16,
+                "text": "@RequestMapping(\"/api/v1/employees\")"
+              },
+              {
+                "line": 25,
+                "text": "@PostMapping"
+              },
+              {
+                "line": 31,
+                "text": "@GetMapping"
+              },
+              {
+                "line": 37,
+                "text": "@GetMapping(\"/{id}\")"
+              }
+            ]
+          },
+          {
+            "file": "src/main/java/com/example/migrationdemo/exception/GlobalExceptionHandler.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 18,
+                "text": "@RestControllerAdvice"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "json",
+        "label": "Jackson / ObjectMapper configuration and injection",
+        "rule": "section 2",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 3,
+                "text": "import com.fasterxml.jackson.databind.ObjectMapper;"
+              },
+              {
+                "line": 4,
+                "text": "import com.fasterxml.jackson.databind.SerializationFeature;"
+              },
+              {
+                "line": 5,
+                "text": "import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;"
+              },
+              {
+                "line": 22,
+                "text": "public ObjectMapper objectMapper() {"
+              },
+              {
+                "line": 23,
+                "text": "ObjectMapper mapper = new ObjectMapper();"
+              }
+            ]
+          },
+          {
+            "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 8,
+                "text": "import com.fasterxml.jackson.databind.ObjectMapper;"
+              },
+              {
+                "line": 38,
+                "text": "private ObjectMapper objectMapper;"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "actuator",
+        "label": "Actuator extension points (health, endpoints, info)",
+        "rule": "section 3",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 3,
+                "text": "import org.springframework.boot.actuate.health.Health;"
+              },
+              {
+                "line": 4,
+                "text": "import org.springframework.boot.actuate.health.HealthIndicator;"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "security",
+        "label": "Spring Security configuration",
+        "rule": "section 5",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/example/migrationdemo/config/SecurityConfig.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 5,
+                "text": "import org.springframework.security.config.Customizer;"
+              },
+              {
+                "line": 6,
+                "text": "import org.springframework.security.config.annotation.web.builders.HttpSecurity;"
+              },
+              {
+                "line": 7,
+                "text": "import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;"
+              },
+              {
+                "line": 8,
+                "text": "import org.springframework.security.core.userdetails.User;"
+              },
+              {
+                "line": 9,
+                "text": "import org.springframework.security.core.userdetails.UserDetails;"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "persistence",
+        "label": "JPA / Hibernate persistence",
+        "rule": "section 6",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/main/java/com/example/migrationdemo/entity/Employee.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 3,
+                "text": "import jakarta.persistence.*;"
+              }
+            ]
+          },
+          {
+            "file": "src/main/java/com/example/migrationdemo/repository/EmployeeRepository.java",
+            "scope": "main",
+            "matches": [
+              {
+                "line": 4,
+                "text": "import org.springframework.data.jpa.repository.JpaRepository;"
+              },
+              {
+                "line": 14,
+                "text": "public interface EmployeeRepository extends JpaRepository<Employee, Long> {"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "test-mocking",
+        "label": "Removed Boot mocking annotations",
+        "rule": "section 4.1",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 12,
+                "text": "import org.springframework.boot.test.mock.mockito.MockBean;"
+              },
+              {
+                "line": 34,
+                "text": "@MockBean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "test-slices",
+        "label": "Test slices whose annotations moved module and package",
+        "rule": "section 4.3",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 11,
+                "text": "import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;"
+              },
+              {
+                "line": 27,
+                "text": "@WebMvcTest(EmployeeController.class)"
+              }
+            ]
+          },
+          {
+            "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 8,
+                "text": "import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;"
+              },
+              {
+                "line": 30,
+                "text": "@DataJpaTest"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "test-security",
+        "label": "Security test support that moved to the Boot security-test starter",
+        "rule": "section 4.4",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 23,
+                "text": "import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;"
+              },
+              {
+                "line": 41,
+                "text": "@WithMockUser"
+              },
+              {
+                "line": 62,
+                "text": "@WithMockUser"
+              },
+              {
+                "line": 84,
+                "text": "@WithMockUser"
+              },
+              {
+                "line": 94,
+                "text": "@WithMockUser"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "testcontainers",
+        "label": "Testcontainers (environment-dependent tests)",
+        "rule": "section 12 round 0",
+        "invalid_patterns": [],
+        "files": [
+          {
+            "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java",
+            "scope": "test",
+            "matches": [
+              {
+                "line": 11,
+                "text": "import org.testcontainers.containers.PostgreSQLContainer;"
+              },
+              {
+                "line": 12,
+                "text": "import org.testcontainers.junit.jupiter.Container;"
+              },
+              {
+                "line": 13,
+                "text": "import org.testcontainers.junit.jupiter.Testcontainers;"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "migration_sensitive_files": [
+      "Dockerfile",
+      "pom.xml",
+      "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "src/main/java/com/example/migrationdemo/config/SecurityConfig.java",
+      "src/main/java/com/example/migrationdemo/controller/EmployeeController.java",
+      "src/main/java/com/example/migrationdemo/entity/Employee.java",
+      "src/main/java/com/example/migrationdemo/exception/GlobalExceptionHandler.java",
+      "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+      "src/main/java/com/example/migrationdemo/repository/EmployeeRepository.java",
+      "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+      "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"
+    ]
+  },
+  "capabilities": {
+    "transformations": [
+      {
+        "id": "boot4-curated",
+        "provider": "openrewrite",
+        "policy": "optional",
+        "recipes": [
+          "mars.migration.SpringBoot3To4Curated"
+        ],
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:6.37.1"
+        ],
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "config": "references/openrewrite/spring-boot-3-to-4.curated.yml",
+        "license": "Moderne Source Available License",
+        "recipe_target": "requested",
+        "build_tool_supported": true,
+        "configuration_problems": [],
+        "availability": "not checked — decided by a dry-run in the sandbox"
+      },
+      {
+        "id": "boot35-preparation",
+        "provider": "openrewrite",
+        "policy": "optional",
+        "recipes": [
+          "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_5"
+        ],
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:6.37.1"
+        ],
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "config": null,
+        "license": "Moderne Source Available License",
+        "recipe_target": "3.5.x",
+        "build_tool_supported": true,
+        "configuration_problems": [],
+        "availability": "not checked — decided by a dry-run in the sandbox"
+      },
+      {
+        "id": "boot4-composite",
+        "provider": "openrewrite",
+        "policy": "optional",
+        "recipes": [
+          "org.openrewrite.java.spring.boot4.UpgradeSpringBoot_4_0"
+        ],
+        "artifacts": [
+          "org.openrewrite.recipe:rewrite-spring:6.37.1"
+        ],
+        "plugin_version": "6.46.1",
+        "gradle_plugin_version": "7.41.0",
+        "config": null,
+        "license": "Moderne Source Available License",
+        "recipe_target": "4.0.x",
+        "build_tool_supported": true,
+        "configuration_problems": [],
+        "availability": "not checked — decided by a dry-run in the sandbox"
+      }
+    ]
+  },
+  "reference_provenance": {
+    "sources": [
+      "https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide",
+      "https://docs.openrewrite.org/recipes/java/spring/boot4/upgradespringboot_4_0",
+      "rewrite-spring 6.37.1 recipe catalogue (META-INF/rewrite/spring-boot-40.yml, spring-boot-40-modular-starters.yml, recipes.csv)"
+    ],
+    "observed_run": "Rounds 0-7 of a recorded Boot 3.5.0 to 4.1.1 migration (sections 12 and 13)",
+    "last_reviewed": "2026-09-30"
+  }
+}

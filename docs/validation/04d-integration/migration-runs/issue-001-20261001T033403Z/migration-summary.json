@@ -1,0 +1,517 @@
+{
+  "schema": "migration-summary/1",
+  "run_id": "issue-001-20261001T033403Z",
+  "slug": "issue-001",
+  "generated_at": "2026-10-01T04:19:40.655Z",
+  "final_status": "PARTIAL PASS",
+  "status_reason": "1 open blocking condition(s) in migration.json: A human confirms API consumers accept the framework-owned response changes (401 default error timestamp 'Z' format, WWW-Authenticate charset parameter, malformed-JSON ProblemDetail without type, health document with livenessState/readinessState/groups)",
+  "state": "RENDERED",
+  "states_reached": [
+    "BASELINE_DETECTED",
+    "WORKSPACE_PREPARED",
+    "BASELINE_BUILT",
+    "BASELINE_PROBED",
+    "PLAN_READY",
+    "TRANSFORMATION_PREVIEWED",
+    "TRANSFORMATION_APPLIED",
+    "TARGET_COMPILED",
+    "TARGET_TESTED",
+    "FINAL_PROBED",
+    "EVIDENCE_READY",
+    "RENDERED"
+  ],
+  "metadata": {
+    "started_at": "2026-10-01T03:34:03.024Z",
+    "last_transition_at": "2026-10-01T03:47:04.486Z",
+    "duration_ms": 781462,
+    "input_location": "E:/mv/R/src/spring-boot-migration-demo",
+    "source_commit": "6d3a8053e4714e3a9d312eeb5aadebe209720e18",
+    "working_branch": "master",
+    "worktree": "E:/mv/R",
+    "output_location": ".github/.pipeline-context/version-migration/issue-001",
+    "selected_pack": "spring-boot-3-to-4",
+    "agent04_issue_id": "ISSUE-001",
+    "approval_mode": "TEST_AUTO_APPROVED (APPROVAL_MODE, 2026-10-01T03:32:19.806Z) — Approval was programmatically granted for controlled pipeline validation; this does not replace the production human approval requirement."
+  },
+  "versions": {
+    "source_platform_name": "Spring Boot",
+    "source_platform": "3.5.0",
+    "target_platform_name": "Spring Boot",
+    "target_platform": "4.1.1",
+    "final_declared_platform": "4.1.1",
+    "source_java": "17",
+    "source_jdk": "17.0.20.1",
+    "target_java": "21",
+    "target_jdk": "21.0.11",
+    "final_declared_java": "21"
+  },
+  "trigger": {
+    "kind": "agent-04-routing",
+    "issue_id": "ISSUE-001",
+    "plan": "docs/agent_output/04-remediation/fix_plan_ISSUE-001.md",
+    "fix_type": "VERSION_MIGRATION",
+    "routing_evidence": [
+      "Stage 1 recorded explicit migration intent: Spring Boot 3.5.0 → 4.1.1, Java 17 → 21 — The issue requires the platform parent/BOM to cross a major generation (3.x -> 4.x) together with a Java level change (17 -> 21); the parent manages every Spring and third-party version and the Java level is declared in pom.xml (twice) and the Dockerfile, so no single-coordinate bump can make this move.",
+      "src/spring-boot-migration-demo/pom.xml declares org.springframework.boot:spring-boot-starter-parent 3.5.0 as its parent — source platform proven",
+      "src/spring-boot-migration-demo/pom.xml declares Java 17",
+      "major framework generation changes: 3.x → 4.x",
+      "Java target changes: 17 → 21"
+    ]
+  },
+  "detection": [
+    {
+      "what": "build tool",
+      "value": "maven (env) Apache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937)",
+      "where": "pom.xml"
+    },
+    {
+      "what": "declared Java",
+      "value": "17",
+      "where": "pom.xml (java.version / compiler release)"
+    },
+    {
+      "what": "source platform",
+      "value": "3.5.0",
+      "where": "org.springframework.boot:spring-boot-starter-parent (parent)"
+    },
+    {
+      "what": "requested target platform",
+      "value": "4.1.1",
+      "where": "request"
+    },
+    {
+      "what": "requested target Java",
+      "value": "21",
+      "where": "request"
+    },
+    {
+      "what": "JDKs available",
+      "value": "17 (17.0.20.1), 21 (21.0.11)",
+      "where": "local toolchain probe"
+    }
+  ],
+  "migration_path": {
+    "status": "SUPPORTED",
+    "source": "3.5.0",
+    "target": "4.1.1",
+    "required_path": {
+      "stack": "Spring Boot",
+      "source": "3.5.0",
+      "target": "4.1.1",
+      "steps": [
+        {
+          "from": "3.5.0",
+          "to": "4.1.1",
+          "capability": "spring-boot-3-to-4",
+          "available": true
+        }
+      ],
+      "missing_capability": []
+    },
+    "missing_capability": [],
+    "pack_eligibility": [
+      {
+        "pack": "spring-boot-3-to-4",
+        "stack": "Spring Boot",
+        "pack_from": "3",
+        "pack_to": "4",
+        "matched_on": [
+          "org.springframework.boot:spring-boot-starter-parent:3",
+          "org.springframework.boot:spring-boot-starter-web"
+        ],
+        "platform_coordinates": [
+          "org.springframework.boot:spring-boot-starter-parent",
+          "org.springframework.boot:spring-boot-dependencies"
+        ],
+        "source_platform": {
+          "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+          "version": "3.5.0",
+          "where": "parent",
+          "descriptor": "pom.xml"
+        },
+        "nominated": true,
+        "eligible": true,
+        "relation": "in-generation",
+        "reason": "source org.springframework.boot:spring-boot-starter-parent 3.5.0 (parent) is in the pack's 3.x generation"
+      }
+    ],
+    "warnings": [],
+    "unresolved": []
+  },
+  "planned_transformations": {
+    "impact_areas": [
+      "Platform parent",
+      "Language level",
+      "Starters",
+      "Pinned third-party test libraries",
+      "JSON handling",
+      "Actuator health",
+      "Test layer",
+      "Test layer (JPA slice)",
+      "Spring Security 7",
+      "Hibernate 7 queries",
+      "Configuration properties",
+      "Runtime image",
+      "Web error handling"
+    ],
+    "impact_entries": 13,
+    "deterministic_candidates": [
+      "boot4-curated"
+    ],
+    "residual_candidates": [
+      {
+        "impact": "I12",
+        "why_not_deterministic": "The pack has no recipe for a Dockerfile base image (section 15)."
+      },
+      {
+        "impact": "I2",
+        "why_not_deterministic": "UpgradeJavaVersion may move java.version but leave an explicit compiler <source>/<target>; pack section 15 lists that as residual."
+      },
+      {
+        "impact": "I4",
+        "why_not_deterministic": "Pinned Testcontainers versions are only changed if a build demands it; the curated recipe deliberately excludes the Testcontainers 2 migration."
+      },
+      {
+        "impact": "I5",
+        "why_not_deterministic": "A hand-built mapper bean whose configuration API changed shape is listed as residual in pack section 15 if the recipe leaves it uncompilable."
+      },
+      {
+        "impact": "I9",
+        "why_not_deterministic": "Only if Security 7 fails to compile; lambda DSL expected to need nothing."
+      },
+      {
+        "impact": "I10",
+        "why_not_deterministic": "Query failures only show at runtime/test time; no recipe can predict them."
+      },
+      {
+        "impact": "I13",
+        "why_not_deterministic": "Only if a Framework 7 signature change breaks the override at compile time."
+      }
+    ]
+  },
+  "openrewrite": [
+    {
+      "seq": 0,
+      "id": "rewrite-00",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.SpringBoot3To4Curated"
+      ],
+      "files": 0,
+      "error": null,
+      "decision": "accepted"
+    },
+    {
+      "seq": 1,
+      "id": "rewrite-01",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.SpringBoot3To4Curated"
+      ],
+      "files": 6,
+      "error": null,
+      "decision": "accepted"
+    }
+  ],
+  "actual_transformations": [
+    {
+      "file": "pom.xml",
+      "origin": "harness-residual",
+      "evidence": "mvn dependency:tree -Dincludes=org.testcontainers on the sandbox after rewrite-01: org.testcontainers:testcontainers:2.0.5 with org.testcontainers:postgresql:1.20.1, jdbc:1.20.1, database-commons:1.20.1, junit-jupiter:1.20.1 (mixed generations).",
+      "summary": "Restored <version>1.20.1</version> on org.testcontainers:testcontainers after the recipe removed it (net: Testcontainers pins unchanged from the project)."
+    },
+    {
+      "file": "pom.xml",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "Parent 3.5.0 -> 4.1.1, java.version 17 -> 21, compiler source/target replaced by release ${java.version}, spring-security-test replaced by spring-boot-starter-security-test, spring-boot-starter-webmvc-test and spring-boot-starter-data-jpa-test added."
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "The hand-built Jackson 2 ObjectMapper bean became a Jackson 3 JsonMapper.builder() bean with NON_NULL value and content inclusion and INDENT_OUTPUT disabled; JavaTimeModule registration and the WRITE_DATES_AS_TIMESTAMPS disable were dropped."
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "Health and HealthIndicator imports moved to org.springframework.boot.health.contributor."
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "@MockBean became @MockitoBean, @WebMvcTest and ObjectMapper imports repointed to their Boot 4 / Jackson 3 packages; assertions unchanged."
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "@DataJpaTest import repointed to org.springframework.boot.data.jpa.test.autoconfigure."
+    },
+    {
+      "file": "Dockerfile",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "Base image eclipse-temurin:17-jre -> eclipse-temurin:21-jre (comments unchanged)."
+    }
+  ],
+  "file_changes": [
+    {
+      "file": "Dockerfile",
+      "change": "modified",
+      "tool": "openrewrite",
+      "reason": "The jar is now compiled for Java 21 and will not start on a Java 17 JRE."
+    },
+    {
+      "file": "pom.xml",
+      "change": "modified",
+      "tool": "openrewrite",
+      "reason": "Boot 4 generation jump plus the modularised test starters."
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "change": "modified",
+      "tool": "openrewrite",
+      "reason": "Boot 4 ships Jackson 3 (tools.jackson), which has java.time support built in and writes dates as ISO-8601 by default; the mapper configuration API changed."
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+      "change": "modified",
+      "tool": "openrewrite",
+      "reason": "Boot 4 relocated the health contributor types."
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+      "change": "modified",
+      "tool": "openrewrite",
+      "reason": "@MockBean was removed in Boot 4; the MVC test slice and Jackson databind moved package."
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java",
+      "change": "modified",
+      "tool": "openrewrite",
+      "reason": "The JPA test slice moved module and package in Boot 4."
+    }
+  ],
+  "dependency_changes": [
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-parent (parent)",
+      "old": "3.5.0",
+      "new": "4.1.1",
+      "reason": "platform parent"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-data-jpa-test",
+      "old": null,
+      "new": "(managed)",
+      "reason": "added"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-security-test",
+      "old": null,
+      "new": "(managed)",
+      "reason": "added"
+    },
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-webmvc-test",
+      "old": null,
+      "new": "(managed)",
+      "reason": "added"
+    },
+    {
+      "dependency": "org.springframework.security:spring-security-test",
+      "old": "(managed)",
+      "new": null,
+      "reason": "removed"
+    },
+    {
+      "dependency": "property java.version",
+      "old": "17",
+      "new": "21",
+      "reason": "build property"
+    }
+  ],
+  "compile_history": [
+    {
+      "round": 0,
+      "baseline": true,
+      "label": "round 0: untouched project, Boot 3.5.0 on JDK 17",
+      "intent": "package",
+      "jdk": "17.0.20.1",
+      "outcome": "tests-failed",
+      "exit_code": 1,
+      "duration_ms": 39738,
+      "errors": 7,
+      "declared_platform": "3.5.0",
+      "diagnosis": "The untouched project on JDK 17 compiles and packages up to the test phase; 19 tests ran, 17 passed. The two failures (EmployeeControllerTest actuator health/info expecting 200 but getting 404) are pre-existing: a @WebMvcTest slice does not register actuator endpoints. EmployeeRepositoryIntegrationTest ran for real against a Testcontainers postgres:16. This round is the reference: a later round 'passes' when it shows no new failures against these two.",
+      "repair": []
+    },
+    {
+      "round": 1,
+      "baseline": false,
+      "label": "boot4-curated OpenRewrite applied (ErrorResponse.java excluded)",
+      "intent": "test-compile",
+      "jdk": "21.0.11",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 8647,
+      "errors": 0,
+      "declared_platform": "4.1.1",
+      "diagnosis": "The previewed boot4-curated recipe (rewrite-00 inspected, applied as rewrite-01 with ErrorResponse.java excluded) moved the parent, Java level, test starters, Jackson 3, health package, mocking annotation and slice imports in one step, so main and test code compiled on JDK 21 at the first attempt — none of the section 2/3/4 compile symptoms the plan predicted surfaced because the recipe pre-empted them.",
+      "repair": [
+        "Applied OpenRewrite boot4-curated (rewrite-01) to 6 files; ErrorResponse.java excluded and restored (would have removed the @JsonFormat error-timestamp pattern)"
+      ]
+    },
+    {
+      "round": 2,
+      "baseline": false,
+      "label": "reverted rejected recipe hunk: Testcontainers core pin 1.20.1 restored; same goal as round 0 (package with tests)",
+      "intent": "package",
+      "jdk": "21.0.11",
+      "outcome": "tests-failed",
+      "exit_code": 1,
+      "duration_ms": 33600,
+      "errors": 7,
+      "declared_platform": "4.1.1",
+      "diagnosis": "Raised to the same goal as round 0 (package with tests). The result is identical to round 0: 19 run, the same 2 pre-existing actuator-slice failures, no new failures. The four @WithMockUser tests pass, confirming the spring-boot-starter-security-test swap covered the section 4.4 trap, and the 5 Testcontainers integration tests pass against postgres:16 with the 1.20.1 pins under the Boot 4.1.1 BOM (JUnit Jupiter 6.0.3).",
+      "repair": [
+        "Reverted the rejected rewrite-01 hunk: restored <version>1.20.1</version> on org.testcontainers:testcontainers (dependency:tree had shown testcontainers 2.0.5 mixed with 1.20.1 modules)"
+      ]
+    },
+    {
+      "round": 3,
+      "baseline": false,
+      "label": "no source change; package the runnable jar on JDK 21 for the final probe",
+      "intent": "package-skip-tests",
+      "jdk": "21.0.11",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 10850,
+      "errors": 0,
+      "declared_platform": "4.1.1",
+      "diagnosis": "Packaging goal with tests skipped, to produce the runnable Java 21 jar for the final runtime probe; the test comparison is carried by round 2. Green.",
+      "repair": []
+    }
+  ],
+  "tests": {
+    "before": {
+      "round": 0,
+      "total": 19,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 17
+    },
+    "after": {
+      "round": 2,
+      "total": 19,
+      "failed": 2,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 17
+    },
+    "new_failures": false
+  },
+  "runtime": {
+    "baseline_probed": true,
+    "final_probed": true,
+    "baseline_started": true,
+    "final_started": true,
+    "final_startup_seconds": 13.981,
+    "readiness": {
+      "path": "/actuator/health",
+      "status": 200,
+      "ready_after_ms": 16593
+    },
+    "probes": 19,
+    "failures": []
+  },
+  "behaviour": {
+    "total": 19,
+    "identical": 2,
+    "body_differs": 17,
+    "status_changed": 0,
+    "expected_differences": [
+      "actuator health anonymous: expected-framework-change",
+      "actuator metrics anonymous: expected-framework-change",
+      "list employees unauthenticated is 401: expected-framework-change",
+      "list employees bad credentials is 401: expected-framework-change",
+      "list employees authenticated: non-deterministic",
+      "get employee 1: non-deterministic",
+      "get employee not found is 404: non-deterministic",
+      "search by department: non-deterministic",
+      "high earners native query: non-deterministic",
+      "create employee: non-deterministic",
+      "create employee without department omits null: non-deterministic",
+      "create duplicate employee number is 409: non-deterministic",
+      "create invalid is 400: non-deterministic",
+      "malformed json is 400: expected-framework-change",
+      "update employee 2: non-deterministic",
+      "update missing employee is 404: non-deterministic",
+      "get deleted employee is 404: non-deterministic"
+    ],
+    "unexpected_differences": [],
+    "verdict": "🟡 same status on all 19, body differs on 17"
+  },
+  "compiled_on_target": true,
+  "target_reached": true,
+  "validation": [
+    [
+      "Build rounds",
+      "4 (R0 tests-failed, R1 passed, R2 tests-failed, R3 passed)"
+    ],
+    [
+      "Final round",
+      "R3 package-skip-tests on JDK 21.0.11 — passed"
+    ],
+    [
+      "Target declared by final build",
+      "4.1.1 (matches request)"
+    ],
+    [
+      "Tests before → after",
+      "19 run / 2 failing → 19 run / 2 failing"
+    ],
+    [
+      "Runtime probes",
+      "19 compared: 2 identical, 17 body-only differences, 0 status changes"
+    ],
+    [
+      "Migration result",
+      "PARTIAL PASS — 1 open blocking condition(s) in migration.json: A human confirms API consumers accept the framework-owned response changes (401 default error timestamp 'Z' format, WWW-Authenticate charset parameter, malformed-JSON ProblemDetail without type, health document with livenessState/readinessState/groups)"
+    ]
+  ],
+  "handoff": {
+    "fix_report": "docs/agent_output/04-remediation/fix_ISSUE-001.md",
+    "fix_diff": "docs/agent_output/04-remediation/fix_ISSUE-001.diff",
+    "fix_status": "Compiled",
+    "note": null,
+    "agent05": "yes — 05-verify/rescan_ISSUE-001.md, 05-verify/redteam_ISSUE-001.md, 05-verify/behavior_ISSUE-001.md",
+    "agent06": "yes — 06-test-gate/qa_ISSUE-001.md (Passed), 06-test-gate/build_ISSUE-001.md (Failed)",
+    "agent07": "yes — 07-ship/verdict_ISSUE-001.md, 07-ship/pr_ISSUE-001.md, 07-ship/audit_ISSUE-001.md (Decision: Blocked)"
+  },
+  "paths": {
+    "session": ".github/.pipeline-context/version-migration/issue-001",
+    "report_md": "E:\\mv\\R\\docs\\agent_output\\04-remediation\\migration_issue-001.md",
+    "report_md_exists": true,
+    "report_diff": "E:\\mv\\R\\docs\\agent_output\\04-remediation\\migration_issue-001.diff",
+    "report_diff_exists": true,
+    "summary_md": "E:\\mv\\R\\docs\\agent_output\\04-remediation\\migration-runs\\issue-001-20261001T033403Z\\MIGRATION_SUMMARY.md",
+    "summary_json": "E:\\mv\\R\\docs\\agent_output\\04-remediation\\migration-runs\\issue-001-20261001T033403Z\\migration-summary.json",
+    "evidence": [
+      ".github/.pipeline-context/version-migration/issue-001/baseline.json",
+      ".github/.pipeline-context/version-migration/issue-001/migration-plan.json",
+      ".github/.pipeline-context/version-migration/issue-001/probes.json",
+      ".github/.pipeline-context/version-migration/issue-001/migration.json",
+      ".github/.pipeline-context/version-migration/issue-001/state.json",
+      ".github/.pipeline-context/version-migration/issue-001/rounds",
+      ".github/.pipeline-context/version-migration/issue-001/runtime",
+      ".github/.pipeline-context/version-migration/issue-001/transformations"
+    ]
+  },
+  "finalized_by": "finalize-run.js"
+}

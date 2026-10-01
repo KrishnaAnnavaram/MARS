@@ -70,6 +70,7 @@ function parseFixPlan(text) {
   const plainSummary = /^>\s*(.+)$/m.exec(text);
   const status = /\|\s*\*\*Status\*\*\s*\|\s*([^|]+)\|/.exec(text);
   const cwe = /\|\s*\*\*CWE\*\*\s*\|\s*`([^`]+)`/.exec(text);
+  const fixType = /\|\s*\*\*Fix Type\*\*\s*\|\s*`?([A-Z_]{4,})`?/.exec(text);
   const rootCauseLink = /\|\s*\*\*Root cause report\*\*\s*\|\s*\[[^\]]*\]\(\.\.\/\.\.\/([^)]+)\)/.exec(text);
   const blastRadiusLink = /\|\s*\*\*Blast radius report\*\*\s*\|\s*\[[^\]]*\]\(\.\.\/\.\.\/([^)]+)\)/.exec(text);
 
@@ -82,6 +83,8 @@ function parseFixPlan(text) {
     plainSummary: plainSummary ? plainSummary[1].trim() : null,
     status: status ? status[1].trim() : 'unknown',
     cwe: cwe ? cwe[1].trim() : null,
+    // Stage 2 routing (rendered by 04a): CODE_FIX | DEPENDENCY_UPGRADE | VERSION_MIGRATION; null on a plan rendered before it existed.
+    fixType: fixType ? fixType[1] : null,
     rootCauseReport: rootCauseLink ? rootCauseLink[1].trim() : null,
     blastRadiusReport: blastRadiusLink ? blastRadiusLink[1].trim() : null,
     approach,
@@ -113,8 +116,9 @@ function listFixPlans() {
     .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 }
 
+/** Approved plans this skill implements — a VERSION_MIGRATION plan is routed to 04d-version-migration instead. */
 function listApprovedFixPlans() {
-  return listFixPlans().filter((p) => p.status === 'Approved');
+  return listFixPlans().filter((p) => p.status === 'Approved' && p.fixType !== 'VERSION_MIGRATION');
 }
 
 function resolveFixPlan(idOrPath) {

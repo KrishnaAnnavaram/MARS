@@ -80,6 +80,14 @@ node_modules/
 !/.claude/.pipeline-context/context/
 /.claude/.pipeline-context/context/*
 !/.claude/.pipeline-context/context/descriptions.json
+# The .github harness keeps the same layout and the same single tracked file. Its 04d sessions
+# (version-migration/<slug>/workspace/) are full sandbox copies of the project with their own nested
+# .git — never source. The migration evidence that matters (migration_<slug>.md/.diff, the per-run
+# migration-runs/<run_id>/ summaries, fix_<id>.md) is written to docs/agent_output/04-remediation/.
+/.github/.pipeline-context/*
+!/.github/.pipeline-context/context/
+/.github/.pipeline-context/context/*
+!/.github/.pipeline-context/context/descriptions.json
 
 ### Previous MARS project (kept locally, not tracked) ###
 older-project/
