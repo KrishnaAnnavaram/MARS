@@ -34,6 +34,10 @@ const {
   patchPathFor, worktreePathFor, verificationJsonPathFor, verificationMdPathFor,
 } = require('./lib/fixplans');
 
+// Mission Control telemetry (optional, additive): emits a ledger witness event after this script has
+// written its own record. Never changes this script's records, reports, output or exit code.
+const marsTelemetry = (() => { try { return require('../../../scripts/telemetry/gate-events'); } catch (_) { return null; } })();
+
 // The Java services live under SOURCE_ROOT; a module is identified by its repo-relative path.
 const SOURCE_ROOT = 'src';
 const KNOWN_MODULES = [
@@ -337,6 +341,7 @@ function main() {
     try {
       const record = verifyOne(plan, args);
       writeRecord(record);
+      if (marsTelemetry) marsTelemetry.fixVerified('04b-fixer/verify-patch', record, plan);
       done.push(record);
       if (record.refused) {
         console.log(`\n${record.id} — REFUSED: ${record.reason}`);

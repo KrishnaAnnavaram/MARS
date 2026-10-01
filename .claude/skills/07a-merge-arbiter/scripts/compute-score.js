@@ -18,6 +18,10 @@ const {
   WORK_DIR, rel, listStep3Fixes, readUpstream, readIssueSeverity, loadScoring, scorePathFor,
 } = require('./lib/arbiter');
 
+// Mission Control telemetry (optional, additive): emits a ledger witness event after this script has
+// written its own record. Never changes this script's records, reports, output or exit code.
+const marsTelemetry = (() => { try { return require('../../../scripts/telemetry/gate-events'); } catch (_) { return null; } })();
+
 function parseArgs(argv) {
   const args = {};
   for (let i = 0; i < argv.length; i += 1) {
@@ -113,6 +117,7 @@ function main() {
       const record = scoreOne(fix, scoring);
       fs.mkdirSync(WORK_DIR, { recursive: true });
       fs.writeFileSync(path.join(WORK_DIR, `${fix.id}.score.json`), JSON.stringify(record, null, 2));
+      if (marsTelemetry) marsTelemetry.verdictComputed(record);
       done.push(record);
       console.log(`\n${record.id} — score ${record.score}/100 (threshold ${record.threshold}) -> ${record.computedDecision}`);
       if (record.gates.length) record.gates.forEach((g) => console.log(`  HARD GATE: ${g.gate} — ${g.reason}`));
