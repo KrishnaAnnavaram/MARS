@@ -1,0 +1,191 @@
+{
+  "round": 2,
+  "label": "OpenRewrite rewrite-04 applied (mars.migration.edge.E2)",
+  "baseline": false,
+  "started_at": "2026-10-01T13:12:33.600Z",
+  "duration_ms": 11335,
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1",
+    "home": "E:/mv/tools/jdk-17.0.20.1+1",
+    "source": "MIGRATION_JDK_17"
+  },
+  "build": {
+    "tool": "maven",
+    "kind": "wrapper",
+    "command": "mvnw.cmd -B clean test-compile",
+    "intent": "test-compile",
+    "exit_code": 1,
+    "spawn_error": null
+  },
+  "outcome": "compile-failed",
+  "declared": {
+    "java": "17",
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "3.0.13"
+    },
+    "dependency_count": 16,
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "3.0.13",
+      "where": "parent"
+    }
+  },
+  "workspace": {
+    "changed_files": [
+      {
+        "state": "A",
+        "file": ".mvn/wrapper/maven-wrapper.jar"
+      },
+      {
+        "state": "M",
+        "file": "pom.xml"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java"
+      },
+      {
+        "state": "M",
+        "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java"
+      }
+    ],
+    "diff_stat": "4 files changed, 16 insertions(+), 9 deletions(-)"
+  },
+  "error_summary": {
+    "total": 5,
+    "byCategory": [
+      {
+        "id": "missing-symbol",
+        "count": 4,
+        "label": "Cannot find symbol",
+        "hint": "A class, method or field was renamed or removed. Look for a replacement API in the reference pack."
+      },
+      {
+        "id": "plugin-failure",
+        "count": 1,
+        "label": "Build plugin failed",
+        "hint": "A build plugin is too old for the new platform, or its configuration changed."
+      }
+    ],
+    "byFile": [
+      {
+        "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+        "count": 4
+      }
+    ]
+  },
+  "errors": [
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+      "line": 7,
+      "column": 48,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+      "line": 10,
+      "column": 2,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project employee-service: Compilation failure: Compilation failure:",
+      "detail": [],
+      "category": "plugin-failure"
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+      "line": 7,
+      "column": 48,
+      "message": "cannot find symbol — class EnableEurekaClient",
+      "detail": [
+        "symbol: class EnableEurekaClient",
+        "location: package org.springframework.cloud.netflix.eureka"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+      "line": 10,
+      "column": 2,
+      "message": "cannot find symbol — class EnableEurekaClient",
+      "detail": [
+        "symbol: class EnableEurekaClient"
+      ],
+      "category": "missing-symbol"
+    }
+  ],
+  "errors_truncated": 0,
+  "log_tail": "[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] -----------------< com.aura.vihanga:employee-service >------------------\r\n[INFO] Building employee-service 0.0.1-SNAPSHOT\r\n[INFO] --------------------------------[ war ]---------------------------------\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/jacoco-maven-plugin/0.8.15/jacoco-maven-plugin-0.8.15.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/jacoco-maven-plugin/0.8.15/jacoco-maven-plugin-0.8.15.pom (4.9 kB at 8.9 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.build/0.8.15/org.jacoco.build-0.8.15.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.build/0.8.15/org.jacoco.build-0.8.15.pom (50 kB at 527 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-bom/9.10.1/asm-bom-9.10.1.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-bom/9.10.1/asm-bom-9.10.1.pom (3.3 kB at 35 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/jacoco-maven-plugin/0.8.15/jacoco-maven-plugin-0.8.15.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/jacoco-maven-plugin/0.8.15/jacoco-maven-plugin-0.8.15.jar (58 kB at 589 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.agent/0.8.15/org.jacoco.agent-0.8.15.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.agent/0.8.15/org.jacoco.agent-0.8.15.pom (4.3 kB at 59 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.core/0.8.15/org.jacoco.core-0.8.15.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.core/0.8.15/org.jacoco.core-0.8.15.pom (2.1 kB at 28 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.10.1/asm-commons-9.10.1.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.10.1/asm-commons-9.10.1.pom (2.8 kB at 35 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.report/0.8.15/org.jacoco.report-0.8.15.pom\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.report/0.8.15/org.jacoco.report-0.8.15.pom (1.9 kB at 25 kB/s)\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.19.0/commons-io-2.19.0.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.agent/0.8.15/org.jacoco.agent-0.8.15-runtime.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.core/0.8.15/org.jacoco.core-0.8.15.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.10.1/asm-commons-9.10.1.jar\r\n[INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.report/0.8.15/org.jacoco.report-0.8.15.jar\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/ow2/asm/asm-commons/9.10.1/asm-commons-9.10.1.jar (75 kB at 396 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-io/commons-io/2.19.0/commons-io-2.19.0.jar (556 kB at 2.8 MB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.report/0.8.15/org.jacoco.report-0.8.15.jar (131 kB at 656 kB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.core/0.8.15/org.jacoco.core-0.8.15.jar (235 kB at 1.1 MB/s)\r\n[INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/jacoco/org.jacoco.agent/0.8.15/org.jacoco.agent-0.8.15-runtime.jar (308 kB at 1.4 MB/s)\r\n[INFO] \r\n[INFO] --- maven-clean-plugin:3.2.0:clean (default-clean) @ employee-service ---\r\n[INFO] Deleting .\\target\r\n[INFO] \r\n[INFO] --- jacoco-maven-plugin:0.8.15:prepare-agent (default) @ employee-service ---\r\n[INFO] argLine set to -javaagent:C:\\\\Users\\\\annav\\\\.m2\\\\repository\\\\org\\\\jacoco\\\\org.jacoco.agent\\\\0.8.15\\\\org.jacoco.agent-0.8.15-runtime.jar=destfile=E:\\\\mv\\\\evidence\\\\v3\\\\v1\\\\ctx\\\\version-migration\\\\v1-employee\\\\workspace\\\\target\\\\jacoco.exec,excludes=com/aura/vihanga/employeeservice/dto/**:com/aura/vihanga/employeeservice/model/**:com/aura/vihanga/employeeservice/util/**:com/aura/vihanga/employeeservice/config/**:com/aura/vihanga/employeeservice/utill/**\r\n[INFO] \r\n[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ employee-service ---\r\n[INFO] Copying 1 resource from src\\main\\resources to target\\classes\r\n[INFO] Copying 1 resource from src\\main\\resources to target\\classes\r\n[INFO] \r\n[INFO] --- maven-compiler-plugin:3.10.1:compile (default-compile) @ employee-service ---\r\n[INFO] Changes detected - recompiling the module!\r\n[INFO] Compiling 18 source files to .\\target\\classes\r\n[INFO] -------------------------------------------------------------\r\n[ERROR] COMPILATION ERROR : \r\n[INFO] -------------------------------------------------------------\r\n[ERROR] ./src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java:[7,48] cannot find symbol\n  symbol:   class EnableEurekaClient\n  location: package org.springframework.cloud.netflix.eureka\r\n[ERROR] ./src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java:[10,2] cannot find symbol\n  symbol: class EnableEurekaClient\r\n[INFO] 2 errors \r\n[INFO] -------------------------------------------------------------\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  9.094 s\r\n[INFO] Finished at: 2026-10-01T08:12:44-05:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project employee-service: Compilation failure: Compilation failure: \r\n[ERROR] ./src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java:[7,48] cannot find symbol\r\n[ERROR]   symbol:   class EnableEurekaClient\r\n[ERROR]   location: package org.springframework.cloud.netflix.eureka\r\n[ERROR] ./src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java:[10,2] cannot find symbol\r\n[ERROR]   symbol: class EnableEurekaClient\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException\r\n\n",
+  "transformation": "rewrite-04",
+  "edge": "E2",
+  "error_groups": [
+    {
+      "id": "G1",
+      "category": "missing-symbol",
+      "subject": "class EnableEurekaClient",
+      "package": "org.springframework.cloud.netflix.eureka",
+      "package_family": "org.springframework.cloud",
+      "basis": "parser + source-import",
+      "count": 2,
+      "files": [
+        "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+      ],
+      "sample": "cannot find symbol — class EnableEurekaClient"
+    },
+    {
+      "id": "G2",
+      "category": "missing-symbol",
+      "subject": "message cannot find symbol",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 2,
+      "files": [
+        "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java"
+      ],
+      "sample": "cannot find symbol"
+    },
+    {
+      "id": "G3",
+      "category": "plugin-failure",
+      "subject": "message Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:N.N.N:compile (default-compile",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.10.1:compile (default-compile) on project employee-service: Compilation failure: Compilation failure:"
+    }
+  ],
+  "correlation": {
+    "basis": "plan-text-match (heuristic: expected_symptoms substring match, not compiler truth)",
+    "matches": [
+      {
+        "group": "G1",
+        "impact": [
+          "I3",
+          "I5"
+        ]
+      },
+      {
+        "group": "G2",
+        "impact": [
+          "I5"
+        ]
+      }
+    ],
+    "unmatched_groups": [
+      "G3"
+    ]
+  }
+}

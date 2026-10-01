@@ -1,0 +1,412 @@
+{
+  "slug": "v2c",
+  "title": "Spring Boot 3.5.0 to 4.1.1 on Java 21 (open-source-only ladder, re-run with the V2/V2b fixes)",
+  "summary": "A clean re-run of the golden 3.5.0 -> 4.1.1 migration after the fixes found in V2 and V2b. The three ladder edges (3.5.16, 4.0.8, 4.1.1) ran only Apache-2.0 OpenRewrite recipes. Compared with V2, the parent pin no longer touches the pinned Testcontainers versions, the open-source composite now adds the two Boot 4 test-slice starters itself, the repair round after E2 was tagged with its edge automatically, and the E3 edge moved the composite's explicitly versioned starters along with the platform. The only hand edits left are the ones no recipe can make: the Jackson 3 mapper configuration, the spring-boot-h2console module, and the Dockerfile base image. Endpoint discovery now includes framework endpoints that configuration enables. As a result, the /h2-console loss after the Boot 4 move was caught by a drafted probe, with no hand-written probe for it, and was restored. The final build runs the same 19 tests with the same 2 pre-existing failures, and all 9 probes return the same status as before.",
+  "migration": {
+    "reference_pack": "references/spring-boot-3-to-4.md",
+    "language": {
+      "name": "Java",
+      "from": "17",
+      "to": "21"
+    },
+    "platform": {
+      "name": "Spring Boot",
+      "from": "3.5.0",
+      "to": "4.1.1"
+    }
+  },
+  "plan": "migration-plan.json",
+  "dependency_changes": [
+    {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "from": "3.5.0",
+      "to": "4.1.1",
+      "kind": "version",
+      "reason": "Pinned per edge by the generated edge recipes (E1 3.5.16, E2 4.0.8, E3 4.1.1) with a plain XML edit of /project/parent/version."
+    },
+    {
+      "coordinate": "java.version",
+      "from": "17",
+      "to": "21",
+      "kind": "property",
+      "reason": "Requested target; set by the E3 edge recipe."
+    },
+    {
+      "coordinate": "org.springframework.boot:spring-boot-starter-web",
+      "from": "spring-boot-starter-web",
+      "to": "org.springframework.boot:spring-boot-starter-webmvc",
+      "kind": "rename",
+      "reason": "Boot 4 servlet starter name; open-source composite (pack 1.3)."
+    },
+    {
+      "coordinate": "org.springframework.security:spring-security-test",
+      "from": "spring-security-test",
+      "to": "org.springframework.boot:spring-boot-starter-security-test",
+      "kind": "rename",
+      "reason": "Boot 4 security test starter; open-source composite (pack 4.4)."
+    },
+    {
+      "coordinate": "org.springframework.boot:spring-boot-starter-webmvc-test",
+      "from": "absent",
+      "to": "managed (written 4.0.8 by E2, version tag removed by E3)",
+      "kind": "added",
+      "reason": "@WebMvcTest moved to this module (pack 4.3); added by the composite's AddDependency (rewrite-03)."
+    },
+    {
+      "coordinate": "org.springframework.boot:spring-boot-starter-data-jpa-test",
+      "from": "absent",
+      "to": "managed (written 4.0.8 by E2, version tag removed by E3)",
+      "kind": "added",
+      "reason": "@DataJpaTest moved to this module (pack 4.3); added by the composite's AddDependency (rewrite-03)."
+    },
+    {
+      "coordinate": "org.springframework.boot:spring-boot-h2console",
+      "from": "absent",
+      "to": "managed 4.1.1 (runtime)",
+      "kind": "added",
+      "reason": "Boot 4 moved the H2 console auto-configuration into this module (pack 7.1); the drafted /h2-console probe returned 404 without it."
+    }
+  ],
+  "code_changes": [
+    {
+      "file": "pom.xml",
+      "category": "Build file",
+      "what": "Parent 3.5.0 -> 3.5.16 -> 4.0.8 -> 4.1.1, java.version 17 -> 21, starter renames, the two test-slice starters added. The three Testcontainers <version>1.20.1</version> pins are unchanged.",
+      "why": "The ladder's three edges to the requested Boot 4.1.1 / Java 21 target.",
+      "reference_rule": "section 1.1, 1.2, 1.3, 4.3, 4.4",
+      "origin": "openrewrite",
+      "transformation": "rewrite-01, rewrite-03, rewrite-05"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "category": "JSON handling",
+      "what": "The mutable Jackson 2 ObjectMapper bean became a JsonMapper built with JsonMapper.builder() (DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS disabled, NON_NULL inclusion, INDENT_OUTPUT disabled). This is the same reviewed edit V2 made.",
+      "why": "Jackson 3 mappers are immutable, WRITE_DATES_AS_TIMESTAMPS moved to DateTimeFeature, and java.time support is built in. A package move cannot fix any of these.",
+      "reference_rule": "section 2.1, 2.2",
+      "found_in_round": 2,
+      "origin": "harness-residual",
+      "evidence": "Round 2 groups G2/G4/G5/G6/G7: JavaTimeModule, disable, setDefaultPropertyInclusion, jsr310 package, WRITE_DATES_AS_TIMESTAMPS."
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "category": "JSON handling",
+      "what": "com.fasterxml.jackson.databind imports moved to tools.jackson.databind.",
+      "why": "Jackson 3 package root.",
+      "reference_rule": "section 2.1",
+      "origin": "openrewrite",
+      "transformation": "rewrite-03"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+      "category": "Health monitoring",
+      "what": "Health and HealthIndicator moved to org.springframework.boot.health.contributor.",
+      "why": "Boot 4 relocated the health contributor types.",
+      "reference_rule": "section 3",
+      "origin": "openrewrite",
+      "transformation": "rewrite-03"
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+      "category": "Test wiring",
+      "what": "@MockBean became @MockitoBean; the @WebMvcTest and ObjectMapper imports moved.",
+      "why": "Boot 4 removed @MockBean and moved the web slice; Jackson 3.",
+      "reference_rule": "section 4.1, 4.3, 2.3",
+      "origin": "openrewrite",
+      "transformation": "rewrite-03"
+    },
+    {
+      "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java",
+      "category": "Test wiring",
+      "what": "@DataJpaTest import moved to org.springframework.boot.data.jpa.test.autoconfigure.",
+      "why": "Boot 4 moved the JPA slice.",
+      "reference_rule": "section 4.3",
+      "origin": "openrewrite",
+      "transformation": "rewrite-03"
+    },
+    {
+      "file": "pom.xml",
+      "category": "Build file",
+      "what": "Added runtime-scope org.springframework.boot:spring-boot-h2console (managed).",
+      "why": "spring.h2.console.enabled=true no longer serves /h2-console on Boot 4 without the module.",
+      "reference_rule": "section 7.1",
+      "found_in_round": 5,
+      "origin": "reference-rule",
+      "evidence": "First final probe: GET /h2-console 404 (baseline 200). After the edit (round 6), the second final probe returned 200."
+    },
+    {
+      "file": "Dockerfile",
+      "category": "Runtime image",
+      "what": "Base image eclipse-temurin:17-jre -> eclipse-temurin:21-jre.",
+      "why": "The jar targets Java 21 (class file major 65).",
+      "reference_rule": "section 8",
+      "origin": "harness-residual",
+      "evidence": "No recipe in the ladder changes a Dockerfile. The first attempt (round 7) rewrote the file's CRLF line endings; it was redone preserving them, and round 8 is the final state."
+    }
+  ],
+  "round_notes": [
+    {
+      "round": 0,
+      "diagnosis": "Pre-migration reference build on JDK 17, test goal: 19 tests, 2 failures. testActuatorHealth_Public and testActuatorInfo_Public expect 200 inside a @WebMvcTest slice, which loads no actuator endpoints, so they get 404. Pre-existing.",
+      "changes": [],
+      "reference_rules": []
+    },
+    {
+      "round": 1,
+      "diagnosis": "Edge E1 (3.5.0 -> 3.5.16, pin-only) compiles. The preview changed only the parent version, so the Testcontainers pins survive (V2 defect A fixed).",
+      "changes": [
+        "Applied rewrite-01 (previewed as rewrite-00)."
+      ],
+      "reference_rules": [
+        "section 1.1"
+      ],
+      "transformation": "rewrite-01"
+    },
+    {
+      "round": 2,
+      "diagnosis": "Edge E2 (3.5.16 -> 4.0.8, open-source composite). Only JacksonConfig fails, on the Jackson 2 mutable mapper API and the jsr310 module.",
+      "changes": [
+        "Applied rewrite-03 (previewed as rewrite-02): composite moves, starter renames, both test-slice starters added (V2 defect B fixed), parent 4.0.8."
+      ],
+      "reference_rules": [
+        "section 1.1",
+        "section 1.3",
+        "section 2.1",
+        "section 3",
+        "section 4.1",
+        "section 4.3",
+        "section 4.4"
+      ],
+      "transformation": "rewrite-03"
+    },
+    {
+      "round": 3,
+      "diagnosis": "test-compile is green after the Jackson 3 mapper repair, with no hand-added test starters. The round was tagged E2 automatically from the declared platform, so the edge completed and E3 was offered (V2b defect fixed).",
+      "changes": [
+        "JacksonConfig rebuilt with JsonMapper.builder()."
+      ],
+      "reference_rules": [
+        "section 2.1",
+        "section 2.2"
+      ]
+    },
+    {
+      "round": 4,
+      "diagnosis": "Edge E3 (4.0.8 -> 4.1.1, pin-only) compiles on JDK 21. The edge recipe's UpgradeDependencyVersion found that the two composite-added test starters were pinned at the managed version and removed the tags, so they follow the 4.1.1 parent (V2b version-skew defect fixed).",
+      "changes": [
+        "Applied rewrite-05 (previewed as rewrite-04)."
+      ],
+      "reference_rules": [
+        "section 1.1",
+        "section 1.2"
+      ],
+      "transformation": "rewrite-05"
+    },
+    {
+      "round": 5,
+      "diagnosis": "Landing test suite on JDK 21: 19 tests, the same 2 pre-existing failures. The first final probe then showed GET /h2-console 404 (baseline 200).",
+      "changes": [],
+      "reference_rules": []
+    },
+    {
+      "round": 6,
+      "diagnosis": "After adding spring-boot-h2console the suite is unchanged (19/2 pre-existing), and the second final probe shows /h2-console 200.",
+      "changes": [
+        "Added runtime spring-boot-h2console."
+      ],
+      "reference_rules": [
+        "section 7.1"
+      ]
+    },
+    {
+      "round": 7,
+      "diagnosis": "Dockerfile base image moved to Java 21. The edit tool rewrote the file's line endings, so the change was redone in round 8.",
+      "changes": [
+        "Dockerfile eclipse-temurin:21-jre (line endings damaged)."
+      ],
+      "reference_rules": [
+        "section 8"
+      ]
+    },
+    {
+      "round": 8,
+      "diagnosis": "Final source state: a one-line Dockerfile diff with CRLF preserved; 19 tests, the same 2 pre-existing failures.",
+      "changes": [
+        "Dockerfile re-edited preserving CRLF."
+      ],
+      "reference_rules": [
+        "section 8"
+      ]
+    },
+    {
+      "round": 9,
+      "diagnosis": "Final package on JDK 21: the same 19 tests and 2 pre-existing failures, with no source change since round 8.",
+      "changes": [],
+      "reference_rules": []
+    }
+  ],
+  "behaviour": {
+    "verdict": "changed",
+    "security_boundary": "preserved",
+    "notes": "All 9 probes return the same status before and after, including /h2-console after the restore. The business payloads (list, high earners) are identical once the run-time createdAt/updatedAt stamps are removed. Framework-owned bodies changed shape: properties are ordered alphabetically, ProblemDetail omits type=about:blank, and the Spring Security 401 timestamp moved from +00:00 to Z. The H2 console page differs only in its copyright year (H2 2.3 -> 2.4).",
+    "differences": [
+      {
+        "probe": "GET /api/v1/employees",
+        "classification": "non-deterministic",
+        "explanation": "Only createdAt/updatedAt differ; the DataInitializer stamps rows with LocalDateTime.now() on each start."
+      },
+      {
+        "probe": "high earners",
+        "classification": "non-deterministic",
+        "explanation": "Only createdAt/updatedAt differ; same rows in the same order."
+      },
+      {
+        "probe": "unauthenticated is 401",
+        "classification": "expected-framework-change",
+        "explanation": "Same status and fields; the timestamp is now rendered with a Z offset by Jackson 3."
+      },
+      {
+        "probe": "endpoint inventory (actuator)",
+        "classification": "expected-framework-change",
+        "explanation": "404 before and after (mappings not exposed); the ProblemDetail body is alphabetically ordered and omits type=about:blank."
+      },
+      {
+        "probe": "GET /actuator/health",
+        "classification": "expected-framework-change",
+        "explanation": "Same components and states; the document is alphabetically ordered under Jackson 3, and the disk-space numbers change between runs."
+      },
+      {
+        "probe": "GET /actuator/metrics",
+        "classification": "expected-framework-change",
+        "explanation": "Same document shape; the meter name list changed with the Boot 4.1 instrumentation."
+      },
+      {
+        "probe": "GET /h2-console",
+        "classification": "expected-framework-change",
+        "explanation": "Same login page; only the H2 copyright year in the HTML comment differs."
+      }
+    ]
+  },
+  "impact_review": [
+    {
+      "impact": "I1",
+      "outcome": "handled-by-transformation",
+      "note": "Parent pins by the edge recipes rewrite-01/03/05."
+    },
+    {
+      "impact": "I4",
+      "outcome": "handled-by-transformation",
+      "note": "Composite rename and moves (rewrite-03); Jackson configuration API repaired by hand."
+    },
+    {
+      "impact": "I9",
+      "outcome": "handled-by-transformation",
+      "note": "Test annotations moved and the test-slice starters added by the composite; test-compile green in round 3 with no hand-added dependency."
+    }
+  ],
+  "transformations": [
+    {
+      "record": "rewrite-00",
+      "decision": "superseded",
+      "rationale": "E1 preview: parent 3.5.0 -> 3.5.16 only. Accepted.",
+      "reviewed_files": [
+        "pom.xml"
+      ]
+    },
+    {
+      "record": "rewrite-01",
+      "decision": "accepted",
+      "rationale": "Applied what rewrite-00 previewed.",
+      "reviewed_files": [
+        "pom.xml"
+      ]
+    },
+    {
+      "record": "rewrite-02",
+      "decision": "superseded",
+      "rationale": "E2 preview: everything within the plan's scope. The two '~~(No version provided ...)~~' lines are OpenRewrite preview markers, and the apply did not write them (0 in the applied pom).",
+      "reviewed_files": [
+        "pom.xml",
+        "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+        "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java",
+        "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java",
+        "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"
+      ]
+    },
+    {
+      "record": "rewrite-03",
+      "decision": "accepted",
+      "rationale": "Applied what rewrite-02 previewed.",
+      "reviewed_files": [
+        "pom.xml"
+      ]
+    },
+    {
+      "record": "rewrite-04",
+      "decision": "superseded",
+      "rationale": "E3 preview: parent 4.1.1, java.version 21, and the redundant 4.0.8 version tags removed from the two test-slice starters. Accepted.",
+      "reviewed_files": [
+        "pom.xml"
+      ]
+    },
+    {
+      "record": "rewrite-05",
+      "decision": "accepted",
+      "rationale": "Applied what rewrite-04 previewed.",
+      "reviewed_files": [
+        "pom.xml"
+      ]
+    }
+  ],
+  "blocking_conditions": [
+    {
+      "condition": "Only Apache-2.0 recipes may run (open-source-only)",
+      "status": "cleared",
+      "evidence": "rewrite-00..05 all record licence Apache-2.0 and use only rewrite-maven-plugin 6.46.1's built-in recipes."
+    },
+    {
+      "condition": "No endpoint may be lost",
+      "status": "cleared",
+      "evidence": "Static inventory 11/11 (7 controller mappings and 4 config-enabled framework endpoints). /h2-console returned 404 in the first final probe and 200 after the restore."
+    }
+  ],
+  "provenance": {
+    "sources": [
+      "references/spring-boot-3-to-4.md",
+      "references/openrewrite/spring-boot-3-to-4.oss.yml",
+      "references/openrewrite/spring-boot-ladder.json"
+    ],
+    "notes": "Approval was programmatically granted for controlled pipeline validation; this does not replace the production human approval requirement. The Jackson 3 mapper edit reuses the reviewed edit from run V2 verbatim."
+  },
+  "out_of_scope_changes": [
+    {
+      "change": "Not fixed: the 2 pre-existing EmployeeControllerTest actuator failures.",
+      "why_separate": "They fail identically on Boot 3.5.0."
+    },
+    {
+      "change": "Not changed: the stale maven-compiler-plugin <source>/<target> 17.",
+      "why_separate": "Inert under the parent's maven.compiler.release=21 (pack 1.2)."
+    }
+  ],
+  "manual_follow_ups": [
+    "Plan the Testcontainers 2 move separately (the project still pins 1.20.1).",
+    "Check clients of the ProblemDetail and 401 bodies, which are now alphabetically ordered with a Z timestamp.",
+    "Build and run the Docker image on eclipse-temurin:21-jre.",
+    "spring-boot-maven-plugin <executable>true</executable> no longer produces a launch script on Boot 4 (pack 7.2)."
+  ],
+  "residual_risk": [
+    "Only the 9 probed requests were exercised at runtime. Mutating endpoints are covered by the unit tests, not by probes.",
+    "Runtime was probed on H2 only."
+  ],
+  "unresolved_constraints": [
+    {
+      "constraint": "C2",
+      "status": "resolved",
+      "evidence": "Rounds 1, 2/3 and 4 resolved and built against parents 3.5.16, 4.0.8 and 4.1.1 from Maven Central; round 9 packaged on 4.1.1."
+    },
+    {
+      "constraint": "C3",
+      "status": "resolved",
+      "evidence": "Round 9 (package, JDK 21): EmployeeRepositoryIntegrationTest ran on Testcontainers 1.20.1 against postgres:16 under Boot 4.1.1."
+    }
+  ]
+}

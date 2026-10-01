@@ -28,7 +28,9 @@ const {
 } = require('./lib/migration');
 
 const BUILD_OUTPUT_PATTERNS = ['target/', 'build/', 'out/', '.gradle/', 'node_modules/', '*.class'];
-const EXCLUDED = ['.git', 'target', 'build', 'out', 'node_modules', '.idea', '.gradle', '.mvn/wrapper/maven-wrapper.jar'];
+// The Maven wrapper jar is copied like any other project file: excluding it made mvnw download it
+// into the sandbox, which then looked changed before anything had been migrated (validation run V1).
+const EXCLUDED = ['.git', 'target', 'build', 'out', 'node_modules', '.idea', '.gradle'];
 
 function parseArgs(argv) {
   const args = {};

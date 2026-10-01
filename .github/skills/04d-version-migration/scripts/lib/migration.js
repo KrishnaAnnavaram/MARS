@@ -653,12 +653,22 @@ function summariseErrors(errors) {
 }
 
 /** Maven prints a one-line reactor result; used to distinguish "compiled" from "tests failed". */
+const COMPILE_CATEGORIES = ['missing-package', 'missing-symbol', 'incompatible-types', 'no-suitable-method', 'abstract-not-implemented', 'removed-api', 'annotation-error'];
+
 function buildOutcome(result, errors) {
   if (result.status === 0) return 'passed';
   if (errors.some((e) => e.category === 'test-failure')) return 'tests-failed';
   if (errors.some((e) => e.category === 'dependency-resolution')) return 'dependency-failed';
+  // The code compiled and a later plugin failed (e.g. an old coverage plugin reading Java 21 class
+  // files): that is not a compile failure, and calling it one sends repair to the wrong place.
+  const compileError = errors.some((e) => COMPILE_CATEGORIES.includes(e.category)
+    || (e.category === 'java-release' && /invalid (target|source) release|release version .* not supported/i.test(e.message || '')));
+  if (!compileError && errors.some((e) => e.category === 'plugin-failure')) return 'build-failed';
   return 'compile-failed';
 }
+
+/** Outcomes that prove the sources compiled on that round (tests or a later plugin may still have failed). */
+const COMPILED_OUTCOMES = ['passed', 'tests-failed', 'build-failed'];
 
 // ---------------------------------------------------------------------------
 // Root-cause grouping
@@ -978,7 +988,7 @@ function inferState(slug) {
   }
   if (transformations.some((t) => t.mode === 'dry-run' && t.status === 'previewed')) reached.push('TRANSFORMATION_PREVIEWED');
   if (transformations.some((t) => t.mode === 'apply' && t.status === 'applied')) reached.push('TRANSFORMATION_APPLIED');
-  if (targetRounds.some((r) => r.outcome === 'passed' || r.outcome === 'tests-failed')) reached.push('TARGET_COMPILED');
+  if (targetRounds.some((r) => COMPILED_OUTCOMES.includes(r.outcome))) reached.push('TARGET_COMPILED');
   if (baselineRound && targetRounds.some((r) => TEST_RUN_INTENTS.includes(r.build.intent) && r.build.intent === baselineRound.build.intent)) {
     reached.push('TARGET_TESTED');
   }
@@ -1048,6 +1058,280 @@ function declaredPlatformVersion(inventory, detectEntries) {
     if (hit) return { coordinate: `${hit.groupId}:${hit.artifactId}`, version: hit.version, where: hit.where };
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Published versions — read from the artifact repository, never remembered
+//
+// The migration path is planned against what Maven Central actually publishes: every line of the
+// platform and its latest GA patch, and every GA Spring Cloud train. One small GET each, through a
+// child Node process so the scripts stay synchronous. MIGRATION_OFFLINE=1 (or no network) falls back
+// to the ladder's recorded values, and the baseline says which source each value came from.
+// ---------------------------------------------------------------------------
+
+const PRERELEASE = /(-|\.)(M\d+|RC\d+|SNAPSHOT|BUILD-SNAPSHOT|alpha|beta)/i;
+
+function httpGet(url, timeoutMs = 20000) {
+  if (process.env.MIGRATION_OFFLINE === '1') return { ok: false, error: 'offline (MIGRATION_OFFLINE=1)' };
+  const script = 'fetch(process.argv[1],{signal:AbortSignal.timeout(Number(process.argv[2]))})'
+    + '.then(async r=>{process.stdout.write(JSON.stringify({status:r.status,body:await r.text()}))})'
+    + '.catch(e=>{process.stdout.write(JSON.stringify({error:String(e&&e.message||e)}))})';
+  const r = spawnSync(process.execPath, ['-e', script, url, String(timeoutMs)], { encoding: 'utf8', timeout: timeoutMs + 5000, maxBuffer: 32 * 1024 * 1024 });
+  try {
+    const out = JSON.parse(r.stdout || '{}');
+    if (out.error) return { ok: false, error: out.error };
+    return { ok: out.status === 200, status: out.status, body: out.body || '' };
+  } catch {
+    return { ok: false, error: (r.stderr || 'no response').slice(0, 200) };
+  }
+}
+
+function metadataVersions(repository, groupId, artifactId) {
+  const url = `${repository.replace(/\/$/, '')}/${groupId.replace(/\./g, '/')}/${artifactId}/maven-metadata.xml`;
+  const res = httpGet(url);
+  if (!res.ok) return { ok: false, url, error: res.error || `HTTP ${res.status}` };
+  return { ok: true, url, versions: [...res.body.matchAll(/<version>([^<]+)<\/version>/g)].map((m) => m[1].trim()) };
+}
+
+/** { line: latest GA patch } for a platform artifact, e.g. { '2.7': '2.7.18', '2.3': '2.3.12.RELEASE' }. */
+function publishedLines(repository, groupId, artifactId) {
+  const meta = metadataVersions(repository, groupId, artifactId);
+  if (!meta.ok) return { ok: false, source: meta.url, error: meta.error, lines: {} };
+  const lines = {};
+  const key = (v) => v.split(/[.\-]/).slice(0, 3).map((n) => Number(n) || 0);
+  for (const v of meta.versions) {
+    if (PRERELEASE.test(v)) continue;
+    const m = /^(\d+)\.(\d+)\.(\d+)(\.RELEASE)?$/.exec(v);
+    if (!m) continue;
+    const line = `${m[1]}.${m[2]}`;
+    const cur = lines[line];
+    const [a, b] = [key(v), cur ? key(cur) : null];
+    if (!cur || a[2] > b[2]) lines[line] = v;
+  }
+  return { ok: true, source: meta.url, lines };
+}
+
+/** { train series: latest GA } for Spring Cloud — numbered (2022.0 → 2022.0.5) and named (Hoxton.SR12 → itself). */
+function publishedCloudTrains(repository, groupId = 'org.springframework.cloud', artifactId = 'spring-cloud-dependencies') {
+  const meta = metadataVersions(repository, groupId, artifactId);
+  if (!meta.ok) return { ok: false, source: meta.url, error: meta.error, trains: {} };
+  const trains = {};
+  for (const v of meta.versions) {
+    if (PRERELEASE.test(v)) continue;
+    const numbered = /^(\d{4}\.\d+)\.(\d+)$/.exec(v);
+    if (numbered) {
+      const cur = trains[numbered[1]];
+      if (!cur || Number(numbered[2]) > Number(cur.split('.')[2])) trains[numbered[1]] = v;
+    } else if (/^[A-Z][a-z]+\.(SR\d+|RELEASE)$/.test(v)) {
+      trains[v] = v;
+    }
+  }
+  return { ok: true, source: meta.url, trains };
+}
+
+/**
+ * The Boot version a Spring Cloud train was built against, read from its spring-cloud-starter-parent
+ * POM (which declares spring-boot-starter-parent as its parent) — evidence that the train and the
+ * Boot line belong together, not a remembered table. From 2025.1 the train no longer publishes
+ * spring-cloud-starter-parent; then the train's spring-cloud-dependencies POM names its
+ * spring-cloud-build release (as the parent's version), whose POM declares <spring-boot.version>.
+ */
+function cloudTrainBootParent(repository, train) {
+  const base = `${repository.replace(/\/$/, '')}/org/springframework/cloud`;
+  const parentOf = (body) => (/<parent>([\s\S]*?)<\/parent>/.exec(stripXmlComments(body)) || [, ''])[1];
+  const url = `${base}/spring-cloud-starter-parent/${train}/spring-cloud-starter-parent-${train}.pom`;
+  const res = httpGet(url);
+  if (res.ok) {
+    const parent = parentOf(res.body);
+    return { ok: true, url, via: `spring-cloud-starter-parent ${train}`, artifactId: tagText(parent, 'artifactId'), version: tagText(parent, 'version') };
+  }
+  const bomUrl = `${base}/spring-cloud-dependencies/${train}/spring-cloud-dependencies-${train}.pom`;
+  const bom = httpGet(bomUrl);
+  const buildVersion = bom.ok ? tagText(parentOf(bom.body), 'version') : null;
+  if (!buildVersion) return { ok: false, url, error: `${res.error || `HTTP ${res.status}`}; ${bom.ok ? 'no parent in the train BOM' : `train BOM ${bom.error || `HTTP ${bom.status}`}`}` };
+  const buildUrl = `${base}/spring-cloud-build/${buildVersion}/spring-cloud-build-${buildVersion}.pom`;
+  const build = httpGet(buildUrl);
+  const boot = build.ok ? (/<spring-boot\.version>\s*([^<\s]+)\s*<\/spring-boot\.version>/.exec(stripXmlComments(build.body)) || [])[1] : null;
+  if (!boot) return { ok: false, url: buildUrl, error: build.ok ? 'spring-cloud-build declares no spring-boot.version' : (build.error || `HTTP ${build.status}`) };
+  return { ok: true, url: buildUrl, via: `spring-cloud-build ${buildVersion} (the build of spring-cloud-dependencies ${train})`, artifactId: 'spring-boot', version: boot };
+}
+
+// ---------------------------------------------------------------------------
+// Endpoint inventory — what the application serves, so a migration can prove it still does
+//
+// A regular-expression pass over controller sources (labelled as such): class-level @RequestMapping
+// prefixes joined with method-level mappings. It cannot see endpoints built at runtime (router
+// functions, programmatic registration); the runtime probe's /actuator/mappings read covers those
+// when the actuator exposes it.
+// ---------------------------------------------------------------------------
+
+const MAPPING_ANNOTATIONS = {
+  GetMapping: 'GET', PostMapping: 'POST', PutMapping: 'PUT', DeleteMapping: 'DELETE', PatchMapping: 'PATCH', RequestMapping: null,
+};
+
+function mappingPaths(args) {
+  if (!args) return [''];
+  const body = args.trim();
+  const named = /(?:^|[,(\s])(?:value|path)\s*=\s*(\{[^}]*\}|"[^"]*")/.exec(body);
+  const raw = named ? named[1] : (/^\s*(\{[^}]*\}|"[^"]*")/.exec(body) || [, null])[1];
+  if (!raw) return [''];
+  const list = [...raw.matchAll(/"([^"]*)"/g)].map((m) => m[1]);
+  return list.length ? list : [''];
+}
+
+function mappingMethods(name, args) {
+  if (MAPPING_ANNOTATIONS[name]) return [MAPPING_ANNOTATIONS[name]];
+  const m = /method\s*=\s*(\{[^}]*\}|[\w.]+)/.exec(args || '');
+  if (!m) return ['ANY'];
+  const methods = [...m[1].matchAll(/(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS)/g)].map((x) => x[1]);
+  return methods.length ? methods : ['ANY'];
+}
+
+function joinPaths(prefix, suffix) {
+  const joined = `/${[prefix, suffix].map((p) => String(p || '').replace(/^\/+|\/+$/g, '')).filter(Boolean).join('/')}`;
+  return joined === '/' ? '/' : joined;
+}
+
+/**
+ * The default-profile application properties as flat keys: { 'a.b.c': { value, file, line } }.
+ * Reads application.properties and the first document of application.yml/.yaml with a small
+ * indentation flattener (block lists become comma lists); later YAML documents are profile-specific.
+ */
+function readAppConfig(projectDir) {
+  const dir = path.join(projectDir, 'src', 'main', 'resources');
+  const props = {};
+  for (const name of ['application.properties', 'application.yml', 'application.yaml']) {
+    let text;
+    try { text = fs.readFileSync(path.join(dir, name), 'utf8'); } catch { continue; }
+    const file = `src/main/resources/${name}`;
+    const lines = text.split(/\r?\n/);
+    if (name.endsWith('.properties')) {
+      lines.forEach((l, i) => {
+        const m = /^\s*([\w.\-[\]]+)\s*[=:]\s*(.*?)\s*$/.exec(l);
+        if (m && !/^\s*[#!]/.test(l)) props[m[1]] = { value: m[2], file, line: i + 1 };
+      });
+      continue;
+    }
+    const stack = [];
+    let listKey = null;
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i];
+      if (/^---/.test(l)) break;
+      if (!l.trim() || /^\s*#/.test(l)) continue;
+      const item = /^\s*-\s*(.+?)\s*$/.exec(l);
+      if (item) {
+        if (listKey) {
+          const v = item[1].replace(/\s+#.*$/, '').replace(/^["']|["']$/g, '');
+          props[listKey].value = props[listKey].value ? `${props[listKey].value},${v}` : v;
+        }
+        continue;
+      }
+      const m = /^(\s*)([\w.\-]+)\s*:\s*(.*?)\s*$/.exec(l);
+      if (!m) continue;
+      const indent = m[1].length;
+      while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+      stack.push({ indent, key: m[2] });
+      const key = stack.map((s) => s.key).join('.');
+      const value = m[3].replace(/\s+#.*$/, '');
+      listKey = null;
+      if (value !== '') props[key] = { value: value.replace(/^\[|\]$/g, '').replace(/^["']|["']$/g, ''), file, line: i + 1 };
+      else { props[key] = { value: '', file, line: i + 1 }; listKey = key; }
+    }
+  }
+  return props;
+}
+
+/**
+ * Endpoints the framework serves because configuration switches them on — the H2 console and the
+ * exposed actuator endpoints. No controller maps them, so a source scan alone misses them, yet a
+ * major upgrade can drop them (Boot 4 moved the H2 console into its own module; observed in V2).
+ */
+function configEndpoints(projectDir) {
+  const props = readAppConfig(projectDir);
+  const out = [];
+  const add = (p, handler, src) => out.push({ method: 'GET', path: p, handler, file: src.file, line: src.line, source: 'config' });
+  const h2 = props['spring.h2.console.enabled'];
+  if (h2 && /^true$/i.test(h2.value)) add(joinPaths((props['spring.h2.console.path'] || {}).value || '/h2-console', ''), 'H2 console (framework)', h2);
+  const include = props['management.endpoints.web.exposure.include'];
+  const separatePort = props['management.server.port'] && props['management.server.port'].value !== (props['server.port'] || {}).value;
+  if (include && !separatePort) {
+    const base = (props['management.endpoints.web.base-path'] || {}).value || '/actuator';
+    const exclude = ((props['management.endpoints.web.exposure.exclude'] || {}).value || '').split(',').map((s) => s.trim());
+    for (const id of include.value.split(',').map((s) => s.trim()).filter(Boolean)) {
+      if (id === '*') add(joinPaths(base, ''), 'actuator discovery (framework; "*" exposes every endpoint)', include);
+      else if (!exclude.includes(id)) add(joinPaths(base, id), `actuator ${id} endpoint (framework)`, include);
+    }
+  }
+  return out;
+}
+
+/**
+ * Static endpoint inventory: [{ method, path, handler, file, line, source? }], sorted, de-duplicated.
+ * Controller mappings from the source, plus framework endpoints the configuration enables
+ * (source: 'config').
+ */
+function scanEndpoints(projectDir) {
+  const root = path.join(projectDir, 'src', 'main', 'java');
+  const files = [];
+  const walk = (dir) => {
+    let entries = [];
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of entries) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (e.name.endsWith('.java')) files.push(full);
+    }
+  };
+  walk(root);
+  const out = [];
+  const annotation = /@(GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping|RequestMapping)\s*(\(([^()]*(?:\([^()]*\)[^()]*)*)\))?/g;
+  for (const file of files) {
+    let text;
+    try { text = fs.readFileSync(file, 'utf8'); } catch { continue; }
+    if (!/@(Rest)?Controller\b/.test(text)) continue;
+    const classIdx = text.search(/\b(class|interface)\s+\w+/);
+    const relFile = path.relative(projectDir, file).split(path.sep).join('/');
+    let prefixes = [''];
+    for (const m of text.matchAll(annotation)) {
+      const args = m[3] || '';
+      if (m.index < classIdx) { prefixes = mappingPaths(args); continue; }
+      const after = text.slice(m.index + m[0].length, m.index + m[0].length + 600);
+      const handler = (/\b(?:public|protected|private)?\s*[\w<>[\],.?\s]+?\s+(\w+)\s*\(/.exec(after) || [, null])[1];
+      // Required query parameters: a probe without them only proves the 400, not the endpoint.
+      const brace = after.indexOf('{');
+      const signature = brace === -1 ? after : after.slice(0, brace);
+      const requiredParams = [...signature.matchAll(/@RequestParam(?:\s*\(([^)]*)\))?\s+(?:final\s+)?[\w<>.,?[\]\s]+?\s+(\w+)\s*[,)]/g)]
+        .filter((p) => !/required\s*=\s*false|defaultValue/.test(p[1] || ''))
+        .map((p) => ((/(?:value|name)\s*=\s*"([^"]+)"/.exec(p[1] || '') || /^\s*"([^"]+)"/.exec(p[1] || '') || [])[1]) || p[2]);
+      const line = text.slice(0, m.index).split(/\r?\n/).length;
+      for (const prefix of prefixes) {
+        for (const p of mappingPaths(args)) {
+          for (const method of mappingMethods(m[1], args)) {
+            out.push({ method, path: joinPaths(prefix, p), handler, file: relFile, line, ...(requiredParams.length ? { required_params: requiredParams } : {}) });
+          }
+        }
+      }
+    }
+  }
+  out.push(...configEndpoints(projectDir));
+  const seen = new Set();
+  return out
+    .filter((e) => { const k = `${e.method} ${e.path}`; if (seen.has(k)) return false; seen.add(k); return true; })
+    .sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
+}
+
+/** Before/after endpoint sets: preserved, missing (a contract break), added. Keys are "METHOD /path". */
+function compareEndpoints(before = [], after = []) {
+  const key = (e) => `${e.method} ${e.path}`;
+  const a = new Set(after.map(key));
+  const b = new Set(before.map(key));
+  return {
+    before: before.length,
+    after: after.length,
+    preserved: before.filter((e) => a.has(key(e))).map(key),
+    missing: before.filter((e) => !a.has(key(e))).map(key),
+    added: after.filter((e) => !b.has(key(e))).map(key),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1128,5 +1412,7 @@ module.exports = {
   validateAgainstSchema, validateTemplate,
   STATES, TERMINAL_STATES, COMPILE_INTENTS, TEST_RUN_INTENTS,
   listTransformations, readState, inferState, recordState, clearBlock,
-  declaredPlatformVersion, compareProbeRecords,
+  declaredPlatformVersion, compareProbeRecords, COMPILED_OUTCOMES,
+  httpGet, metadataVersions, publishedLines, publishedCloudTrains, cloudTrainBootParent,
+  scanEndpoints, compareEndpoints, readAppConfig,
 };

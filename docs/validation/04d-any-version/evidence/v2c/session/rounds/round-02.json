@@ -1,0 +1,292 @@
+{
+  "round": 2,
+  "label": "OpenRewrite rewrite-03 applied (mars.migration.edge.E2)",
+  "baseline": false,
+  "started_at": "2026-10-01T13:50:48.994Z",
+  "duration_ms": 4696,
+  "jdk": {
+    "major": 17,
+    "version": "17.0.20.1",
+    "home": "E:/mv/tools/jdk-17.0.20.1+1",
+    "source": "MIGRATION_JDK_17"
+  },
+  "build": {
+    "tool": "maven",
+    "kind": "env",
+    "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B clean compile",
+    "intent": "compile",
+    "exit_code": 1,
+    "spawn_error": null
+  },
+  "outcome": "compile-failed",
+  "declared": {
+    "java": "17",
+    "parent": {
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-starter-parent",
+      "version": "4.0.8"
+    },
+    "dependency_count": 14,
+    "platform": {
+      "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+      "version": "4.0.8",
+      "where": "parent"
+    }
+  },
+  "workspace": {
+    "changed_files": [
+      {
+        "state": "M",
+        "file": "pom.xml"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      },
+      {
+        "state": "M",
+        "file": "src/main/java/com/example/migrationdemo/health/DatabaseHealthIndicator.java"
+      },
+      {
+        "state": "M",
+        "file": "src/test/java/com/example/migrationdemo/controller/EmployeeControllerTest.java"
+      },
+      {
+        "state": "M",
+        "file": "src/test/java/com/example/migrationdemo/integration/EmployeeRepositoryIntegrationTest.java"
+      }
+    ],
+    "diff_stat": "5 files changed, 25 insertions(+), 13 deletions(-)"
+  },
+  "error_summary": {
+    "total": 10,
+    "byCategory": [
+      {
+        "id": "missing-symbol",
+        "count": 8,
+        "label": "Cannot find symbol",
+        "hint": "A class, method or field was renamed or removed. Look for a replacement API in the reference pack."
+      },
+      {
+        "id": "missing-package",
+        "count": 1,
+        "label": "Package does not exist",
+        "hint": "A type moved to a new package or module. Look for a relocation entry in the reference pack."
+      },
+      {
+        "id": "plugin-failure",
+        "count": 1,
+        "label": "Build plugin failed",
+        "hint": "A build plugin is too old for the new platform, or its configuration changed."
+      }
+    ],
+    "byFile": [
+      {
+        "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+        "count": 9
+      }
+    ]
+  },
+  "errors": [
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 5,
+      "column": 45,
+      "message": "package com.fasterxml.jackson.datatype.jsr310 does not exist",
+      "detail": [],
+      "category": "missing-package"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 26,
+      "column": 35,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 29,
+      "column": 44,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 32,
+      "column": 15,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 36,
+      "column": 15,
+      "message": "cannot find symbol",
+      "detail": [],
+      "category": "missing-symbol"
+    },
+    {
+      "file": null,
+      "line": null,
+      "column": null,
+      "message": "Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project spring-boot-migration-demo: Compilation failure: Compilation failure:",
+      "detail": [],
+      "category": "plugin-failure"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 26,
+      "column": 35,
+      "message": "cannot find symbol — class JavaTimeModule",
+      "detail": [
+        "symbol: class JavaTimeModule",
+        "location: class com.example.migrationdemo.config.JacksonConfig"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 29,
+      "column": 44,
+      "message": "cannot find symbol — variable WRITE_DATES_AS_TIMESTAMPS",
+      "detail": [
+        "symbol: variable WRITE_DATES_AS_TIMESTAMPS",
+        "location: class tools.jackson.databind.SerializationFeature"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 32,
+      "column": 15,
+      "message": "cannot find symbol — method setDefaultPropertyInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include)",
+      "detail": [
+        "symbol: method setDefaultPropertyInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include)",
+        "location: variable mapper of type tools.jackson.databind.ObjectMapper"
+      ],
+      "category": "missing-symbol"
+    },
+    {
+      "file": "src/main/java/com/example/migrationdemo/config/JacksonConfig.java",
+      "line": 36,
+      "column": 15,
+      "message": "cannot find symbol — method disable(tools.jackson.databind.SerializationFeature)",
+      "detail": [
+        "symbol: method disable(tools.jackson.databind.SerializationFeature)",
+        "location: variable mapper of type tools.jackson.databind.ObjectMapper"
+      ],
+      "category": "missing-symbol"
+    }
+  ],
+  "errors_truncated": 0,
+  "log_tail": "[INFO] Scanning for projects...\r\n[INFO] \r\n[INFO] ---------------< com.example:spring-boot-migration-demo >---------------\r\n[INFO] Building Spring Boot 3 to 4 Migration Demo 1.0.0\r\n[INFO]   from pom.xml\r\n[INFO] --------------------------------[ jar ]---------------------------------\r\n[INFO] \r\n[INFO] --- clean:3.5.0:clean (default-clean) @ spring-boot-migration-demo ---\r\n[INFO] Deleting .\\target\r\n[INFO] \r\n[INFO] --- resources:3.3.1:resources (default-resources) @ spring-boot-migration-demo ---\r\n[INFO] Copying 1 resource from src\\main\\resources to target\\classes\r\n[INFO] Copying 0 resource from src\\main\\resources to target\\classes\r\n[INFO] \r\n[INFO] --- compiler:3.14.1:compile (default-compile) @ spring-boot-migration-demo ---\r\n[INFO] Recompiling the module because of changed source code.\r\n[INFO] Compiling 17 source files with javac [debug parameters release 17] to target\\classes\r\n[INFO] -------------------------------------------------------------\r\n[ERROR] COMPILATION ERROR : \r\n[INFO] -------------------------------------------------------------\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[5,45] package com.fasterxml.jackson.datatype.jsr310 does not exist\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[26,35] cannot find symbol\n  symbol:   class JavaTimeModule\n  location: class com.example.migrationdemo.config.JacksonConfig\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[29,44] cannot find symbol\n  symbol:   variable WRITE_DATES_AS_TIMESTAMPS\n  location: class tools.jackson.databind.SerializationFeature\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[32,15] cannot find symbol\n  symbol:   method setDefaultPropertyInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include)\n  location: variable mapper of type tools.jackson.databind.ObjectMapper\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[36,15] cannot find symbol\n  symbol:   method disable(tools.jackson.databind.SerializationFeature)\n  location: variable mapper of type tools.jackson.databind.ObjectMapper\r\n[INFO] 5 errors \r\n[INFO] -------------------------------------------------------------\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] BUILD FAILURE\r\n[INFO] ------------------------------------------------------------------------\r\n[INFO] Total time:  3.301 s\r\n[INFO] Finished at: 2026-10-01T08:50:53-05:00\r\n[INFO] ------------------------------------------------------------------------\r\n[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project spring-boot-migration-demo: Compilation failure: Compilation failure: \r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[5,45] package com.fasterxml.jackson.datatype.jsr310 does not exist\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[26,35] cannot find symbol\r\n[ERROR]   symbol:   class JavaTimeModule\r\n[ERROR]   location: class com.example.migrationdemo.config.JacksonConfig\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[29,44] cannot find symbol\r\n[ERROR]   symbol:   variable WRITE_DATES_AS_TIMESTAMPS\r\n[ERROR]   location: class tools.jackson.databind.SerializationFeature\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[32,15] cannot find symbol\r\n[ERROR]   symbol:   method setDefaultPropertyInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include)\r\n[ERROR]   location: variable mapper of type tools.jackson.databind.ObjectMapper\r\n[ERROR] ./src/main/java/com/example/migrationdemo/config/JacksonConfig.java:[36,15] cannot find symbol\r\n[ERROR]   symbol:   method disable(tools.jackson.databind.SerializationFeature)\r\n[ERROR]   location: variable mapper of type tools.jackson.databind.ObjectMapper\r\n[ERROR] -> [Help 1]\r\n[ERROR] \r\n[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.\r\n[ERROR] Re-run Maven using the -X switch to enable full debug logging.\r\n[ERROR] \r\n[ERROR] For more information about the errors and possible solutions, please read the following articles:\r\n[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException\r\n\n",
+  "transformation": "rewrite-03",
+  "edge": "E2",
+  "error_groups": [
+    {
+      "id": "G1",
+      "category": "missing-symbol",
+      "subject": "message cannot find symbol",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 4,
+      "files": [
+        "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      ],
+      "sample": "cannot find symbol"
+    },
+    {
+      "id": "G2",
+      "category": "missing-symbol",
+      "subject": "class JavaTimeModule",
+      "package": "com.fasterxml.jackson.datatype.jsr310",
+      "package_family": "com.fasterxml.jackson",
+      "basis": "parser + source-import",
+      "count": 1,
+      "files": [
+        "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      ],
+      "sample": "cannot find symbol — class JavaTimeModule"
+    },
+    {
+      "id": "G3",
+      "category": "plugin-failure",
+      "subject": "message Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:N.N.N:compile (default-compile",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [],
+      "sample": "Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.14.1:compile (default-compile) on project spring-boot-migration-demo: Compilation failure: Compilation failure:"
+    },
+    {
+      "id": "G4",
+      "category": "missing-symbol",
+      "subject": "method disable",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [
+        "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      ],
+      "sample": "cannot find symbol — method disable(tools.jackson.databind.SerializationFeature)"
+    },
+    {
+      "id": "G5",
+      "category": "missing-symbol",
+      "subject": "method setDefaultPropertyInclusion",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [
+        "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      ],
+      "sample": "cannot find symbol — method setDefaultPropertyInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include)"
+    },
+    {
+      "id": "G6",
+      "category": "missing-package",
+      "subject": "package com.fasterxml.jackson.datatype.jsr310",
+      "package": "com.fasterxml.jackson.datatype.jsr310",
+      "package_family": "com.fasterxml.jackson",
+      "basis": "parser",
+      "count": 1,
+      "files": [
+        "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      ],
+      "sample": "package com.fasterxml.jackson.datatype.jsr310 does not exist"
+    },
+    {
+      "id": "G7",
+      "category": "missing-symbol",
+      "subject": "variable WRITE_DATES_AS_TIMESTAMPS",
+      "package": null,
+      "package_family": null,
+      "basis": "parser",
+      "count": 1,
+      "files": [
+        "src/main/java/com/example/migrationdemo/config/JacksonConfig.java"
+      ],
+      "sample": "cannot find symbol — variable WRITE_DATES_AS_TIMESTAMPS"
+    }
+  ],
+  "correlation": {
+    "basis": "plan-text-match (heuristic: expected_symptoms substring match, not compiler truth)",
+    "matches": [],
+    "unmatched_groups": [
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5",
+      "G6",
+      "G7"
+    ]
+  }
+}

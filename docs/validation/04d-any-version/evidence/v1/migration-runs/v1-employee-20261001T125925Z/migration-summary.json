@@ -1,0 +1,831 @@
+{
+  "schema": "migration-summary/1",
+  "run_id": "v1-employee-20261001T125925Z",
+  "slug": "v1-employee",
+  "generated_at": "2026-10-01T13:59:05.139Z",
+  "final_status": "PARTIAL PASS",
+  "status_reason": "1 client-visible HTTP status change(s) classified as expected framework changes need human acceptance: get employee trailing slash",
+  "state": "RENDERED",
+  "states_reached": [
+    "BASELINE_DETECTED",
+    "WORKSPACE_PREPARED",
+    "BASELINE_BUILT",
+    "BASELINE_PROBED",
+    "PLAN_READY",
+    "TRANSFORMATION_PREVIEWED",
+    "TRANSFORMATION_APPLIED",
+    "TARGET_COMPILED",
+    "TARGET_TESTED",
+    "FINAL_PROBED",
+    "EVIDENCE_READY",
+    "RENDERED"
+  ],
+  "metadata": {
+    "started_at": "2026-10-01T12:59:25.019Z",
+    "last_transition_at": "2026-10-01T13:22:34.068Z",
+    "duration_ms": 1389049,
+    "input_location": "E:/mv/C/src/employee-service",
+    "source_commit": "20a26a512670e49dc603675a941dbfa3b2b5f1e7",
+    "working_branch": "validate/04d-integration",
+    "worktree": "E:/mv/C",
+    "output_location": "../evidence/v3/v1/ctx/version-migration/v1-employee",
+    "selected_pack": "spring-boot-2-to-3",
+    "agent04_issue_id": null,
+    "approval_mode": "n/a — direct request, not routed by Agent 04"
+  },
+  "versions": {
+    "source_platform_name": "Spring Boot",
+    "source_platform": "2.7.12",
+    "target_platform_name": "Spring Boot",
+    "target_platform": "3.5.16",
+    "final_declared_platform": "3.5.16",
+    "source_java": "17",
+    "source_jdk": "17.0.20.1",
+    "target_java": "21",
+    "target_jdk": "21.0.11",
+    "final_declared_java": "21"
+  },
+  "trigger": {
+    "kind": "direct-request",
+    "note": "invoked directly, not by 04_fix-generator Stage 2"
+  },
+  "detection": [
+    {
+      "what": "build tool",
+      "value": "maven (wrapper) Apache Maven 3.8.7 (b89d5959fcde851dcb1c8946a785a163f14e1e29)",
+      "where": "pom.xml"
+    },
+    {
+      "what": "declared Java",
+      "value": "17",
+      "where": "pom.xml (java.version / compiler release)"
+    },
+    {
+      "what": "source platform",
+      "value": "2.7.12",
+      "where": "org.springframework.boot:spring-boot-starter-parent (parent)"
+    },
+    {
+      "what": "requested target platform",
+      "value": "3.5.16",
+      "where": "request (line 3.5 → latest GA patch, maven-metadata)"
+    },
+    {
+      "what": "requested target Java",
+      "value": "21",
+      "where": "request"
+    },
+    {
+      "what": "JDKs available",
+      "value": "17 (17.0.20.1), 21 (21.0.11)",
+      "where": "local toolchain probe"
+    }
+  ],
+  "migration_path": {
+    "status": "SUPPORTED",
+    "source": "2.7.12",
+    "target": "3.5.16",
+    "required_path": {
+      "stack": "Spring Boot",
+      "source": "2.7.12",
+      "target": "3.5.16",
+      "steps": [
+        {
+          "from": "2.7.12",
+          "to": "2.7.18",
+          "capability": "pin-only (core-apache-2.0)",
+          "available": true
+        },
+        {
+          "from": "2.7.18",
+          "to": "3.0.13",
+          "capability": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0",
+          "available": true
+        },
+        {
+          "from": "3.0.13",
+          "to": "3.3.13",
+          "capability": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3",
+          "available": true
+        },
+        {
+          "from": "3.3.13",
+          "to": "3.5.16",
+          "capability": "pin-only (core-apache-2.0)",
+          "available": true
+        }
+      ],
+      "missing_capability": []
+    },
+    "missing_capability": [],
+    "pack_eligibility": [
+      {
+        "pack": "spring-boot-2-to-3",
+        "stack": "Spring Boot",
+        "pack_from": "2",
+        "pack_to": "3",
+        "matched_on": [
+          "org.springframework.boot:spring-boot-starter-parent:2"
+        ],
+        "platform_coordinates": [
+          "org.springframework.boot:spring-boot-starter-parent",
+          "org.springframework.boot:spring-boot-dependencies"
+        ],
+        "source_platform": {
+          "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+          "version": "2.7.12",
+          "where": "parent",
+          "descriptor": "pom.xml"
+        },
+        "nominated": true,
+        "eligible": true,
+        "relation": "in-generation",
+        "reason": "source org.springframework.boot:spring-boot-starter-parent 2.7.12 (parent) is in the pack's 2.x generation"
+      },
+      {
+        "pack": "spring-boot-3-to-4",
+        "stack": "Spring Boot",
+        "pack_from": "3",
+        "pack_to": "4",
+        "matched_on": [
+          "org.springframework.boot:spring-boot-starter-web"
+        ],
+        "platform_coordinates": [
+          "org.springframework.boot:spring-boot-starter-parent",
+          "org.springframework.boot:spring-boot-dependencies"
+        ],
+        "source_platform": {
+          "coordinate": "org.springframework.boot:spring-boot-starter-parent",
+          "version": "2.7.12",
+          "where": "parent",
+          "descriptor": "pom.xml"
+        },
+        "nominated": true,
+        "eligible": false,
+        "relation": "behind",
+        "reason": "source org.springframework.boot:spring-boot-starter-parent 2.7.12 (parent) is generation 2, but the pack migrates from 3.x"
+      }
+    ],
+    "warnings": [],
+    "unresolved": []
+  },
+  "license_policy": "open-source-only",
+  "path": {
+    "ladder": "references/openrewrite/spring-boot-ladder.json",
+    "granularity": "boundary",
+    "versions_from": "maven-metadata https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter-parent/maven-metadata.xml",
+    "edges": [
+      {
+        "id": "E1",
+        "class": "PATCH",
+        "role": "transit",
+        "from": "2.7.12",
+        "to": "2.7.18",
+        "java": "17",
+        "jdk": "17.0.20.1",
+        "recipe_source": "pin-only",
+        "recipe": null,
+        "stack": "core-apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "cloud_train": "2021.0.9",
+        "pack": null,
+        "notes": [
+          "patch edge within 2.7: pins the platform and Spring Cloud train only — a patch release carries no framework migration"
+        ],
+        "previews": [
+          "rewrite-00 failed (0 files)",
+          "rewrite-01 previewed (1 files)"
+        ],
+        "applies": [
+          "rewrite-02 applied (1 files)"
+        ],
+        "rounds": [
+          "R1 test-compile passed"
+        ],
+        "complete": true,
+        "completed_by": "R1"
+      },
+      {
+        "id": "E2",
+        "class": "MAJOR_BOUNDARY",
+        "role": "transit",
+        "from": "2.7.18",
+        "to": "3.0.13",
+        "java": "17",
+        "jdk": "17.0.20.1",
+        "recipe_source": "upstream",
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_0",
+        "stack": "apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "cloud_train": "2022.0.5",
+        "pack": "spring-boot-2-to-3",
+        "notes": [],
+        "previews": [
+          "rewrite-03 previewed (7 files)"
+        ],
+        "applies": [
+          "rewrite-04 applied (3 files)"
+        ],
+        "rounds": [
+          "R2 test-compile compile-failed",
+          "R3 test-compile passed"
+        ],
+        "complete": true,
+        "completed_by": "R3"
+      },
+      {
+        "id": "E3",
+        "class": "MINOR",
+        "role": "transit",
+        "from": "3.0.13",
+        "to": "3.3.13",
+        "java": "17",
+        "jdk": "17.0.20.1",
+        "recipe_source": "upstream",
+        "recipe": "org.openrewrite.java.spring.boot3.UpgradeSpringBoot_3_3",
+        "stack": "apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "cloud_train": "2023.0.6",
+        "pack": null,
+        "notes": [],
+        "previews": [
+          "rewrite-05 previewed (6 files)"
+        ],
+        "applies": [
+          "rewrite-06 applied (1 files)"
+        ],
+        "rounds": [
+          "R4 test-compile compile-failed",
+          "R5 test-compile passed"
+        ],
+        "complete": true,
+        "completed_by": "R5"
+      },
+      {
+        "id": "E4",
+        "class": "MINOR",
+        "role": "landing",
+        "from": "3.3.13",
+        "to": "3.5.16",
+        "java": "21",
+        "jdk": "21.0.11",
+        "recipe_source": "pin-only",
+        "recipe": null,
+        "stack": "core-apache-2.0",
+        "license": "Apache-2.0",
+        "open_source": true,
+        "cloud_train": "2025.0.3",
+        "pack": null,
+        "notes": [
+          "no open-source-only upstream recipe for 3.5: the edge pins the platform, Spring Cloud train and Java level; compiler-driven repair handles the rest"
+        ],
+        "previews": [
+          "rewrite-07 previewed (1 files)"
+        ],
+        "applies": [
+          "rewrite-08 applied (1 files)"
+        ],
+        "rounds": [
+          "R6 test-compile passed",
+          "R7 package compile-failed",
+          "R8 package passed"
+        ],
+        "complete": true,
+        "completed_by": "R6"
+      }
+    ]
+  },
+  "endpoints": {
+    "static": {
+      "before": 5,
+      "after": 5,
+      "preserved": [
+        "POST /api/v1/employee",
+        "GET /api/v1/employee/{id}",
+        "POST /api/v1/employee/excelUpload",
+        "GET /api/v1/employee/salary/{id}",
+        "GET /api/v1/employee/search"
+      ],
+      "missing": [],
+      "added": []
+    },
+    "runtime": {
+      "before": 10,
+      "after": 10,
+      "preserved": [
+        "ANY /error",
+        "GET /actuator",
+        "GET /actuator/health",
+        "GET /actuator/health/**",
+        "GET /actuator/mappings",
+        "GET /api/v1/employee/salary/{id}",
+        "GET /api/v1/employee/search",
+        "GET /api/v1/employee/{id}",
+        "POST /api/v1/employee",
+        "POST /api/v1/employee/excelUpload"
+      ],
+      "missing": [],
+      "added": [],
+      "source": "actuator /mappings"
+    }
+  },
+  "planned_transformations": {
+    "impact_areas": [
+      "[E1] Platform patch + Cloud train",
+      "[E2] Boot 3.0 parent + Cloud 2022.0",
+      "[E2] Spring Cloud 2022.0",
+      "[E2] Spring Framework 6 MVC error handling",
+      "[E2] javax -> jakarta (test glue)",
+      "[E2] RestTemplate on HttpClient",
+      "[E2] ResponseEntity status API",
+      "[E2] Trailing-slash matching off",
+      "[E2] Default error bodies (ResponseEntityExceptionHandler)",
+      "[E3] Boot 3.3 parent + Cloud 2023.0",
+      "[E4] Boot 3.5 parent + Cloud 2025.0 + Java 21",
+      "[E4] Pinned jacoco-maven-plugin 0.8.7 on Java 21",
+      "[E3/E4] @MockBean deprecation"
+    ],
+    "impact_entries": 13,
+    "deterministic_candidates": [
+      "edge:E1",
+      "edge:E2",
+      "edge:E3",
+      "edge:E4"
+    ],
+    "residual_candidates": [
+      {
+        "impact": "I5",
+        "why_not_deterministic": "The javax->jakarta move of javax.ws.rs only helps if a Jakarta RS API is on the test classpath; Eureka 4 no longer brings Jersey, so what replaces the import must be decided from the resolved dependency tree"
+      },
+      {
+        "impact": "I6",
+        "why_not_deterministic": "No recipe in the path switches HttpClient 4 to 5 for a test helper; only acted on if the build names it"
+      },
+      {
+        "impact": "I8",
+        "why_not_deterministic": "Trailing-slash matching is a runtime behaviour change; recorded, not re-enabled silently (pack 5.1)"
+      },
+      {
+        "impact": "I9",
+        "why_not_deterministic": "Framework-owned error body; classified after the final probe"
+      },
+      {
+        "impact": "I12",
+        "why_not_deterministic": "No ladder recipe touches the pinned jacoco plugin; only changed if the Java 21 build/test evidence demands it"
+      }
+    ]
+  },
+  "openrewrite": [
+    {
+      "seq": 0,
+      "id": "rewrite-00",
+      "mode": "dry-run",
+      "status": "failed",
+      "recipes": [
+        "mars.migration.edge.E1"
+      ],
+      "files": 0,
+      "error": null,
+      "decision": "superseded"
+    },
+    {
+      "seq": 1,
+      "id": "rewrite-01",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E1"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": "superseded"
+    },
+    {
+      "seq": 2,
+      "id": "rewrite-02",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.edge.E1"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": "accepted"
+    },
+    {
+      "seq": 3,
+      "id": "rewrite-03",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E2"
+      ],
+      "files": 7,
+      "error": null,
+      "decision": "superseded"
+    },
+    {
+      "seq": 4,
+      "id": "rewrite-04",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.edge.E2"
+      ],
+      "files": 3,
+      "error": null,
+      "decision": "accepted"
+    },
+    {
+      "seq": 5,
+      "id": "rewrite-05",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E3"
+      ],
+      "files": 6,
+      "error": null,
+      "decision": "superseded"
+    },
+    {
+      "seq": 6,
+      "id": "rewrite-06",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.edge.E3"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": "accepted"
+    },
+    {
+      "seq": 7,
+      "id": "rewrite-07",
+      "mode": "dry-run",
+      "status": "previewed",
+      "recipes": [
+        "mars.migration.edge.E4"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": "superseded"
+    },
+    {
+      "seq": 8,
+      "id": "rewrite-08",
+      "mode": "apply",
+      "status": "applied",
+      "recipes": [
+        "mars.migration.edge.E4"
+      ],
+      "files": 1,
+      "error": null,
+      "decision": "accepted"
+    }
+  ],
+  "actual_transformations": [
+    {
+      "file": "pom.xml",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "Parent 2.7.12 -> 2.7.18 -> 3.0.13 -> 3.3.13 -> 3.5.16, spring-cloud.version per edge, java.version 17 -> 21."
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "handleHttpRequestMethodNotSupported now overrides the Framework 6 signature taking HttpStatusCode instead of HttpStatus."
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+      "origin": "openrewrite",
+      "evidence": null,
+      "summary": "import javax.ws.rs.core.Application became import jakarta.ws.rs.core.Application."
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+      "origin": "reference-rule",
+      "evidence": "Round 2 G1: 2x cannot find symbol class EnableEurekaClient at EmployeeServiceApplication.java:7 and :10.",
+      "summary": "Removed the @EnableEurekaClient annotation and its import."
+    },
+    {
+      "file": "pom.xml",
+      "origin": "harness-residual",
+      "evidence": "Round 7: 'Failed to execute goal org.jacoco:jacoco-maven-plugin:0.8.7:report ... Unsupported class file major version 65'. Version verified against Maven Central metadata and JaCoCo's release notes (0.8.11, 2023/10/14: officially supports Java 21).",
+      "summary": "jacoco-maven-plugin in the unitTest profile 0.8.7 -> 0.8.11 (the unused test-scope dependency declaration left at 0.8.7)."
+    },
+    {
+      "file": "pom.xml",
+      "origin": "harness-residual",
+      "evidence": "Rejected at preview inspection (rewrite-03, rewrite-05); round 4 showed the exclusion removes JUnit 4 (org.junit.runner / org.junit.Before / org.junit.Assert not found in 4 test files); round 5 green after the revert.",
+      "summary": "After rewrite-04 and rewrite-06, hand-reverted the junit exclusion on cucumber-junit, jacoco 0.8.7 -> 0.8.15 (x2) and maven-surefire-plugin 2.19.1 -> 3.1.2 in the inactive cucumberTest profile."
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+      "origin": "harness-residual",
+      "evidence": "Rejected at preview inspection of rewrite-03; round 3 green with the revert.",
+      "summary": "After rewrite-04, hand-reverted org.junit.Before -> org.junit.jupiter.api.BeforeEach (kept the jakarta import from the same file)."
+    }
+  ],
+  "file_changes": [
+    {
+      "file": "pom.xml",
+      "change": "modified",
+      "tool": "openrewrite + harness-residual",
+      "reason": "The migration path's four edges, each pinned by its generated recipe. · JaCoCo 0.8.7 cannot read Java 21 (major 65) class files, so the report goal failed after the tests passed. · Unrelated upgrades and a JUnit 4 removal the jump does not require; the exclusion actively broke test compilation (round 4)."
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/EmployeeServiceApplication.java",
+      "change": "modified",
+      "tool": "reference-rule",
+      "reason": "Spring Cloud 2022.0 removed the annotation; the Eureka client starter on the classpath registers the service."
+    },
+    {
+      "file": "src/main/java/com/aura/vihanga/employeeservice/advice/EmployeeAdvice.java",
+      "change": "modified",
+      "tool": "openrewrite",
+      "reason": "Spring Framework 6 changed ResponseEntityExceptionHandler's handler signatures to HttpStatusCode; the old override would no longer override anything."
+    },
+    {
+      "file": "src/test/java/com/aura/vihanga/employeeservice/cucumberglue/CucumberConfig.java",
+      "change": "modified",
+      "tool": "openrewrite + harness-residual",
+      "reason": "Jakarta EE 9 namespace; Eureka's Jersey moved to jakarta.ws.rs, which round 3 resolved on the test classpath. · A JUnit 4 -> 5 migration of Cucumber glue is not required by the Boot jump."
+    }
+  ],
+  "dependency_changes": [
+    {
+      "dependency": "org.springframework.boot:spring-boot-starter-parent (parent)",
+      "old": "2.7.12",
+      "new": "3.5.16",
+      "reason": "platform parent"
+    },
+    {
+      "dependency": "org.springframework.cloud:spring-cloud-dependencies",
+      "old": "2021.0.7",
+      "new": "2025.0.3",
+      "reason": "version changed"
+    },
+    {
+      "dependency": "org.jacoco:jacoco-maven-plugin (plugin)",
+      "old": "0.8.7",
+      "new": "0.8.11",
+      "reason": "plugin version changed"
+    },
+    {
+      "dependency": "property java.version",
+      "old": "17",
+      "new": "21",
+      "reason": "build property"
+    },
+    {
+      "dependency": "property spring-cloud.version",
+      "old": "2021.0.7",
+      "new": "2025.0.3",
+      "reason": "build property"
+    }
+  ],
+  "compile_history": [
+    {
+      "round": 0,
+      "baseline": true,
+      "label": "Pre-migration reference build",
+      "intent": "package",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 61525,
+      "errors": 0,
+      "declared_platform": "2.7.12",
+      "diagnosis": "Pre-migration reference build of the untouched project on JDK 17, goal package: 7 JUnit 5 tests across 4 classes, all passing (the @DataMongoTest class runs against the local MongoDB). The JUnit 4 Cucumber runner is not executed by surefire on the JUnit Platform, so the Cucumber glue is only ever compiled. These are the counts the migration is judged against.",
+      "repair": []
+    },
+    {
+      "round": 1,
+      "baseline": false,
+      "label": "OpenRewrite rewrite-02 applied (mars.migration.edge.E1)",
+      "intent": "test-compile",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 14735,
+      "errors": 0,
+      "declared_platform": "2.7.18",
+      "diagnosis": "Edge E1 (PATCH 2.7.12 -> 2.7.18): the pin-only recipe moved the parent and the Spring Cloud train to 2021.0.9; main and test code compile unchanged on JDK 17. Edge complete.",
+      "repair": [
+        "Applied rewrite-02 (edge E1, previewed as rewrite-01): parent 2.7.18, spring-cloud.version 2021.0.9."
+      ]
+    },
+    {
+      "round": 2,
+      "baseline": false,
+      "label": "OpenRewrite rewrite-04 applied (mars.migration.edge.E2)",
+      "intent": "test-compile",
+      "jdk": "17.0.20.1",
+      "outcome": "compile-failed",
+      "exit_code": 1,
+      "duration_ms": 11335,
+      "errors": 5,
+      "declared_platform": "3.0.13",
+      "diagnosis": "Edge E2 apply build (2.7.18 -> 3.0.13, Cloud 2022.0.5). UpgradeSpringBoot_3_0 fixed the advice signature and the javax.ws.rs import, but Spring Cloud 2022.0 deleted @EnableEurekaClient, which no recipe in the chain removed, so main compilation stopped there before any test code was compiled. The rejected pom hunks were still present in this round.",
+      "repair": [
+        "Applied rewrite-04 (edge E2, previewed as rewrite-03) to pom.xml, EmployeeAdvice.java and CucumberConfig.java; WebClientConfig.java, EmployeeController.java, CucumberSteps.java and EmployeeRepositoryTest.java excluded as out of scope."
+      ]
+    },
+    {
+      "round": 3,
+      "baseline": false,
+      "label": "Removed @EnableEurekaClient (pack s8); hand-reverted rejected rewrite-04 hunks (junit exclusion, jacoco/surefire bumps, @BeforeEach)",
+      "intent": "test-compile",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 11029,
+      "errors": 0,
+      "declared_platform": "3.0.13",
+      "diagnosis": "With the annotation removed and the rejected hunks reverted, main and test code compile on 3.0.13. jakarta.ws.rs.core.Application resolves on the test classpath (Eureka's Jakarta Jersey), confirming the accepted import move. Edge E2 complete.",
+      "repair": [
+        "Removed @EnableEurekaClient and its import from EmployeeServiceApplication.java (pack section 8).",
+        "Hand-reverted rejected rewrite-04 hunks: cucumber-junit junit exclusion, jacoco 0.8.15 x2, surefire 3.1.2 (pom.xml) and @BeforeEach (CucumberConfig.java)."
+      ]
+    },
+    {
+      "round": 4,
+      "baseline": false,
+      "label": "OpenRewrite rewrite-06 applied (mars.migration.edge.E3)",
+      "intent": "test-compile",
+      "jdk": "17.0.20.1",
+      "outcome": "compile-failed",
+      "exit_code": 1,
+      "duration_ms": 29455,
+      "errors": 14,
+      "declared_platform": "3.3.13",
+      "diagnosis": "Edge E3 apply build (3.0.13 -> 3.3.13, Cloud 2023.0.6). Every error is JUnit 4 disappearing from the test classpath: the rejected cucumber-junit junit exclusion was still in pom.xml for this round (the hunk is reverted by hand after the apply, per the procedure). Nothing here is caused by Boot 3.3.",
+      "repair": [
+        "Applied rewrite-06 (edge E3, previewed as rewrite-05) to pom.xml only; WebClientConfig.java, EmployeeController.java, CucumberConfig.java, CucumberSteps.java and EmployeeRepositoryTest.java excluded as out of scope."
+      ]
+    },
+    {
+      "round": 5,
+      "baseline": false,
+      "label": "Hand-reverted rejected rewrite-06 pom hunks (cucumber-junit junit exclusion that removed JUnit 4, jacoco/surefire bumps)",
+      "intent": "test-compile",
+      "jdk": "17.0.20.1",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 9167,
+      "errors": 0,
+      "declared_platform": "3.3.13",
+      "diagnosis": "With the rejected pom hunks reverted, everything compiles on 3.3.13 / JDK 17. Edge E3 complete.",
+      "repair": [
+        "Hand-reverted rejected rewrite-06 pom.xml hunks (junit exclusion, jacoco 0.8.15 x2, surefire 3.1.2)."
+      ]
+    },
+    {
+      "round": 6,
+      "baseline": false,
+      "label": "OpenRewrite rewrite-08 applied (mars.migration.edge.E4)",
+      "intent": "test-compile",
+      "jdk": "21.0.11",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 14049,
+      "errors": 0,
+      "declared_platform": "3.5.16",
+      "diagnosis": "Landing edge E4 apply build (3.3.13 -> 3.5.16, Cloud 2025.0.3, java.version 21) on JDK 21: main and test code compile. Only warnings remain: @MockBean is deprecated for removal from Boot 3.4 (plan I13), which still compiles on 3.5. Edge E4 complete.",
+      "repair": [
+        "Applied rewrite-08 (edge E4, previewed as rewrite-07): parent 3.5.16, java.version 21, spring-cloud.version 2025.0.3."
+      ]
+    },
+    {
+      "round": 7,
+      "baseline": false,
+      "label": "Same goal as round 0 (package, tests run) on JDK 21; no source change",
+      "intent": "package",
+      "jdk": "21.0.11",
+      "outcome": "compile-failed",
+      "exit_code": 1,
+      "duration_ms": 35699,
+      "errors": 1,
+      "declared_platform": "3.5.16",
+      "diagnosis": "Same goal as round 0 (package) on JDK 21: the 7 tests all pass, then the pinned JaCoCo 0.8.7 report goal fails because it cannot parse Java 21 (major 65) class files; its agent also logged instrumentation errors during the tests. The script records the outcome as compile-failed, but compilation and tests succeeded; the failure is the reporting plugin. This is the predicted impact I12.",
+      "repair": []
+    },
+    {
+      "round": 8,
+      "baseline": false,
+      "label": "jacoco-maven-plugin 0.8.7 -> 0.8.11 in the unitTest profile (Java 21 class files)",
+      "intent": "package",
+      "jdk": "21.0.11",
+      "outcome": "passed",
+      "exit_code": 0,
+      "duration_ms": 38312,
+      "errors": 0,
+      "declared_platform": "3.5.16",
+      "diagnosis": "With JaCoCo 0.8.11 the package goal is green on JDK 21: 7 tests run, 0 failures, 0 errors, 0 skipped, which are the same counts as round 0, and the executable war is built for Boot 3.5.16 (manifest Build-Jdk-Spec 21).",
+      "repair": [
+        "jacoco-maven-plugin 0.8.7 -> 0.8.11 in the unitTest profile (pom.xml)."
+      ]
+    }
+  ],
+  "tests": {
+    "before": {
+      "round": 0,
+      "total": 7,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 7
+    },
+    "after": {
+      "round": 8,
+      "total": 7,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 7
+    },
+    "new_failures": false
+  },
+  "runtime": {
+    "baseline_probed": true,
+    "final_probed": true,
+    "baseline_started": true,
+    "final_started": true,
+    "final_startup_seconds": 7.485,
+    "readiness": {
+      "path": "/actuator/health",
+      "status": 200,
+      "ready_after_ms": 9419
+    },
+    "probes": 13,
+    "failures": []
+  },
+  "behaviour": {
+    "total": 13,
+    "identical": 10,
+    "body_differs": 2,
+    "status_changed": 1,
+    "expected_differences": [
+      "endpoint inventory (actuator): expected-framework-change",
+      "get employee trailing slash: expected-framework-change",
+      "search without name is 400: expected-framework-change"
+    ],
+    "unexpected_differences": [],
+    "verdict": "🔴 1 of 13 probe(s) changed status"
+  },
+  "compiled_on_target": true,
+  "target_reached": true,
+  "validation": [
+    [
+      "Build rounds",
+      "9 (R0 passed, R1 passed, R2 compile-failed, R3 passed, R4 compile-failed, R5 passed, R6 passed, R7 compile-failed, R8 passed)"
+    ],
+    [
+      "Final round",
+      "R8 package on JDK 21.0.11 — passed"
+    ],
+    [
+      "Target declared by final build",
+      "3.5.16 (matches request)"
+    ],
+    [
+      "Tests before → after",
+      "7 run / 0 failing → 7 run / 0 failing"
+    ],
+    [
+      "Runtime probes",
+      "13 compared: 10 identical, 2 body-only differences, 1 status changes"
+    ],
+    [
+      "Migration result",
+      "PARTIAL PASS — 1 client-visible HTTP status change(s) classified as expected framework changes need human acceptance: get employee trailing slash"
+    ]
+  ],
+  "handoff": null,
+  "paths": {
+    "session": "../evidence/v3/v1/ctx/version-migration/v1-employee",
+    "report_md": "E:\\mv\\evidence\\v3\\v1\\reports\\migration_v1-employee.md",
+    "report_md_exists": true,
+    "report_diff": "E:\\mv\\evidence\\v3\\v1\\reports\\migration_v1-employee.diff",
+    "report_diff_exists": true,
+    "summary_md": "E:\\mv\\evidence\\v3\\v1\\reports\\migration-runs\\v1-employee-20261001T125925Z\\MIGRATION_SUMMARY.md",
+    "summary_json": "E:\\mv\\evidence\\v3\\v1\\reports\\migration-runs\\v1-employee-20261001T125925Z\\migration-summary.json",
+    "evidence": [
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/baseline.json",
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/migration-plan.json",
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/probes.json",
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/migration.json",
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/state.json",
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/rounds",
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/runtime",
+      "../evidence/v3/v1/ctx/version-migration/v1-employee/transformations"
+    ]
+  },
+  "finalized_by": "apply-migration.js"
+}

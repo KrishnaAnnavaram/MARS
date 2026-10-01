@@ -1,0 +1,61 @@
+{
+  "$comment": "Drafted by probe-runtime.js --discover from the static endpoint inventory. Add auth, real ids, request bodies and expect_status from the application's source, then pass it as --probes. not_probed must end empty or each entry must stay explained.",
+  "base_url": "http://localhost:8093",
+  "readiness": {
+    "path": "/actuator/health",
+    "timeout_seconds": 120
+  },
+  "requests": [
+    {
+      "name": "endpoint inventory (actuator)",
+      "method": "GET",
+      "path": "/actuator/mappings",
+      "category": "endpoint-inventory"
+    },
+    {
+      "name": "GET /api/v1/employees",
+      "method": "GET",
+      "path": "/api/v1/employees",
+      "category": "endpoint-inventory",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:31"
+    }
+  ],
+  "not_probed": [
+    {
+      "endpoint": "POST /api/v1/employees",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:25",
+      "reason": "mutating or unspecified method — needs a request body and an expectation the agent writes from the source"
+    },
+    {
+      "endpoint": "DELETE /api/v1/employees/{id}",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:51",
+      "reason": "path variable — needs a real id from the application's data"
+    },
+    {
+      "endpoint": "GET /api/v1/employees/{id}",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:37",
+      "reason": "path variable — needs a real id from the application's data"
+    },
+    {
+      "endpoint": "PUT /api/v1/employees/{id}",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:43",
+      "reason": "path variable — needs a real id from the application's data"
+    },
+    {
+      "endpoint": "GET /api/v1/employees/high-earners",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:64",
+      "reason": "required request parameter(s) salary — needs real values from the application's data",
+      "required_params": [
+        "salary"
+      ]
+    },
+    {
+      "endpoint": "GET /api/v1/employees/search",
+      "handler": "src/main/java/com/example/migrationdemo/controller/EmployeeController.java:57",
+      "reason": "required request parameter(s) department — needs real values from the application's data",
+      "required_params": [
+        "department"
+      ]
+    }
+  ]
+}

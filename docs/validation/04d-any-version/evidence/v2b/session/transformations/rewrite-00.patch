@@ -1,0 +1,14 @@
+diff --git a/pom.xml b/pom.xml
+index f8bdfa0..19319bd 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -16,7 +16,7 @@ mars.migration.edge.E1
+     <parent>
+         <groupId>org.springframework.boot</groupId>
+         <artifactId>spring-boot-starter-parent</artifactId>
+-        <version>3.5.0</version>
++        <version>3.5.16</version>
+         <relativePath/>
+     </parent>
+ 
+

@@ -1,0 +1,71 @@
+{
+  "id": "rewrite-04",
+  "seq": 4,
+  "provider": "openrewrite",
+  "mode": "dry-run",
+  "applied": false,
+  "transformation": "edge-E3",
+  "pack_transformation": null,
+  "policy": "optional",
+  "phase": "edge",
+  "build_tool": "maven",
+  "build_tool_kind": "env",
+  "plugin_version": "6.46.1",
+  "recipes": [
+    "mars.migration.edge.E3"
+  ],
+  "artifacts": [],
+  "config": null,
+  "config_sha": "b30468edd76035b6",
+  "license": "Apache-2.0",
+  "license_note": null,
+  "source_repository": null,
+  "recipe_target": "4.1.1",
+  "jdk": {
+    "major": 21,
+    "version": "21.0.11"
+  },
+  "started_at": "2026-10-01T13:40:59.198Z",
+  "finished_at": "2026-10-01T13:41:14.719Z",
+  "duration_ms": 15521,
+  "command": "E:/mv/tools/apache-maven-3.9.9/bin/mvn.cmd -B org.openrewrite.maven:rewrite-maven-plugin:6.46.1:dryRunNoFork -Drewrite.activeRecipes=mars.migration.edge.E3 -Drewrite.configLocation=<session>\\transformations\\rewrite-04.rewrite.yml",
+  "exit_code": 0,
+  "status": "previewed",
+  "availability": {
+    "available": true,
+    "reason": null
+  },
+  "preview": null,
+  "proposed_files": [
+    "pom.xml"
+  ],
+  "changed_files": [],
+  "excluded_files": [],
+  "attribution": {
+    "pom.xml": [
+      {
+        "depth": 0,
+        "recipe": "org.openrewrite.xml.ChangeTagValue: {elementName=/project/parent/version, oldValue=4.0.8, newValue=4.1.1}"
+      },
+      {
+        "depth": 1,
+        "recipe": "org.openrewrite.maven.ChangePropertyValue: {key=java.version, newValue=21}"
+      }
+    ]
+  },
+  "patch": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-04.patch",
+  "log": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-04.log",
+  "checkpoint": {
+    "ref": "refs/checkpoints/rewrite-04-before",
+    "commit": "0d1f92463260afee18098e1df158059654cd12e0"
+  },
+  "scope_check": null,
+  "reconciliation": null,
+  "build_round": null,
+  "notes": [],
+  "edge": "E3",
+  "license_policy": "open-source-only",
+  "open_source": true,
+  "rendered_config": "../evidence/v3/v2b/ctx/version-migration/v2b/transformations/rewrite-04.rewrite.yml",
+  "goal": "dryRunNoFork"
+}
