@@ -178,7 +178,7 @@ export function loadRegistry(ws: Workspace): Registry {
     return m ? Number(m[1]) : null;
   };
   const claudeSkillCount = ws.dirs('.claude/skills').length;
-  for (const [rel, label] of [['.claude/README.md', '.claude'], ['.github/README.md', '.github']] as const) {
+  for (const [rel, label] of [['.claude/README.md', '.claude'], ['.github/HARNESS.md', '.github']] as const) {
     const claimed = readmeCount(rel, 'Skills');
     const actual = label === '.claude' ? claudeSkillCount : ws.dirs('.github/skills').length;
     if (claimed != null && claimed !== actual) drift.push({ id: `readme-skills-${label}`, title: `${rel} claims ${claimed} skills; ${actual} skill folders exist`, detail: 'Counts in documentation are hand-maintained; Mission Control derives them from the filesystem.', severity: 'minor' });

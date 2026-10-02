@@ -1849,7 +1849,7 @@ self-tests.
 │   └── 07b-scribe/                              ┘
 ├── pipeline-contract.md         ownership · transitions · routing · decision policy
 ├── scripts/pipeline-lint.js     contract text checks
-└── README.md                    harness overview
+└── HARNESS.md                   harness overview (not README.md, so GitHub shows the root README)
 .claude/                         path-swapped mirror for Claude Code
 ├── agents/ · skills/            same agents and skills (04d is a pointer)
 ├── scripts/                     pipeline-lint · record-decision · telemetry/
