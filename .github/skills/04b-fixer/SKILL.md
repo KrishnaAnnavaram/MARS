@@ -16,7 +16,7 @@ untouched at every point in this pipeline.
 **A Compiled result here is not a merge signal.** This skill only proves the patch builds. Whether it
 actually closes the vulnerability, survives adversarial re-testing, passes a real test/build gate, and
 is safe to ship is decided entirely by the rest of the pipeline (`05_existing-app-test-agent`,
-`06_additional-test-execution`, `07_audit-and-pr`) — see [`.github/README.md`](../../README.md).
+`06_additional-test-execution`, `07_audit-and-pr`) — see [`.github/HARNESS.md`](../../HARNESS.md).
 Nothing in this skill clears a patch to merge.
 
 **`docs/agent_output/04-remediation/` is read-only input.** This skill reads a plan's Status cell as a gate; nothing
