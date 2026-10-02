@@ -1,10 +1,39 @@
+<div align="center">
+
 # MARS — Modernization, Assessment, Remediation & Security
 
-**MARS** is an agentic remediation harness for Java / Spring Boot systems. It takes a reported
-defect or vulnerability and carries it all the way to a scored, auditable ship decision:
+**MARS is an agentic remediation harness for Java / Spring Boot systems. It takes a reported
+defect or vulnerability and carries it all the way to a scored, auditable ship decision:**
 
-> understand the code → diagnose the issue → measure its reach → plan a fix → get human approval →
-> implement it → verify it → test it → build it → decide → document it.
+`understand the code` → `diagnose the issue` → `measure its reach` → `plan a fix` → `get human approval` → `implement it` → `verify it` → `test it` → `build it` → `decide` → `document it`.
+
+![Agents](https://img.shields.io/badge/Agents-7-1F3864?style=for-the-badge)
+![Skills](https://img.shields.io/badge/Skills-18-2E5FD9?style=for-the-badge)
+![Phases](https://img.shields.io/badge/Phases-3-6E86E8?style=for-the-badge)
+![Human checkpoints](https://img.shields.io/badge/Human_checkpoints-2-F5C542?style=for-the-badge)
+![Hard gates](https://img.shields.io/badge/Hard_gates-3-C0392B?style=for-the-badge)
+![Zero-dep skills](https://img.shields.io/badge/Zero--dep_skills-12_of_18-3DA35B?style=for-the-badge)
+![Release authority](https://img.shields.io/badge/Release_authority-Cleared_only-A0399B?style=for-the-badge)
+
+![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-1.5_%E2%86%92_4.1-6DB33F?style=flat-square&logo=springboot&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=flat-square&logo=nodedotjs&logoColor=white)
+![Maven](https://img.shields.io/badge/Maven-build_%26_gates-C71A36?style=flat-square&logo=apachemaven&logoColor=white)
+![Neo4j](https://img.shields.io/badge/Neo4j-optional-4581C3?style=flat-square&logo=neo4j&logoColor=white)
+![OpenRewrite](https://img.shields.io/badge/OpenRewrite-open--source_recipes-2C3E50?style=flat-square)
+![Runtime](https://img.shields.io/badge/Runtime-Claude_Code_%7C_Copilot_Chat-D97757?style=flat-square&logo=githubcopilot&logoColor=white)
+
+**[At a glance](#1-mars-at-a-glance)** ·
+**[Agents](#24-the-7-agents-at-a-glance)** ·
+**[Skills](#25-the-18-skills-at-a-glance)** ·
+**[Workflow](#4-the-end-to-end-workflow)** ·
+**[Ship decision](#12-the-ship-decision-and-status-vocabulary)** ·
+**[Running MARS](#15-running-mars)** ·
+**[Glossary](#20-glossary)**
+
+</div>
+
+---
 
 Framework and Java version migrations (Spring Boot from any published line to any later one) travel
 the same road.
@@ -25,38 +54,38 @@ harness. It does not describe the Java application that MARS analyses.
 
 ## Table of contents
 
-1. [MARS at a glance](#1-mars-at-a-glance)
-2. [How MARS is built](#2-how-mars-is-built)
+1. 🧭 [MARS at a glance](#1-mars-at-a-glance)
+2. 🏗️ [How MARS is built](#2-how-mars-is-built)
    - 2.1 [Agents, skills, scripts and the runtime](#21-agents-skills-scripts-and-the-runtime)
    - 2.2 [System context](#22-system-context)
    - 2.3 [`.github` and `.claude`](#23-github-and-claude)
    - 2.4 [The 7 agents at a glance](#24-the-7-agents-at-a-glance)
    - 2.5 [The 18 skills at a glance](#25-the-18-skills-at-a-glance)
    - 2.6 [Which agent drives which skill](#26-which-agent-drives-which-skill)
-3. [The ideas that make MARS trustworthy](#3-the-ideas-that-make-mars-trustworthy)
-4. [The end-to-end workflow](#4-the-end-to-end-workflow)
-5. [The input — skill `00-issue-register`](#5-the-input--skill-00-issue-register)
-6. [Phase A · Understand](#6-phase-a--understand)
+3. 🛡️ [The ideas that make MARS trustworthy](#3-the-ideas-that-make-mars-trustworthy)
+4. 🔄 [The end-to-end workflow](#4-the-end-to-end-workflow)
+5. 📊 [The input — skill `00-issue-register`](#5-the-input--skill-00-issue-register)
+6. 🔵 [Phase A · Understand](#6-phase-a--understand)
    - 6.1 [Agent 01 — Architect](#61-agent-01--architect) · skills [01a](#skill-01a--code-cartographer), [01b](#skill-01b--context-weaver), [01c](#skill-01c--graph-forge), [01d](#skill-01d--blueprint-scribe)
    - 6.2 [Agent 02 — Root Cause Analyst](#62-agent-02--root-cause-analyst) · skill [02](#skill-02--root-cause-analyst)
    - 6.3 [Agent 03 — Blast Radius Analyst](#63-agent-03--blast-radius-analyst) · skill [03](#skill-03--blast-radius-analyst)
-7. [Phase B · Fix — Agent 04 Fix Generator](#7-phase-b--fix--agent-04-fix-generator)
-8. [Agent 04, Stage 1 — Strategize](#8-agent-04-stage-1--strategize) · skills [04a](#skill-04a--fix-strategist), [04a1](#skill-04a1--remediation-intelligence), [04a2](#skill-04a2--remediation-research)
-9. [The human checkpoint and Fix Type routing](#9-the-human-checkpoint-and-fix-type-routing)
-10. [Agent 04, Stage 2 — Implement](#10-agent-04-stage-2--implement) · skills [04b](#skill-04b--fixer), [04c](#skill-04c--dependency-upgrader), [04d](#skill-04d--version-migration)
-11. [Phase C · Verify & Ship](#11-phase-c--verify--ship)
+7. 🟢 [Phase B · Fix — Agent 04 Fix Generator](#7-phase-b--fix--agent-04-fix-generator)
+8. 🧠 [Agent 04, Stage 1 — Strategize](#8-agent-04-stage-1--strategize) · skills [04a](#skill-04a--fix-strategist), [04a1](#skill-04a1--remediation-intelligence), [04a2](#skill-04a2--remediation-research)
+9. ⏸️ [The human checkpoint and Fix Type routing](#9-the-human-checkpoint-and-fix-type-routing)
+10. 🛠️ [Agent 04, Stage 2 — Implement](#10-agent-04-stage-2--implement) · skills [04b](#skill-04b--fixer), [04c](#skill-04c--dependency-upgrader), [04d](#skill-04d--version-migration)
+11. 🟣 [Phase C · Verify & Ship](#11-phase-c--verify--ship)
     - 11.1 [Agent 05 — Existing App Test Agent](#111-agent-05--existing-app-test-agent) · skill [05](#skill-05--verify)
     - 11.2 [Agent 06 — Additional Test Execution](#112-agent-06--additional-test-execution) · skills [06a](#skill-06a--qa-runner), [06b](#skill-06b--build-gatekeeper)
     - 11.3 [Agent 07 — Audit & PR](#113-agent-07--audit--pr) · skills [07a](#skill-07a--merge-arbiter), [07b](#skill-07b--scribe)
-12. [The ship decision and status vocabulary](#12-the-ship-decision-and-status-vocabulary)
-13. [Data and file map](#13-data-and-file-map)
-14. [Observability — telemetry and Mission Control](#14-observability--telemetry-and-mission-control)
-15. [Running MARS](#15-running-mars)
-16. [Extending MARS](#16-extending-mars)
-17. [Proven results](#17-proven-results)
-18. [Known issues and gotchas](#18-known-issues-and-gotchas)
-19. [Key points cheat sheet](#19-key-points-cheat-sheet)
-20. [Glossary](#20-glossary)
+12. ⚖️ [The ship decision and status vocabulary](#12-the-ship-decision-and-status-vocabulary)
+13. 🗂️ [Data and file map](#13-data-and-file-map)
+14. 📡 [Observability — telemetry and Mission Control](#14-observability--telemetry-and-mission-control)
+15. ▶️ [Running MARS](#15-running-mars)
+16. 🧩 [Extending MARS](#16-extending-mars)
+17. ✅ [Proven results](#17-proven-results)
+18. ⚠️ [Known issues and gotchas](#18-known-issues-and-gotchas)
+19. 📌 [Key points cheat sheet](#19-key-points-cheat-sheet)
+20. 📖 [Glossary](#20-glossary)
 
 ---
 
